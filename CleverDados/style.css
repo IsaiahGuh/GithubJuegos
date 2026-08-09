@@ -1,9 +1,8 @@
 /* ============================================================
-   CLEVERDADOS - ESTILOS CON NUEVA PALETA DE COLORES
+   CLEVERDADOS - ESTILOS
    ============================================================ */
 
 :root {
-    /* Paleta de colores principal */
     --color-negro: #262626;
     --color-amarillo: #EBC21A;
     --color-azul: #808BC3;
@@ -12,7 +11,6 @@
     --color-morado: #553B61;
     --color-blanco: #ECE5DB;
     
-    /* Derivados para UI */
     --bg-main: #262626;
     --bg-panel: #1a1a1a;
     --bg-box: #2a2a2a;
@@ -38,27 +36,34 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; flex-
 }
 .modal-box h2 { color: #ECE5DB; margin-bottom: 5px; font-size: 1.8rem; }
 .modal-box p { color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem; }
-.input-group { margin-bottom: 15px; text-align: left; }
-.input-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
-.input-group input {
-    width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-box);
-    border: 1px solid var(--border-color); color: #ECE5DB; font-size: 1.1rem; font-weight: bold; text-align: center;
-}
-.input-group input:focus { outline: none; border-color: var(--color-azul); }
 .modal-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-.modal-buttons .row-btns { display: flex; gap: 10px; }
 .modal-btn {
     padding: 14px 15px; border: none; border-radius: 8px; font-weight: bold;
     cursor: pointer; flex: 1; font-size: 1rem; transition: transform 0.1s;
 }
 .modal-btn:active { transform: scale(0.97); }
 .btn-primary { background: var(--color-verde); color: #ECE5DB; }
-.btn-secondary { background: var(--color-verde); color: #ECE5DB; }
-.btn-success { background: var(--color-verde); color: #ECE5DB; }
 .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
 .btn-danger { background: #8B3A3A; color: #ECE5DB; }
 #confirmModal, #joinModal, #loadingModal { display: none; }
 #loadingModal { z-index: 3000; }
+
+/* LOBBY - DATOS DEL JUGADOR (SOLO LECTURA) */
+.lobby-info {
+    display: flex; gap: 16px; margin: 12px 0 20px 0; justify-content: center; flex-wrap: wrap;
+}
+.lobby-field {
+    flex: 1; min-width: 120px; text-align: left;
+}
+.lobby-field label {
+    display: block; font-size: 0.7rem; color: #a09888; margin-bottom: 4px;
+    font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.lobby-value {
+    display: block; padding: 8px 12px; background: rgba(245, 233, 226, 0.06);
+    border: 1px solid rgba(245, 233, 226, 0.12); border-radius: 8px;
+    color: #F5E9E2; font-size: 0.95rem; font-weight: 600; min-height: 40px; word-break: break-all;
+}
 
 /* HEADER */
 header { text-align: center; margin-bottom: 10px; width: 100%; }
@@ -116,30 +121,15 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
 .cell.marcada[data-area="morado"] { color: #ECE5DB !important; }
 .cell.pre-marcada { background: rgba(235,194,26,0.10); color: var(--text-muted); }
 
-/* BONIFICACIONES Y PUNTAJES */
-.bonificacion-circulo, .puntaje-circulo {
+/* PUNTAJES */
+.puntaje-circulo {
     width: 32px; height: 32px; border-radius: 50%; display: inline-flex;
     align-items: center; justify-content: center; font-size: 0.7rem;
     font-weight: bold; color: #ECE5DB; transition: all 0.3s ease;
     border: 2px solid var(--border-color); user-select: none; flex-shrink: 0;
 }
-.bonificacion-circulo { background: var(--bg-cell); font-size: 0.8rem; }
 .puntaje-circulo { background: var(--bg-cell); opacity: 0.5; }
 .puntaje-circulo.puntaje-completado { background: var(--color-verde); border-color: var(--color-verde); color: #ECE5DB; box-shadow: 0 0 12px rgba(38,95,86,0.25); }
-.bonificacion-label {
-    min-width: 52px; height: 32px; border-radius: 4px; display: inline-flex;
-    align-items: center; justify-content: center; font-size: 0.6rem;
-    font-weight: bold; color: #ECE5DB; transition: all 0.3s ease;
-    border: 1px solid var(--border-color); background: var(--bg-cell); user-select: none;
-}
-.puntaje-label {
-    min-width: 36px; height: 28px; border-radius: 4px; display: inline-flex;
-    align-items: center; justify-content: center; font-size: 0.7rem;
-    font-weight: bold; transition: all 0.3s ease;
-    border: 1px solid var(--border-color); background: var(--bg-cell); color: var(--text-muted); user-select: none;
-}
-.puntaje-label.puntaje-completado { background: var(--color-verde); border-color: var(--color-verde); color: #ECE5DB; }
-.puntajes-fila { display: flex; gap: var(--cell-gap); justify-content: center; margin-top: 4px; padding: 2px 0; }
 
 /* ÁREA GRIS */
 .gris-section { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; }
@@ -180,7 +170,7 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
 .celda-habilidad.usada { opacity: 0.35; filter: grayscale(0.6); }
 .celda-habilidad.usada::after { content: "✓"; position: absolute; font-size: 1rem; font-weight: 900; color: var(--color-verde); }
 
-/* ÁREAS AMARILLA, AZUL, VERDE, NARANJA, MORADO - ESTRUCTURA UNIFICADA */
+/* ÁREAS AMARILLA, AZUL, VERDE, NARANJA, MORADO */
 .amarilla-grid, .azul-grid, .verde-grid, .naranja-grid, .morado-grid {
     display: flex; flex-direction: column; gap: var(--cell-gap); width: 100%; align-items: center; justify-content: center;
 }
@@ -207,7 +197,7 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
 .azul-puntajes-fila { display: flex; gap: var(--cell-gap); justify-content: center; margin-bottom: 6px; padding: 2px 0; flex-wrap: wrap; width: 100%; }
 .azul-puntajes-fila .puntaje-circulo { width: 32px; height: 32px; }
 
-/* VERDE, NARANJA, MORADO - estructura de tabla */
+/* VERDE, NARANJA, MORADO */
 .verde-tabla-container, .naranja-tabla-container, .morado-tabla-container {
     display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center;
 }
@@ -244,13 +234,6 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
     border: 1px solid var(--border-color); flex-direction: column; gap: 8px;
 }
 .leaderboard h3 { font-size: 0.85rem; color: var(--text-muted); text-align: center; text-transform: uppercase; letter-spacing: 1px; }
-.no-players { color: var(--text-muted); text-align: center; padding: 20px; font-size: 0.9rem; }
-.player-card {
-    background: var(--bg-box); border-radius: 8px; padding: 8px 10px;
-    display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border-color);
-}
-.player-card.me { border-left: 4px solid var(--color-azul); }
-.player-card-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.9rem; color: #ECE5DB; }
 .controls { display: flex; justify-content: center; margin-top: 8px; }
 .controls .modal-btn { width: 100%; max-width: 200px; }
 
@@ -279,7 +262,6 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
 /* ZOOM MODAL */
 .zoom-area-modal .zoom-modal { max-width: 750px; padding: 16px 20px; background: var(--bg-panel); border-radius: 16px; }
 .zoom-area-modal .zoom-body { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.zoom-area-modal .zoom-area-title { display: none !important; }
 .zoom-area-modal .zoom-header { justify-content: flex-end !important; margin-bottom: 4px; min-height: 0; }
 .zoom-close { display: none !important; }
 .zoom-area-modal .area-replica {
@@ -427,8 +409,7 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
     .area { padding: 4px 6px; }
     .side-panel { flex: 1; max-width: 200px; overflow-y: auto; max-height: 100%; }
     .leaderboard { padding: 6px; }
-    .player-card { padding: 4px 6px; }
-    .player-card-header { font-size: 0.7rem; }
+    .controls .modal-btn { max-width: 150px; }
     .gris-turno-cell { min-width: 30px; height: 34px; }
     .turno-numero { font-size: 0.55rem; }
     .turno-bonificacion { font-size: 0.45rem; }
@@ -452,5 +433,3 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
         width: 18px; height: 18px; font-size: 0.45rem;
     }
 }
-
-/* SCROLLBAR - ELIMINADA */

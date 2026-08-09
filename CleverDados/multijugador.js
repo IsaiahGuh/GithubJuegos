@@ -33,69 +33,16 @@ let datosJugadores = {};
 let miNombre = "";
 
 // ============================================================
-// FUNCIONES DE LOBBY
+// FUNCIONES DE LOBBY (SOLO MULTIJUGADOR)
 // ============================================================
 
 function obtenerNombre() {
-    const input = document.getElementById('playerName');
-    if (input) {
-        const nombre = input.value.trim();
-        if (nombre) return nombre;
-    }
-    return localStorage.getItem('cleverdados_nombre') || "Jugador " + Math.floor(Math.random() * 100);
-}
-
-function mostrarUnirse() {
-    const roomInput = document.getElementById('roomCodeInput');
-    if (roomInput) {
-        // Cargar sala guardada si existe
-        const salaGuardada = obtenerSalaGuardada();
-        if (salaGuardada) {
-            roomInput.value = salaGuardada;
-            roomInput.readOnly = true;
-            roomInput.style.opacity = '0.7';
-            roomInput.style.color = '#4CAF50';
-        } else {
-            roomInput.value = '';
-            roomInput.readOnly = false;
-            roomInput.style.opacity = '1';
-            roomInput.style.color = 'white';
-        }
-    }
-    
-    document.getElementById('lobbyModal').style.display = 'none';
-    document.getElementById('joinModal').style.display = 'flex';
+    return localStorage.getItem('cleverdados_nombre') || window.miNombre || "Jugador";
 }
 
 function volverLobby() {
-    const roomInput = document.getElementById('roomCodeInput');
-    if (roomInput) {
-        roomInput.value = '';
-        roomInput.readOnly = false;
-        roomInput.style.opacity = '1';
-        roomInput.style.color = 'white';
-    }
-    
     document.getElementById('joinModal').style.display = 'none';
     document.getElementById('lobbyModal').style.display = 'flex';
-}
-
-function crearSala() {
-    miNombre = obtenerNombre();
-    const codigo = Math.random().toString(36).substring(2, 6).toUpperCase();
-    conectarSala(codigo);
-}
-
-function unirseSala() {
-    miNombre = obtenerNombre();
-    let codigo = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-    
-    if (codigo.length !== 4) {
-        alert("El código debe tener 4 letras/números.");
-        return;
-    }
-    
-    conectarSala(codigo);
 }
 
 // ============================================================
@@ -263,7 +210,7 @@ function unirseExitoso(codigo) {
     const info = document.getElementById('roomInfoDisplay');
     if (info) {
         info.style.display = 'inline-block';
-        info.textContent = `SALA: ${codigo}`;
+        info.textContent = 'SALA: ' + codigo;
     }
     
     const leaderboardPanel = document.getElementById('leaderboardPanel');
@@ -293,33 +240,17 @@ function ocultarCargando() {
 }
 
 // ============================================================
-// INICIALIZACIÓN AUTOMÁTICA - SIN SALA POR DEFECTO
+// INICIALIZACIÓN AUTOMÁTICA
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎮 CleverDados - Inicializando...');
     
-    // Cargar nombre guardado en el input
-    const playerNameInput = document.getElementById('playerName');
-    const nombreGuardado = obtenerNombreGuardado();
-    if (playerNameInput && nombreGuardado) {
-        playerNameInput.value = nombreGuardado;
-        miNombre = nombreGuardado;
-    }
+    // Los datos ya vienen de los parámetros URL
+    miNombre = localStorage.getItem('cleverdados_nombre') || window.miNombre || 'Jugador';
     
-    // Si hay sala guardada, cargarla en el input de unirse
-    const salaGuardada = obtenerSalaGuardada();
-    if (salaGuardada) {
-        const roomInput = document.getElementById('roomCodeInput');
-        if (roomInput) {
-            roomInput.value = salaGuardada;
-        }
-    }
-    
-    // NO conectar automáticamente - esperar a que el usuario elija
-    console.log('📝 Esperando acción del usuario...');
-    console.log(`👤 Nombre guardado: ${nombreGuardado || '(ninguno)'}`);
-    console.log(`🏠 Sala guardada: ${salaGuardada || '(ninguna)'}`);
+    console.log(`👤 Nombre: ${miNombre}`);
+    console.log(`🏠 Sala: ${localStorage.getItem('cleverdados_sala') || '---'}`);
 });
 
 // ============================================================
@@ -334,10 +265,7 @@ window.miNombre = miNombre;
 window.obtenerNombre = obtenerNombre;
 window.obtenerNombreGuardado = obtenerNombreGuardado;
 window.obtenerSalaGuardada = obtenerSalaGuardada;
-window.mostrarUnirse = mostrarUnirse;
 window.volverLobby = volverLobby;
-window.crearSala = crearSala;
-window.unirseSala = unirseSala;
 window.conectarSala = conectarSala;
 window.unirseExitoso = unirseExitoso;
 window.mostrarCargando = mostrarCargando;

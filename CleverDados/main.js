@@ -1,5 +1,5 @@
 // ============================================================
-// MAIN - CLEVERDADOS (VERSIÓN CORREGIDA)
+// MAIN - CLEVERDADOS (VERSIÓN CORREGIDA - SIN MODO LOCAL)
 // ============================================================
 
 // Estado global del juego
@@ -17,6 +17,39 @@ var puntajesAreas = {
 
 var AREAS = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
 var enModoZoom = false;
+
+// ============================================================
+// LEER PARÁMETROS DE URL
+// ============================================================
+
+function obtenerParametrosURL() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        nombre: params.get('nombre') || '',
+        sala: params.get('sala') || ''
+    };
+}
+
+// ============================================================
+// MOSTRAR DATOS EN EL MODAL
+// ============================================================
+
+function mostrarDatosLobby() {
+    const params = obtenerParametrosURL();
+    const displayName = document.getElementById('displayName');
+    const displayRoom = document.getElementById('displayRoom');
+    
+    if (displayName) {
+        displayName.textContent = params.nombre || 'Jugador';
+    }
+    if (displayRoom) {
+        displayRoom.textContent = params.sala || '----';
+    }
+    
+    // Guardar en variables globales para uso posterior
+    window.miNombre = params.nombre || 'Jugador';
+    window.salaRecibida = params.sala || '';
+}
 
 // ============================================================
 // SISTEMA DE PUNTUACIÓN
@@ -128,7 +161,7 @@ function actualizarVisuales() {
 }
 
 // ============================================================
-// ZOOM DE ÁREA - CORREGIDO
+// ZOOM DE ÁREA
 // ============================================================
 
 function abrirZoomArea(area) {
@@ -144,7 +177,6 @@ function abrirZoomArea(area) {
         return;
     }
     
-    // Buscar el contenido del área
     var areaElement = document.getElementById('area-' + area);
     if (!areaElement) {
         console.error('Área ' + area + ' no encontrada');
@@ -160,12 +192,10 @@ function abrirZoomArea(area) {
         return;
     }
     
-    // CLONAR EL CONTENIDO
     var clone = areaContent.cloneNode(true);
     content.innerHTML = '';
     content.appendChild(clone);
     
-    // Si es verde, naranja o morado, reorganizar en 2 filas
     if (area === 'verde' || area === 'naranja' || area === 'morado') {
         reorganizarEnDosFilas(content, area);
     }
@@ -174,7 +204,6 @@ function abrirZoomArea(area) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
-    // Actualizar visuales después de un breve delay
     setTimeout(function() {
         if (typeof actualizarVisualesZoom === 'function') {
             actualizarVisualesZoom();
@@ -182,9 +211,26 @@ function abrirZoomArea(area) {
     }, 50);
 }
 
-// ============================================================
-// REORGANIZAR EN DOS FILAS
-// ============================================================
+function cerrarZoomArea() {
+    var modal = document.getElementById('zoomAreaModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        enModoZoom = false;
+        
+        if (typeof actualizarVisuales === 'function') actualizarVisuales();
+        
+        if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
+            PUNTAJES.calcularTotal();
+        } else {
+            calcularPuntajes();
+        }
+        
+        if (typeof renderizarLeaderboard === 'function') {
+            renderizarLeaderboard();
+        }
+    }
+}
 
 function reorganizarEnDosFilas(container, area) {
     var fila = container.querySelector('.' + area + '-fila');
@@ -234,10 +280,6 @@ function reorganizarEnDosFilas(container, area) {
     }
 }
 
-// ============================================================
-// ACTUALIZAR VISUALES EN EL ZOOM
-// ============================================================
-
 function actualizarVisualesZoom() {
     var zoomContent = document.getElementById('zoomAreaContent');
     if (!zoomContent) return;
@@ -275,35 +317,6 @@ function actualizarVisualesZoom() {
         }
     }
 }
-
-// ============================================================
-// CERRAR ZOOM DE ÁREA
-// ============================================================
-
-function cerrarZoomArea() {
-    var modal = document.getElementById('zoomAreaModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        enModoZoom = false;
-        
-        if (typeof actualizarVisuales === 'function') actualizarVisuales();
-        
-        if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
-            PUNTAJES.calcularTotal();
-        } else {
-            calcularPuntajes();
-        }
-        
-        if (typeof renderizarLeaderboard === 'function') {
-            renderizarLeaderboard();
-        }
-    }
-}
-
-// ============================================================
-// PROPAGAR CLICKS DESDE EL ZOOM
-// ============================================================
 
 function propagarClickZoom(cell) {
     if (cell.classList.contains('marcada') || cell.classList.contains('pre-marcada')) {
@@ -360,10 +373,6 @@ function propagarClickZoom(cell) {
     
     return resultado;
 }
-
-// ============================================================
-// MOSTRAR FEEDBACK DE ERROR
-// ============================================================
 
 function mostrarFeedbackError(cell) {
     if (!cell) return;
@@ -439,20 +448,51 @@ function confirmarReinicio() {
     cerrarModal();
 }
 
-function jugarSolo() {
+// ============================================================
+// UNIRSE A SALA (MULTIJUGADOR)
+// ============================================================
+
+function unirseSala() {
+    const params = obtenerParametrosURL();
+    const nombre = params.nombre || 'Jugador';
+    const codigo = params.sala || '';
+    
+    if (!codigo || codigo.length < 4) {
+        alert('Código de sala inválido. Asegúrate de tener un código de 4 caracteres.');
+        return;
+    }
+    
     document.getElementById('lobbyModal').style.display = 'none';
+    
+    // Inicializar datos del jugador
+    window.miNombre = nombre;
+    window.salaActual = codigo;
+    
+    // Inicializar datosJugadores para el modo multijugador
     if (typeof datosJugadores !== 'undefined') {
         datosJugadores = {};
-        datosJugadores['local'] = {
-            nombre: miNombre || 'Jugador',
+        datosJugadores[miId] = {
+            nombre: nombre,
             puntaje: 0,
             movimientos: [],
             valoresNaranja: null,
             valoresMorado: null,
             puntajesPorArea: null
         };
-        miId = 'local';
     }
+    
+    // Conectar a la sala MQTT
+    if (typeof conectarSala === 'function') {
+        conectarSala(codigo);
+    }
+    
+    // Mostrar información de sala
+    const info = document.getElementById('roomInfoDisplay');
+    if (info) {
+        info.style.display = 'inline-block';
+        info.textContent = 'SALA: ' + codigo;
+    }
+    
     if (typeof renderizarLeaderboard === 'function') {
         renderizarLeaderboard();
     }
@@ -469,7 +509,7 @@ window.reiniciarTablero = reiniciarTablero;
 window.mostrarModalReinicio = mostrarModalReinicio;
 window.cerrarModal = cerrarModal;
 window.confirmarReinicio = confirmarReinicio;
-window.jugarSolo = jugarSolo;
+window.unirseSala = unirseSala;
 window.abrirZoomArea = abrirZoomArea;
 window.cerrarZoomArea = cerrarZoomArea;
 window.propagarClickZoom = propagarClickZoom;
@@ -480,6 +520,8 @@ window.historialMovimientos = historialMovimientos;
 window.puntajeTotal = puntajeTotal;
 window.puntosBonificacion = puntosBonificacion;
 window.puntajesAreas = puntajesAreas;
+window.miNombre = '';
+window.salaRecibida = '';
 
 // ============================================================
 // INICIALIZACIÓN
@@ -487,6 +529,9 @@ window.puntajesAreas = puntajesAreas;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Inicializando CleverDados...');
+    
+    // Mostrar datos del lobby
+    mostrarDatosLobby();
     
     if (typeof inicializarAreaGris === 'function') inicializarAreaGris();
     if (typeof inicializarAreaAmarilla === 'function') inicializarAreaAmarilla();
