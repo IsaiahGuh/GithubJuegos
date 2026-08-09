@@ -1,5 +1,5 @@
 // ============================================================
-// MAIN - CLEVERDADOS (VERSIÓN CORREGIDA - SIN MODO LOCAL)
+// MAIN - CLEVERDADOS (VERSIÓN SIMPLIFICADA - SIN FALLBACK)
 // ============================================================
 
 // Estado global del juego
@@ -46,74 +46,45 @@ function mostrarDatosLobby() {
         displayRoom.textContent = params.sala || '----';
     }
     
-    // Guardar en variables globales para uso posterior
     window.miNombre = params.nombre || 'Jugador';
     window.salaRecibida = params.sala || '';
 }
 
 // ============================================================
-// SISTEMA DE PUNTUACIÓN
+// SISTEMA DE PUNTUACIÓN - USANDO PUNTAJES.JS
 // ============================================================
 
 function calcularPuntajes() {
-    if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
-        var total = PUNTAJES.calcularTotal();
-        window.puntajeTotal = total;
-        
-        var areas = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
-        for (var i = 0; i < areas.length; i++) {
-            var area = areas[i];
-            var element = document.getElementById('score-' + area);
-            if (element) {
-                element.textContent = puntajesAreas[area] || 0;
-            }
-        }
-        
-        var totalElement = document.getElementById('score-total');
-        var bonusElement = document.getElementById('bonus-display');
-        if (totalElement) totalElement.textContent = total;
-        if (bonusElement) bonusElement.textContent = puntosBonificacion || 0;
-        
-        if (typeof renderizarLeaderboard === 'function') {
-            renderizarLeaderboard();
-        }
-        
-        if (typeof broadcastPuntaje === 'function') {
-            broadcastPuntaje('sync');
-        }
+    if (typeof PUNTAJES === 'undefined' || !PUNTAJES) {
+        console.error('❌ PUNTAJES no está disponible');
         return;
     }
- 
-    var total = 0;
-    var bonus = 0;
-
-    for (var j = 0; j < AREAS.length; j++) {
-        var area = AREAS[j];
-        var marks = historialMovimientos.filter(function(m) { return m.startsWith(area); });
-        var count = marks.length;
-        
-        var puntos = count > 0 ? count * (count + 1) / 2 : 0;
-        
-        puntajesAreas[area] = puntos;
-        total += puntos;
-        
-        var element = document.getElementById('score-' + area);
-        if (element) element.textContent = puntos;
-    }
-
-    bonus = puntosBonificacion;
-    total += bonus;
     
-    puntajeTotal = total;
+    var total = PUNTAJES.calcularTotal();
+    window.puntajeTotal = total;
+    
+    // Actualizar UI de cada área
+    var areas = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
+    for (var i = 0; i < areas.length; i++) {
+        var area = areas[i];
+        var element = document.getElementById('score-' + area);
+        if (element) {
+            element.textContent = puntajesAreas[area] || 0;
+        }
+    }
+    
+    // Actualizar total y bonificaciones
     var totalElement = document.getElementById('score-total');
     var bonusElement = document.getElementById('bonus-display');
     if (totalElement) totalElement.textContent = total;
-    if (bonusElement) bonusElement.textContent = bonus;
+    if (bonusElement) bonusElement.textContent = puntosBonificacion || 0;
     
+    // Actualizar leaderboard
     if (typeof renderizarLeaderboard === 'function') {
         renderizarLeaderboard();
     }
     
+    // Sincronizar multijugador
     if (typeof broadcastPuntaje === 'function') {
         broadcastPuntaje('sync');
     }
@@ -128,13 +99,12 @@ function actualizarVisuales() {
     for (var i = 0; i < celdas.length; i++) {
         var cell = celdas[i];
         var area = cell.dataset.area;
-        if (!area) continue;
+        if (!area || area === 'gris') continue;
         
+        var id = '';
         var fila = cell.dataset.fila;
         var col = cell.dataset.col;
         var index = cell.dataset.index;
-        
-        var id = '';
         
         if (area === 'amarilla' && fila !== undefined && col !== undefined) {
             id = 'amarilla-' + fila + '-' + col;
@@ -146,17 +116,10 @@ function actualizarVisuales() {
             id = 'naranja-' + index;
         } else if (area === 'morado' && index !== undefined) {
             id = 'morado-' + index;
-        } else if (area === 'gris') {
-            continue;
         }
         
         var estaMarcada = id ? historialMovimientos.includes(id) : false;
-        
-        if (estaMarcada) {
-            cell.classList.add('marcada');
-        } else {
-            cell.classList.remove('marcada');
-        }
+        cell.classList.toggle('marcada', estaMarcada);
     }
 }
 
@@ -219,13 +182,9 @@ function cerrarZoomArea() {
         enModoZoom = false;
         
         if (typeof actualizarVisuales === 'function') actualizarVisuales();
-        
         if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
             PUNTAJES.calcularTotal();
-        } else {
-            calcularPuntajes();
         }
-        
         if (typeof renderizarLeaderboard === 'function') {
             renderizarLeaderboard();
         }
@@ -309,12 +268,7 @@ function actualizarVisualesZoom() {
         }
         
         var estaMarcada = id ? historialMovimientos.includes(id) : false;
-        
-        if (estaMarcada) {
-            cell.classList.add('marcada');
-        } else {
-            cell.classList.remove('marcada');
-        }
+        cell.classList.toggle('marcada', estaMarcada);
     }
 }
 
@@ -416,8 +370,6 @@ function reiniciarTablero() {
     
     if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
         PUNTAJES.calcularTotal();
-    } else {
-        calcularPuntajes();
     }
     
     actualizarVisuales();
@@ -464,11 +416,9 @@ function unirseSala() {
     
     document.getElementById('lobbyModal').style.display = 'none';
     
-    // Inicializar datos del jugador
     window.miNombre = nombre;
     window.salaActual = codigo;
     
-    // Inicializar datosJugadores para el modo multijugador
     if (typeof datosJugadores !== 'undefined') {
         datosJugadores = {};
         datosJugadores[miId] = {
@@ -481,12 +431,10 @@ function unirseSala() {
         };
     }
     
-    // Conectar a la sala MQTT
     if (typeof conectarSala === 'function') {
         conectarSala(codigo);
     }
     
-    // Mostrar información de sala
     const info = document.getElementById('roomInfoDisplay');
     if (info) {
         info.style.display = 'inline-block';
@@ -514,14 +462,14 @@ window.abrirZoomArea = abrirZoomArea;
 window.cerrarZoomArea = cerrarZoomArea;
 window.propagarClickZoom = propagarClickZoom;
 window.reorganizarEnDosFilas = reorganizarEnDosFilas;
-window.enModoZoom = enModoZoom;
 window.mostrarFeedbackError = mostrarFeedbackError;
+
+// Exponer variables
 window.historialMovimientos = historialMovimientos;
 window.puntajeTotal = puntajeTotal;
 window.puntosBonificacion = puntosBonificacion;
 window.puntajesAreas = puntajesAreas;
-window.miNombre = '';
-window.salaRecibida = '';
+window.enModoZoom = enModoZoom;
 
 // ============================================================
 // INICIALIZACIÓN
@@ -530,7 +478,6 @@ window.salaRecibida = '';
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Inicializando CleverDados...');
     
-    // Mostrar datos del lobby
     mostrarDatosLobby();
     
     if (typeof inicializarAreaGris === 'function') inicializarAreaGris();
@@ -576,8 +523,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
         PUNTAJES.calcularTotal();
-    } else {
-        calcularPuntajes();
     }
     
     if (typeof renderizarLeaderboard === 'function') {
