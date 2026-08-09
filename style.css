@@ -1,7 +1,6 @@
 /* ============================================================
-   GITHUB BODEGA - ESTILOS ORIGINALES (CON FAVICON)
+   ESTILOS BASE
    ============================================================ */
-
 * {
     margin: 0;
     padding: 0;
@@ -24,12 +23,12 @@ body {
 /* ============================================================
    HEADER
    ============================================================ */
-
 header {
     text-align: center;
     margin-bottom: 3rem;
     padding: 2rem 0;
     border-bottom: 2px solid #773344;
+    cursor: pointer;
 }
 
 h1 {
@@ -53,9 +52,8 @@ h1::after {
 }
 
 /* ============================================================
-   SYNC INDICATOR EN HEADER
+   SYNC INDICATOR
    ============================================================ */
-
 .sync-indicator {
     display: none;
     font-size: 0.75rem;
@@ -80,9 +78,8 @@ h1::after {
 }
 
 /* ============================================================
-   SHELVES (GRILLA DE PROYECTOS)
+   SHELVES - GRILLA DE JUEGOS
    ============================================================ */
-
 .shelves {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -92,7 +89,6 @@ h1::after {
 
 .project-item {
     background: #773344;
-    border: none;
     border-radius: 10px;
     padding: 1rem 0.75rem;
     text-align: center;
@@ -103,16 +99,13 @@ h1::after {
     align-items: center;
     justify-content: center;
     min-height: 150px;
-    position: relative;
 }
 
 .project-item:hover {
     transform: translateY(-4px);
-    background: #773344;
     box-shadow: 0 8px 30px rgba(212, 77, 92, 0.25);
 }
 
-/* BADGE */
 .project-badge {
     display: inline-block;
     font-size: 0.55rem;
@@ -126,49 +119,35 @@ h1::after {
     letter-spacing: 0.3px;
 }
 
-.project-clever {
-    border-color: rgba(212, 77, 92, 0.3) !important;
-    box-shadow: 0 0 20px rgba(212, 77, 92, 0.05);
-}
-
-.project-clever:hover {
-    border-color: rgba(212, 77, 92, 0.6) !important;
-    box-shadow: 0 8px 30px rgba(212, 77, 92, 0.15);
-}
-
 /* ============================================================
-   FAVICON WRAPPER
+   FAVICON
    ============================================================ */
-
-.project-item .favicon-wrapper {
+.favicon-wrapper {
     width: 80px;
     height: 80px;
     margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(245, 233, 226, 0.2) !important;
+    background: rgba(245, 233, 226, 0.1);
     border-radius: 14px;
-    border: none;
     padding: 10px;
     transition: all 0.3s ease;
-    backdrop-filter: blur(4px);
 }
 
 .project-item:hover .favicon-wrapper {
-    background: rgba(245, 233, 226, 0.3) !important;
+    background: rgba(245, 233, 226, 0.2);
     box-shadow: 0 0 25px rgba(245, 233, 226, 0.1);
 }
 
-.project-item .favicon-wrapper .favicon-img {
+.favicon-img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     border-radius: 6px;
-    display: block;
 }
 
-.project-item .favicon-wrapper .favicon-placeholder {
+.favicon-placeholder {
     width: 100%;
     height: 100%;
     display: none;
@@ -178,10 +157,9 @@ h1::after {
     font-weight: bold;
     font-size: 2rem;
     color: #773344;
-    background: transparent;
 }
 
-.project-item .project-name {
+.project-name {
     font-size: 0.85rem;
     font-weight: 500;
     color: #F5E9E2;
@@ -191,7 +169,7 @@ h1::after {
     word-break: break-word;
 }
 
-.project-item .project-name a {
+.project-name a {
     color: #F5E9E2;
     text-decoration: none;
     transition: color 0.3s ease;
@@ -202,43 +180,13 @@ h1::after {
 }
 
 /* ============================================================
-   LOADING & ERROR
+   ESTADOS VACIOS
    ============================================================ */
-
-.loading {
-    text-align: center;
-    padding: 4rem;
-    color: #E3B5A4;
-    grid-column: 1 / -1;
-}
-
-.loading .spinner {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    border: 3px solid #773344;
-    border-top: 3px solid #D44D5C;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.error {
-    text-align: center;
-    padding: 2rem;
-    color: #D44D5C;
-    background: #77334433;
-    border: 1px solid #D44D5C;
-    border-radius: 8px;
-    grid-column: 1 / -1;
-}
-
 .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: #E3B5A4;
     animation: fadeInUp 0.5s ease forwards;
 }
 
@@ -250,7 +198,6 @@ h1::after {
 /* ============================================================
    FOOTER
    ============================================================ */
-
 footer {
     text-align: center;
     margin-top: 4rem;
@@ -260,18 +207,6 @@ footer {
     font-size: 0.8rem;
     letter-spacing: 1px;
 }
-
-footer p {
-    color: #E3B5A4;
-}
-
-footer p strong {
-    color: #D44D5C;
-}
-
-/* ============================================================
-   QR BUTTON
-   ============================================================ */
 
 .qr-button {
     margin-top: 1rem;
@@ -297,7 +232,6 @@ footer p strong {
 /* ============================================================
    QR MODAL
    ============================================================ */
-
 .qr-modal {
     display: none;
     position: fixed;
@@ -323,9 +257,8 @@ footer p strong {
     border: 1px solid #E3B5A4;
     max-width: 400px;
     width: 90%;
-    position: relative;
-    animation: scaleIn 0.3s ease;
     box-shadow: 0 0 60px rgba(212, 77, 92, 0.2);
+    animation: scaleIn 0.3s ease;
 }
 
 .qr-image {
@@ -341,41 +274,13 @@ footer p strong {
 }
 
 @keyframes scaleIn {
-    from {
-        transform: scale(0.9);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 
 /* ============================================================
-   SCROLLBAR
+   FILTER DROPDOWN - LOBBY
    ============================================================ */
-
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #160029;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #773344;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #D44D5C;
-}
-
-/* ============================================================
-   FILTER DROPDOWN - LOBBY CENTRALIZADO
-   ============================================================ */
-
 .filter-dropdown {
     display: none;
     position: relative;
@@ -395,31 +300,18 @@ footer p strong {
 }
 
 @keyframes dropdownOpen {
-    0% {
-        opacity: 0;
-        transform: translateY(-10px) scale(0.98);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    0% { opacity: 0; transform: translateY(-10px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes dropdownClose {
-    0% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(-10px) scale(0.98);
-    }
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-10px) scale(0.98); }
 }
 
 .filter-dropdown-content {
     background: rgba(119, 51, 68, 0.30);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     padding: 1.5rem 2rem;
     border-radius: 12px;
     border: 1px solid rgba(227, 181, 164, 0.15);
@@ -428,9 +320,8 @@ footer p strong {
 }
 
 /* ============================================================
-   LOBBY - SECCIÓN DE DATOS DEL JUGADOR
+   LOBBY - DATOS DEL JUGADOR
    ============================================================ */
-
 .lobby-section {
     padding: 4px 0;
 }
@@ -562,7 +453,6 @@ footer p strong {
 /* ============================================================
    FILTER TOPICS
    ============================================================ */
-
 .filter-topics-container {
     display: flex;
     flex-wrap: wrap;
@@ -599,7 +489,7 @@ footer p strong {
     box-shadow: 0 4px 15px rgba(212, 77, 92, 0.3);
 }
 
-.filter-topic-btn .topic-count {
+.topic-count {
     background: rgba(0, 0, 0, 0.25);
     padding: 0.1rem 0.4rem;
     border-radius: 10px;
@@ -616,7 +506,6 @@ footer p strong {
 /* ============================================================
    ANIMACIONES DE PROYECTOS
    ============================================================ */
-
 .project-exit {
     animation: projectExit 0.4s ease forwards;
 }
@@ -637,9 +526,28 @@ footer p strong {
 }
 
 /* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #160029;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #773344;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #D44D5C;
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
-
 @media (max-width: 768px) {
     .warehouse {
         padding: 1rem;
@@ -663,19 +571,14 @@ footer p strong {
         padding: 0.75rem 0.5rem;
     }
     
-    .project-item .favicon-wrapper {
+    .favicon-wrapper {
         width: 64px;
         height: 64px;
         padding: 8px;
     }
     
-    .project-item .favicon-placeholder {
+    .favicon-placeholder {
         font-size: 1.5rem;
-    }
-
-    .qr-modal-content {
-        padding: 1.5rem;
-        max-width: 320px;
     }
 
     .filter-dropdown {
@@ -686,11 +589,6 @@ footer p strong {
         padding: 1rem 1.2rem;
     }
     
-    .filter-topic-btn {
-        font-size: 0.7rem;
-        padding: 0.35rem 0.7rem;
-    }
-
     .lobby-fields {
         flex-direction: column;
         gap: 8px;
@@ -721,23 +619,18 @@ footer p strong {
         padding: 0.5rem 0.35rem;
     }
     
-    .project-item .favicon-wrapper {
+    .favicon-wrapper {
         width: 52px;
         height: 52px;
         padding: 6px;
     }
     
-    .project-item .favicon-placeholder {
+    .favicon-placeholder {
         font-size: 1.2rem;
     }
     
-    .project-item .project-name {
+    .project-name {
         font-size: 0.75rem;
-    }
-
-    .qr-modal-content {
-        padding: 1rem;
-        max-width: 280px;
     }
 
     .filter-dropdown {
@@ -752,40 +645,4 @@ footer p strong {
         font-size: 0.65rem;
         padding: 0.3rem 0.6rem;
     }
-
-    .lobby-section-title {
-        font-size: 0.75rem;
-    }
-    
-    .lobby-field input {
-        font-size: 0.8rem;
-        padding: 6px 10px;
-    }
-    
-    .lobby-btn {
-        font-size: 0.7rem;
-        padding: 6px 14px;
-    }
-}
-
-/* ============================================================
-   SCROLLBAR DEL DROPDOWN
-   ============================================================ */
-
-.filter-dropdown-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.filter-dropdown-content::-webkit-scrollbar-track {
-    background: rgba(245, 233, 226, 0.05);
-    border-radius: 3px;
-}
-
-.filter-dropdown-content::-webkit-scrollbar-thumb {
-    background: rgba(212, 77, 92, 0.3);
-    border-radius: 3px;
-}
-
-.filter-dropdown-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(212, 77, 92, 0.5);
 }

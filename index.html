@@ -12,9 +12,7 @@
     <link rel="stylesheet" href="style.css">
     
     <script>
-        // ============================================================
-        // CONFIGURACIÓN - SOLO JUEGOS LOCALES
-        // ============================================================
+        // Configuracion de juegos
         const APP_CONFIG = {
             TITLE: 'Github Juegos',
             SUBTITLE: 'Mis juegos locales',
@@ -28,31 +26,19 @@
                     topics: ['multijugador', 'dados', 'estrategia'],
                     badge: 'Online'
                 }
-                // 👇 AÑADE MÁS JUEGOS AQUÍ CUANDO LOS TENGAS
-                // {
-                //     id: 'OtroJuego',
-                //     nombre: 'Otro Juego',
-                //     ruta: './OtroJuego/index.html',
-                //     color: '#4CAF50',
-                //     topics: ['accion', 'aventura'],
-                //     badge: ''
-                // }
             ]
         };
-        
-        console.log('✅ APP_CONFIG cargado con', APP_CONFIG.JUEGOS.length, 'juegos');
     </script>
 </head>
 <body>
     <div class="warehouse">
-        <header id="filterHeader" style="cursor: pointer;">
+        <header id="filterHeader">
             <h1>Github Juegos</h1>
             <div id="syncIndicator" class="sync-indicator"></div>
         </header>
 
         <div id="filterDropdown" class="filter-dropdown">
             <div class="filter-dropdown-content">
-                
                 <div class="lobby-section">
                     <div class="lobby-section-title">Datos del Jugador</div>
                     <div class="lobby-fields">
@@ -61,7 +47,7 @@
                             <input type="text" id="playerNameInput" placeholder="Tu nombre" maxlength="12">
                         </div>
                         <div class="lobby-field">
-                            <label for="roomCodeInput">Código de Sala</label>
+                            <label for="roomCodeInput">Codigo de Sala</label>
                             <input type="text" id="roomCodeInput" placeholder="GRIL" maxlength="6" style="text-transform: uppercase;">
                         </div>
                     </div>
@@ -78,7 +64,6 @@
                     <div class="lobby-section-title">Filtrar por tema</div>
                     <div id="filterTopicsContainer" class="filter-topics-container"></div>
                 </div>
-
             </div>
         </div>
 
@@ -92,11 +77,15 @@
 
     <div id="qrModal" class="qr-modal">
         <div class="qr-modal-content">
-            <img src="qr-code.png" alt="Código QR" class="qr-image">
+            <img src="qr-code.png" alt="Codigo QR" class="qr-image">
         </div>
     </div>
 
+    <!-- Scripts modulares -->
     <script src="animations.js"></script>
-    <script src="script.js"></script>
+    <script src="config.js"></script>
+    <script src="filtros.js"></script>
+    <script src="ui.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
