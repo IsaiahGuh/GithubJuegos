@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Github Juegos</title>
+    
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/favicon.ico">
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <script>
+        // ============================================================
+        // CONFIGURACIÓN - SOLO JUEGOS LOCALES
+        // ============================================================
+        const APP_CONFIG = {
+            TITLE: 'Github Juegos',
+            SUBTITLE: 'Mis juegos locales',
+            DEFAULT_ROOM_CODE: 'GRIL',
+            JUEGOS: [
+                {
+                    id: 'CleverDados',
+                    nombre: 'CleverDados',
+                    ruta: './CleverDados/index.html',
+                    color: '#D44D5C',
+                    topics: ['multijugador', 'dados', 'estrategia'],
+                    badge: 'Online'
+                }
+                // 👇 AÑADE MÁS JUEGOS AQUÍ CUANDO LOS TENGAS
+                // {
+                //     id: 'OtroJuego',
+                //     nombre: 'Otro Juego',
+                //     ruta: './OtroJuego/index.html',
+                //     color: '#4CAF50',
+                //     topics: ['accion', 'aventura'],
+                //     badge: ''
+                // }
+            ]
+        };
+        
+        console.log('✅ APP_CONFIG cargado con', APP_CONFIG.JUEGOS.length, 'juegos');
+    </script>
+</head>
+<body>
+    <div class="warehouse">
+        <header id="filterHeader" style="cursor: pointer;">
+            <h1>Github Juegos</h1>
+            <div id="syncIndicator" class="sync-indicator"></div>
+        </header>
+
+        <div id="filterDropdown" class="filter-dropdown">
+            <div class="filter-dropdown-content">
+                
+                <div class="lobby-section">
+                    <div class="lobby-section-title">Datos del Jugador</div>
+                    <div class="lobby-fields">
+                        <div class="lobby-field">
+                            <label for="playerNameInput">Nombre</label>
+                            <input type="text" id="playerNameInput" placeholder="Tu nombre" maxlength="12">
+                        </div>
+                        <div class="lobby-field">
+                            <label for="roomCodeInput">Código de Sala</label>
+                            <input type="text" id="roomCodeInput" placeholder="GRIL" maxlength="6" style="text-transform: uppercase;">
+                        </div>
+                    </div>
+                    <div class="lobby-actions">
+                        <button id="saveLobbyDataBtn" class="lobby-btn btn-primary">Guardar datos</button>
+                        <button id="clearLobbyDataBtn" class="lobby-btn btn-outline">Limpiar</button>
+                    </div>
+                    <div id="lobbyStatus" class="lobby-status" style="display: none;"></div>
+                </div>
+
+                <hr class="lobby-divider">
+
+                <div class="lobby-section">
+                    <div class="lobby-section-title">Filtrar por tema</div>
+                    <div id="filterTopicsContainer" class="filter-topics-container"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="projectsContainer" class="shelves"></div>
+
+        <footer>
+            <p>GithubJuegos - Todos los juegos en un solo lugar</p>
+            <button id="qrButton" class="qr-button">QR</button>
+        </footer>
+    </div>
+
+    <div id="qrModal" class="qr-modal">
+        <div class="qr-modal-content">
+            <img src="qr-code.png" alt="Código QR" class="qr-image">
+        </div>
+    </div>
+
+    <script src="animations.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
