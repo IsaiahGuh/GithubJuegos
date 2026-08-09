@@ -1,5 +1,5 @@
 // ============================================================
-// MAIN - CLEVERDADOS (VERSIÓN SIMPLIFICADA - SIN FALLBACK)
+// MAIN - CLEVERDADOS (VERSION SIMPLIFICADA - SIN FALLBACK)
 // ============================================================
 
 // Estado global del juego
@@ -16,10 +16,9 @@ var puntajesAreas = {
 };
 
 var AREAS = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
-var enModoZoom = false;
 
 // ============================================================
-// LEER PARÁMETROS DE URL
+// LEER PARAMETROS DE URL
 // ============================================================
 
 function obtenerParametrosURL() {
@@ -51,19 +50,18 @@ function mostrarDatosLobby() {
 }
 
 // ============================================================
-// SISTEMA DE PUNTUACIÓN - USANDO PUNTAJES.JS
+// SISTEMA DE PUNTUACION - USANDO PUNTAJES.JS
 // ============================================================
 
 function calcularPuntajes() {
     if (typeof PUNTAJES === 'undefined' || !PUNTAJES) {
-        console.error('❌ PUNTAJES no está disponible');
+        console.error('PUNTAJES no esta disponible');
         return;
     }
     
     var total = PUNTAJES.calcularTotal();
     window.puntajeTotal = total;
     
-    // Actualizar UI de cada área
     var areas = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
     for (var i = 0; i < areas.length; i++) {
         var area = areas[i];
@@ -73,18 +71,15 @@ function calcularPuntajes() {
         }
     }
     
-    // Actualizar total y bonificaciones
     var totalElement = document.getElementById('score-total');
     var bonusElement = document.getElementById('bonus-display');
     if (totalElement) totalElement.textContent = total;
     if (bonusElement) bonusElement.textContent = puntosBonificacion || 0;
     
-    // Actualizar leaderboard
     if (typeof renderizarLeaderboard === 'function') {
         renderizarLeaderboard();
     }
     
-    // Sincronizar multijugador
     if (typeof broadcastPuntaje === 'function') {
         broadcastPuntaje('sync');
     }
@@ -124,209 +119,8 @@ function actualizarVisuales() {
 }
 
 // ============================================================
-// ZOOM DE ÁREA
+// MOSTRAR FEEDBACK DE ERROR
 // ============================================================
-
-function abrirZoomArea(area) {
-    if (area === 'gris') return;
-    
-    console.log('🔍 Abriendo zoom de: ' + area);
-    
-    var modal = document.getElementById('zoomAreaModal');
-    var content = document.getElementById('zoomAreaContent');
-    
-    if (!modal || !content) {
-        console.error('Modal o content no encontrado');
-        return;
-    }
-    
-    var areaElement = document.getElementById('area-' + area);
-    if (!areaElement) {
-        console.error('Área ' + area + ' no encontrada');
-        return;
-    }
-    
-    var areaContent = areaElement.querySelector('#area-' + area + '-content');
-    if (!areaContent) {
-        content.innerHTML = '<p style="color: var(--text-muted);">Contenido no disponible</p>';
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        enModoZoom = true;
-        return;
-    }
-    
-    var clone = areaContent.cloneNode(true);
-    content.innerHTML = '';
-    content.appendChild(clone);
-    
-    if (area === 'verde' || area === 'naranja' || area === 'morado') {
-        reorganizarEnDosFilas(content, area);
-    }
-    
-    enModoZoom = true;
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    setTimeout(function() {
-        if (typeof actualizarVisualesZoom === 'function') {
-            actualizarVisualesZoom();
-        }
-    }, 50);
-}
-
-function cerrarZoomArea() {
-    var modal = document.getElementById('zoomAreaModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        enModoZoom = false;
-        
-        if (typeof actualizarVisuales === 'function') actualizarVisuales();
-        if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
-            PUNTAJES.calcularTotal();
-        }
-        if (typeof renderizarLeaderboard === 'function') {
-            renderizarLeaderboard();
-        }
-    }
-}
-
-function reorganizarEnDosFilas(container, area) {
-    var fila = container.querySelector('.' + area + '-fila');
-    if (!fila) return;
-    
-    var wrappers = fila.querySelectorAll('.' + area + '-celda-wrapper');
-    if (wrappers.length === 0) return;
-    
-    fila.innerHTML = '';
-    fila.style.display = 'flex';
-    fila.style.flexWrap = 'wrap';
-    fila.style.gap = '6px';
-    fila.style.justifyContent = 'center';
-    fila.style.width = '100%';
-    fila.style.maxWidth = '650px';
-    
-    for (var i = 0; i < wrappers.length; i++) {
-        var w = wrappers[i];
-        w.style.flex = '0 0 auto';
-        if (i >= 6) {
-            w.style.marginTop = '6px';
-        }
-        fila.appendChild(w);
-    }
-    
-    var bonusFila = container.querySelector('.' + area + '-bonus-fila');
-    if (bonusFila) {
-        var bonusItems = bonusFila.querySelectorAll('.' + area + '-bonus-item');
-        if (bonusItems.length > 0) {
-            bonusFila.innerHTML = '';
-            bonusFila.style.display = 'flex';
-            bonusFila.style.flexWrap = 'wrap';
-            bonusFila.style.gap = '6px';
-            bonusFila.style.justifyContent = 'center';
-            bonusFila.style.width = '100%';
-            bonusFila.style.maxWidth = '650px';
-            
-            for (var j = 0; j < bonusItems.length; j++) {
-                var item = bonusItems[j];
-                item.style.flex = '0 0 auto';
-                if (j >= 6) {
-                    item.style.marginTop = '6px';
-                }
-                bonusFila.appendChild(item);
-            }
-        }
-    }
-}
-
-function actualizarVisualesZoom() {
-    var zoomContent = document.getElementById('zoomAreaContent');
-    if (!zoomContent) return;
-    
-    var celdas = zoomContent.querySelectorAll('.cell');
-    for (var i = 0; i < celdas.length; i++) {
-        var cell = celdas[i];
-        var area = cell.dataset.area;
-        var fila = cell.dataset.fila;
-        var col = cell.dataset.col;
-        var index = cell.dataset.index;
-        
-        if (!area) continue;
-        
-        var id = '';
-        
-        if (area === 'amarilla' && fila !== undefined && col !== undefined) {
-            id = 'amarilla-' + fila + '-' + col;
-        } else if (area === 'azul' && index !== undefined) {
-            id = 'azul-tabla-' + index;
-        } else if (area === 'verde' && index !== undefined) {
-            id = 'verde-tabla-' + index;
-        } else if (area === 'naranja' && index !== undefined) {
-            id = 'naranja-' + index;
-        } else if (area === 'morado' && index !== undefined) {
-            id = 'morado-' + index;
-        }
-        
-        var estaMarcada = id ? historialMovimientos.includes(id) : false;
-        cell.classList.toggle('marcada', estaMarcada);
-    }
-}
-
-function propagarClickZoom(cell) {
-    if (cell.classList.contains('marcada') || cell.classList.contains('pre-marcada')) {
-        return false;
-    }
-    
-    var area = cell.dataset.area;
-    var fila = cell.dataset.fila;
-    var col = cell.dataset.col;
-    var index = cell.dataset.index;
-    
-    if (!area) return false;
-    
-    var resultado = false;
-    
-    try {
-        if (area === 'amarilla' && fila !== undefined && col !== undefined) {
-            if (typeof manejarClickAmarilla === 'function') {
-                manejarClickAmarilla(parseInt(fila), parseInt(col));
-                resultado = true;
-            }
-        } else if (area === 'azul' && index !== undefined) {
-            if (typeof manejarClickAzul === 'function') {
-                manejarClickAzul(parseInt(index));
-                resultado = true;
-            }
-        } else if (area === 'verde' && index !== undefined) {
-            if (typeof manejarClickVerde === 'function') {
-                manejarClickVerde(parseInt(index));
-                resultado = true;
-            }
-        } else if (area === 'naranja' && index !== undefined) {
-            if (typeof manejarClickNaranja === 'function') {
-                manejarClickNaranja(parseInt(index));
-                resultado = true;
-            }
-        } else if (area === 'morado' && index !== undefined) {
-            if (typeof manejarClickMorado === 'function') {
-                manejarClickMorado(parseInt(index));
-                resultado = true;
-            }
-        }
-    } catch(e) {
-        console.warn('Error al propagar click:', e);
-        return false;
-    }
-    
-    if (resultado) {
-        if (typeof actualizarVisualesZoom === 'function') actualizarVisualesZoom();
-        if (typeof actualizarVisuales === 'function') actualizarVisuales();
-        if (typeof PUNTAJES !== 'undefined' && PUNTAJES) PUNTAJES.calcularTotal();
-        if (typeof renderizarLeaderboard === 'function') renderizarLeaderboard();
-    }
-    
-    return resultado;
-}
 
 function mostrarFeedbackError(cell) {
     if (!cell) return;
@@ -410,7 +204,7 @@ function unirseSala() {
     const codigo = params.sala || '';
     
     if (!codigo || codigo.length < 4) {
-        alert('Código de sala inválido. Asegúrate de tener un código de 4 caracteres.');
+        alert('Codigo de sala invalido. Asegurate de tener un codigo de 4 caracteres.');
         return;
     }
     
@@ -452,31 +246,24 @@ function unirseSala() {
 
 window.calcularPuntajes = calcularPuntajes;
 window.actualizarVisuales = actualizarVisuales;
-window.actualizarVisualesZoom = actualizarVisualesZoom;
 window.reiniciarTablero = reiniciarTablero;
 window.mostrarModalReinicio = mostrarModalReinicio;
 window.cerrarModal = cerrarModal;
 window.confirmarReinicio = confirmarReinicio;
 window.unirseSala = unirseSala;
-window.abrirZoomArea = abrirZoomArea;
-window.cerrarZoomArea = cerrarZoomArea;
-window.propagarClickZoom = propagarClickZoom;
-window.reorganizarEnDosFilas = reorganizarEnDosFilas;
 window.mostrarFeedbackError = mostrarFeedbackError;
 
-// Exponer variables
 window.historialMovimientos = historialMovimientos;
 window.puntajeTotal = puntajeTotal;
 window.puntosBonificacion = puntosBonificacion;
 window.puntajesAreas = puntajesAreas;
-window.enModoZoom = enModoZoom;
 
 // ============================================================
-// INICIALIZACIÓN
+// INICIALIZACION
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Inicializando CleverDados...');
+    console.log('Inicializando CleverDados...');
     
     mostrarDatosLobby();
     
@@ -487,7 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof inicializarAreaNaranja === 'function') inicializarAreaNaranja();
     if (typeof inicializarAreaMorado === 'function') inicializarAreaMorado();
     
-    // Event listener para propagar clicks desde el zoom
     document.addEventListener('click', function(e) {
         var cell = e.target.closest('.cell');
         if (!cell) return;
@@ -499,24 +285,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             e.stopPropagation();
             e.preventDefault();
-            propagarClickZoom(cell);
+            if (typeof propagarClickZoom === 'function') {
+                propagarClickZoom(cell);
+            }
         }
     });
     
-    // Cerrar zoom con ESC
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            cerrarZoomArea();
+            if (typeof cerrarZoomArea === 'function') cerrarZoomArea();
             if (typeof cerrarZoom === 'function') cerrarZoom();
         }
     });
     
-    // Cerrar zoom al hacer clic fuera
     var zoomModal = document.getElementById('zoomAreaModal');
     if (zoomModal) {
         zoomModal.addEventListener('click', function(e) {
             if (e.target === this) {
-                cerrarZoomArea();
+                if (typeof cerrarZoomArea === 'function') cerrarZoomArea();
             }
         });
     }
@@ -529,5 +315,5 @@ document.addEventListener('DOMContentLoaded', function() {
         renderizarLeaderboard();
     }
     
-    console.log('🧠 CleverDados inicializado correctamente');
+    console.log('CleverDados inicializado correctamente');
 });
