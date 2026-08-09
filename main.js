@@ -5,7 +5,6 @@
     let juegos = [];
     let isDropdownOpen = false;
     
-    // Inicializacion
     function init() {
         console.log('Inicializando Github Juegos...');
         
@@ -25,7 +24,7 @@
         
         setupEvents();
         
-        setTimeout(() => {
+        setTimeout(function() {
             UI.toggleDropdown(true);
             isDropdownOpen = true;
         }, 300);
@@ -117,7 +116,6 @@
         }
     }
     
-    // Funciones globales - TIENEN ACCESO A LA VARIABLE juegos
     window.openGame = function(gameId) {
         const juego = juegos.find(function(j) {
             return j.id === gameId;

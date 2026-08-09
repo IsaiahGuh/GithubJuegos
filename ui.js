@@ -26,13 +26,14 @@ const UI = {
             return;
         }
         
-        container.innerHTML = juegos.map(juego => this.getGameCardHTML(juego)).join('');
+        container.innerHTML = juegos.map(function(juego) {
+            return UI.getGameCardHTML(juego);
+        }).join('');
         Animations.enter(container.querySelectorAll('.project-item'));
     },
     
     getGameCardHTML(juego) {
         const color = juego.color || '#666';
-        const badge = juego.badge ? `<span class="project-badge">${juego.badge}</span>` : '';
         const rutaBase = juego.ruta.substring(0, juego.ruta.lastIndexOf('/') + 1);
         const faviconPath = rutaBase + 'favicon.ico';
         
@@ -50,20 +51,17 @@ const UI = {
                         ${juego.nombre.charAt(0)}
                     </div>
                 </div>
-                <div class="project-name">
-                    <a href="#" onclick="event.preventDefault(); window.openGame('${juego.id}')">${juego.nombre}</a>
-                    ${badge}
-                </div>
+                <div class="project-name">${juego.nombre}</div>
             </div>
         `;
     },
     
     getEmptyStateHTML() {
         return `
-            <div class="no-results" style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #E3B5A4;">
-                <p style="font-size: 1.2rem;">No hay juegos disponibles</p>
+            <div class="no-results">
+                <p>No hay juegos disponibles</p>
                 <p style="font-size: 0.9rem; margin-top: 0.5rem; color: #888;">
-                    Anade juegos en <strong>APP_CONFIG.JUEGOS</strong>
+                    Anade juegos en APP_CONFIG.JUEGOS
                 </p>
             </div>
         `;
@@ -71,19 +69,9 @@ const UI = {
     
     renderFilterTopics(juegos) {
         const container = this.elements.filterTopicsContainer;
-        FilterSystem.extractTopics(juegos);
         const topics = FilterSystem.getTopicsArray();
         
-        if (topics.length === 0) {
-            container.innerHTML = `
-                <p style="color: #E3B5A4; text-align: center; padding: 1rem; width: 100%;">
-                    No hay temas disponibles
-                </p>
-            `;
-            return;
-        }
-        
-        container.innerHTML = topics.map(topic => {
+        container.innerHTML = topics.map(function(topic) {
             const count = FilterHelpers.getTopicCount(juegos, topic);
             const active = FilterSystem.isActive(topic) ? 'active' : '';
             return `
@@ -100,7 +88,7 @@ const UI = {
     updateSyncIndicator(playerName, roomCode) {
         const indicator = this.elements.syncIndicator;
         if (playerName && roomCode) {
-            indicator.textContent = `${playerName} | ${roomCode}`;
+            indicator.textContent = playerName + ' | ' + roomCode;
             indicator.classList.add('active');
         } else {
             indicator.textContent = '';
@@ -108,14 +96,15 @@ const UI = {
         }
     },
     
-    showLobbyStatus(message, type = 'info') {
+    showLobbyStatus(message, type) {
+        type = type || 'info';
         const status = this.elements.lobbyStatus;
         status.style.display = 'block';
         status.textContent = message;
         status.className = 'lobby-status ' + type;
         
         clearTimeout(status._timeout);
-        status._timeout = setTimeout(() => {
+        status._timeout = setTimeout(function() {
             status.style.display = 'none';
         }, 4000);
     },
@@ -136,10 +125,6 @@ const UI = {
         } else {
             Animations.closeDropdown(dropdown);
         }
-    },
-    
-    isDropdownOpen() {
-        return this.elements.filterDropdown.classList.contains('show');
     },
     
     openQRModal() {

@@ -1,27 +1,17 @@
 // Sistema de filtrado de juegos
 const FilterSystem = {
+    TEMAS_FIJOS: ['mqtt', 'local', 'dados', 'cartas'],
     currentFilter: null,
-    allTopics: new Set(),
-    
-    extractTopics(juegos) {
-        this.allTopics = new Set();
-        juegos.forEach(juego => {
-            if (juego.topics) {
-                juego.topics.forEach(topic => this.allTopics.add(topic));
-            }
-        });
-        return this.allTopics;
-    },
     
     getTopicsArray() {
-        return Array.from(this.allTopics).sort();
+        return this.TEMAS_FIJOS;
     },
     
     filterGames(juegos, topic) {
         if (!topic) return juegos;
-        return juegos.filter(juego => 
-            juego.topics && juego.topics.includes(topic)
-        );
+        return juegos.filter(function(juego) {
+            return juego.topics && juego.topics.includes(topic);
+        });
     },
     
     setFilter(topic) {
@@ -46,12 +36,12 @@ const FilterSystem = {
     }
 };
 
-// Funciones de ayuda para filtros
+// Funciones de ayuda
 const FilterHelpers = {
     getTopicCount(juegos, topic) {
-        return juegos.filter(juego => 
-            juego.topics && juego.topics.includes(topic)
-        ).length;
+        return juegos.filter(function(juego) {
+            return juego.topics && juego.topics.includes(topic);
+        }).length;
     },
     
     capitalize(str) {

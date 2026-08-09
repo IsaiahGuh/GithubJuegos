@@ -10,25 +10,6 @@
     <link rel="apple-touch-icon" href="/favicon.ico">
     
     <link rel="stylesheet" href="style.css">
-    
-    <script>
-        // Configuracion de juegos
-        const APP_CONFIG = {
-            TITLE: 'Github Juegos',
-            SUBTITLE: 'Mis juegos locales',
-            DEFAULT_ROOM_CODE: 'GRIL',
-            JUEGOS: [
-                {
-                    id: 'CleverDados',
-                    nombre: 'CleverDados',
-                    ruta: './CleverDados/index.html',
-                    color: '#D44D5C',
-                    topics: ['multijugador', 'dados', 'estrategia'],
-                    badge: 'Online'
-                }
-            ]
-        };
-    </script>
 </head>
 <body>
     <div class="warehouse">
@@ -81,8 +62,8 @@
         </div>
     </div>
 
-    <!-- Scripts modulares -->
     <script src="animations.js"></script>
+    <script src="config-data.js"></script>
     <script src="config.js"></script>
     <script src="filtros.js"></script>
     <script src="ui.js"></script>

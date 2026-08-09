@@ -1,6 +1,3 @@
-/* ============================================================
-   ESTILOS BASE
-   ============================================================ */
 * {
     margin: 0;
     padding: 0;
@@ -8,7 +5,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #160029;
     color: #F5E9E2;
     min-height: 100vh;
@@ -20,9 +17,6 @@ body {
     padding: 2rem;
 }
 
-/* ============================================================
-   HEADER
-   ============================================================ */
 header {
     text-align: center;
     margin-bottom: 3rem;
@@ -36,8 +30,6 @@ h1 {
     font-weight: 900;
     letter-spacing: 4px;
     text-transform: uppercase;
-    color: #F5E9E2;
-    margin-bottom: 0.5rem;
     text-shadow: 0 2px 20px rgba(212, 77, 92, 0.3);
 }
 
@@ -46,14 +38,11 @@ h1::after {
     display: block;
     width: 80px;
     height: 3px;
-    margin: 0.5rem auto 0;
+    margin: 0.5rem auto;
     background: linear-gradient(90deg, #D44D5C, #773344);
     border-radius: 2px;
 }
 
-/* ============================================================
-   SYNC INDICATOR
-   ============================================================ */
 .sync-indicator {
     display: none;
     font-size: 0.75rem;
@@ -64,22 +53,12 @@ h1::after {
     border-radius: 20px;
     border: 1px solid rgba(76, 175, 80, 0.15);
     margin-top: 6px;
-    letter-spacing: 0.5px;
 }
 
 .sync-indicator.active {
     display: inline-block;
-    animation: pulseIndicator 2s ease-in-out infinite;
 }
 
-@keyframes pulseIndicator {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
-/* ============================================================
-   SHELVES - GRILLA DE JUEGOS
-   ============================================================ */
 .shelves {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -92,13 +71,13 @@ h1::after {
     border-radius: 10px;
     padding: 1rem 0.75rem;
     text-align: center;
-    transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 150px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .project-item:hover {
@@ -106,22 +85,6 @@ h1::after {
     box-shadow: 0 8px 30px rgba(212, 77, 92, 0.25);
 }
 
-.project-badge {
-    display: inline-block;
-    font-size: 0.55rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 10px;
-    background: rgba(212, 77, 92, 0.25);
-    color: #D44D5C;
-    margin-top: 4px;
-    border: 1px solid rgba(212, 77, 92, 0.15);
-    letter-spacing: 0.3px;
-}
-
-/* ============================================================
-   FAVICON
-   ============================================================ */
 .favicon-wrapper {
     width: 80px;
     height: 80px;
@@ -132,19 +95,17 @@ h1::after {
     background: rgba(245, 233, 226, 0.1);
     border-radius: 14px;
     padding: 10px;
-    transition: all 0.3s ease;
+    transition: background 0.3s ease;
 }
 
 .project-item:hover .favicon-wrapper {
     background: rgba(245, 233, 226, 0.2);
-    box-shadow: 0 0 25px rgba(245, 233, 226, 0.1);
 }
 
-.favicon-img {
+.favicon-wrapper img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    border-radius: 6px;
 }
 
 .favicon-placeholder {
@@ -153,51 +114,32 @@ h1::after {
     display: none;
     align-items: center;
     justify-content: center;
-    border-radius: 6px;
-    font-weight: bold;
     font-size: 2rem;
+    font-weight: bold;
     color: #773344;
 }
 
 .project-name {
     font-size: 0.85rem;
     font-weight: 500;
-    color: #F5E9E2;
-    text-align: center;
-    line-height: 1.2;
-    max-width: 100%;
-    word-break: break-word;
 }
 
 .project-name a {
     color: #F5E9E2;
     text-decoration: none;
-    transition: color 0.3s ease;
 }
 
 .project-item:hover .project-name a {
     color: #E3B5A4;
 }
 
-/* ============================================================
-   ESTADOS VACIOS
-   ============================================================ */
 .no-results {
     grid-column: 1 / -1;
     text-align: center;
     padding: 3rem;
     color: #E3B5A4;
-    animation: fadeInUp 0.5s ease forwards;
 }
 
-@keyframes fadeInUp {
-    0% { opacity: 0; transform: translateY(20px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
-/* ============================================================
-   FOOTER
-   ============================================================ */
 footer {
     text-align: center;
     margin-top: 4rem;
@@ -205,7 +147,6 @@ footer {
     border-top: 1px solid #773344;
     color: #E3B5A4;
     font-size: 0.8rem;
-    letter-spacing: 1px;
 }
 
 .qr-button {
@@ -219,19 +160,14 @@ footer {
     cursor: pointer;
     transition: all 0.3s ease;
     letter-spacing: 2px;
-    font-weight: 500;
 }
 
 .qr-button:hover {
     background: #D44D5C;
     color: #F5E9E2;
     border-color: #D44D5C;
-    box-shadow: 0 0 20px rgba(212, 77, 92, 0.3);
 }
 
-/* ============================================================
-   QR MODAL
-   ============================================================ */
 .qr-modal {
     display: none;
     position: fixed;
@@ -240,8 +176,7 @@ footer {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(22, 0, 41, 0.92);
-    animation: fadeIn 0.3s ease;
+    background: rgba(22, 0, 41, 0.92);
 }
 
 .qr-modal.show {
@@ -257,29 +192,16 @@ footer {
     border: 1px solid #E3B5A4;
     max-width: 400px;
     width: 90%;
-    box-shadow: 0 0 60px rgba(212, 77, 92, 0.2);
-    animation: scaleIn 0.3s ease;
 }
 
 .qr-image {
     width: 100%;
     height: auto;
     display: block;
-    border-radius: 8px;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
 }
 
 /* ============================================================
-   FILTER DROPDOWN - LOBBY
+   FILTER DROPDOWN CON LOBBY
    ============================================================ */
 .filter-dropdown {
     display: none;
@@ -312,6 +234,7 @@ footer {
 .filter-dropdown-content {
     background: rgba(119, 51, 68, 0.30);
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 1.5rem 2rem;
     border-radius: 12px;
     border: 1px solid rgba(227, 181, 164, 0.15);
@@ -351,7 +274,6 @@ footer {
     color: #a09888;
     margin-bottom: 4px;
     font-weight: 500;
-    letter-spacing: 0.3px;
 }
 
 .lobby-field input {
@@ -423,7 +345,6 @@ footer {
     border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 500;
-    animation: fadeInUp 0.3s ease;
 }
 
 .lobby-status.success {
@@ -495,7 +416,6 @@ footer {
     border-radius: 10px;
     font-size: 0.65rem;
     font-weight: 600;
-    color: rgba(227, 181, 164, 0.8);
 }
 
 .filter-topic-btn.active .topic-count {
@@ -525,124 +445,34 @@ footer {
     100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ============================================================
-   SCROLLBAR
-   ============================================================ */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #160029;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #773344;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #D44D5C;
-}
-
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 768px) {
-    .warehouse {
-        padding: 1rem;
-    }
+    .warehouse { padding: 1rem; }
+    h1 { font-size: 2rem; }
+    h1::after { width: 60px; }
+    .shelves { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
+    .project-item { min-height: 130px; padding: 0.75rem 0.5rem; }
+    .favicon-wrapper { width: 64px; height: 64px; padding: 8px; }
+    .favicon-placeholder { font-size: 1.5rem; }
     
-    h1 {
-        font-size: 2rem;
-    }
+    .filter-dropdown { padding: 0 1rem; }
+    .filter-dropdown-content { padding: 1rem 1.2rem; }
     
-    h1::after {
-        width: 60px;
-    }
+    .lobby-fields { flex-direction: column; gap: 8px; }
+    .lobby-field { min-width: 100%; }
+    .lobby-actions { flex-direction: column; }
+    .lobby-btn { width: 100%; }
     
-    .shelves {
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 1rem;
-    }
-    
-    .project-item {
-        min-height: 130px;
-        padding: 0.75rem 0.5rem;
-    }
-    
-    .favicon-wrapper {
-        width: 64px;
-        height: 64px;
-        padding: 8px;
-    }
-    
-    .favicon-placeholder {
-        font-size: 1.5rem;
-    }
-
-    .filter-dropdown {
-        padding: 0 1rem;
-    }
-    
-    .filter-dropdown-content {
-        padding: 1rem 1.2rem;
-    }
-    
-    .lobby-fields {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .lobby-field {
-        min-width: 100%;
-    }
-    
-    .lobby-actions {
-        flex-direction: column;
-    }
-    
-    .lobby-btn {
-        width: 100%;
-        justify-content: center;
-    }
+    .filter-topic-btn { font-size: 0.7rem; padding: 0.35rem 0.7rem; }
 }
 
 @media (max-width: 480px) {
-    .shelves {
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        gap: 0.75rem;
-    }
+    .shelves { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.75rem; }
+    .project-item { min-height: 110px; padding: 0.5rem 0.35rem; }
+    .favicon-wrapper { width: 52px; height: 52px; padding: 6px; }
+    .favicon-placeholder { font-size: 1.2rem; }
+    .project-name { font-size: 0.75rem; }
     
-    .project-item {
-        min-height: 110px;
-        padding: 0.5rem 0.35rem;
-    }
-    
-    .favicon-wrapper {
-        width: 52px;
-        height: 52px;
-        padding: 6px;
-    }
-    
-    .favicon-placeholder {
-        font-size: 1.2rem;
-    }
-    
-    .project-name {
-        font-size: 0.75rem;
-    }
-
-    .filter-dropdown {
-        padding: 0 0.5rem;
-    }
-    
-    .filter-dropdown-content {
-        padding: 0.8rem 1rem;
-    }
-    
-    .filter-topic-btn {
-        font-size: 0.65rem;
-        padding: 0.3rem 0.6rem;
-    }
+    .filter-dropdown { padding: 0 0.5rem; }
+    .filter-dropdown-content { padding: 0.8rem 1rem; }
+    .filter-topic-btn { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
 }
