@@ -23,6 +23,71 @@ function guardarAccion(tipo, id, area, datosExtra = {}) {
 }
 
 // ============================================================
+// RECONSTRUIR PILA DE MOVIMIENTOS DESDE EL HISTORIAL
+// (necesario tras restaurar historialMovimientos "de golpe" -por
+//  reclamo de identidad o reconexión- ya que pilaMovimientos solo
+//  se llena normalmente a través de guardarAccion() en cada click)
+// ============================================================
+
+function inferirMovimientoDesdeId(id) {
+    if (id.startsWith('amarilla-')) {
+        const partes = id.split('-');
+        return { tipo: 'marcar', area: 'amarilla', datos: { fila: parseInt(partes[1]), col: parseInt(partes[2]) } };
+    }
+    if (id.startsWith('azul-tabla-')) {
+        return { tipo: 'marcar', area: 'azul', datos: {} };
+    }
+    if (id.startsWith('verde-tabla-')) {
+        return { tipo: 'marcar', area: 'verde', datos: {} };
+    }
+    if (id.startsWith('naranja-')) {
+        // valorAnterior es null porque una celda solo se marca una vez
+        // (no hay flujo normal de re-marcar tras desmarcar salvo deshacer)
+        return { tipo: 'numero', area: 'naranja', datos: { valorAnterior: null } };
+    }
+    if (id.startsWith('morado-')) {
+        return { tipo: 'numero', area: 'morado', datos: { valorAnterior: null } };
+    }
+    if (id.startsWith('gris-turno-')) {
+        const partes = id.split('-');
+        const idx = parseInt(partes[2]);
+        return { tipo: 'turno', area: 'gris', datos: { turno: idx + 1, index: idx } };
+    }
+    if (id.startsWith('gris-')) {
+        const partes = id.split('-');
+        return { tipo: 'habilidad', area: 'gris', datos: { habilidad: partes[1], index: parseInt(partes[2]) } };
+    }
+    return null;
+}
+
+function reconstruirPilaMovimientos() {
+    pilaMovimientos = [];
+
+    if (typeof historialMovimientos === 'undefined' || !historialMovimientos) {
+        return;
+    }
+
+    historialMovimientos.forEach(id => {
+        const info = inferirMovimientoDesdeId(id);
+        if (!info) {
+            console.warn(`⚠️ No se pudo inferir el tipo de movimiento para: ${id}`);
+            return;
+        }
+        pilaMovimientos.push({
+            tipo: info.tipo,
+            id: id,
+            area: info.area,
+            datos: info.datos || {},
+            timestamp: Date.now()
+        });
+    });
+
+    console.log(`↩️ Pila de movimientos reconstruida: ${pilaMovimientos.length} movimiento(s)`);
+}
+
+window.reconstruirPilaMovimientos = reconstruirPilaMovimientos;
+
+// ============================================================
 // ACTUALIZAR ÚLTIMA ACCIÓN (para lobos)
 // ============================================================
 
@@ -258,6 +323,12 @@ function reconstruirTodoDesdeHistorial() {
 
     if (typeof window.historialMovimientos === 'undefined' || !window.historialMovimientos) {
         window.historialMovimientos = [];
+    }
+
+    // 0. Reconstruir la pila de deshacer a partir del historial, para
+    //    que "deshacer" vuelva a funcionar sobre el último movimiento
+    if (typeof window.reconstruirPilaMovimientos === 'function') {
+        window.reconstruirPilaMovimientos();
     }
 
     // 1. Recalcular bonificaciones/filas/columnas completadas de cada área
