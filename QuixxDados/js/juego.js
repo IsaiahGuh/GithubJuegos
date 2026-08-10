@@ -29,36 +29,33 @@ function backToLobby() {
     document.getElementById('lobbyModal').style.display = 'flex';
 }
 
-function getPlayerName() {
-    var name = document.getElementById('playerName').value.trim();
-    return name || 'Jugador ' + Math.floor(Math.random() * 100);
-}
-
-function createRoom() {
-    myName = getPlayerName();
+function entrarSala() {
+    var nombre = localStorage.getItem('quixx_nombre_prefill');
+    var sala = localStorage.getItem('quixx_sala_prefill');
+    
+    if (!nombre) {
+        nombre = 'Jugador_' + Math.floor(Math.random() * 1000);
+    }
+    
+    if (!sala || sala.length !== 4) {
+        alert('No se ha configurado una sala valida. Usa ?sala=XXXX en la URL.');
+        return;
+    }
+    
+    myName = nombre;
     myId = Math.random().toString(36).substr(2, 9);
     moveHistory = [];
     
-    // Usar sala preconfigurada si existe
-    var prefillSala = getPrefilledRoom(); // <-- NUEVO
-    var code;
+    localStorage.removeItem('quixx_nombre_prefill');
+    localStorage.removeItem('quixx_sala_prefill');
     
-    if (prefillSala) {
-        code = prefillSala;
-        console.log('🏠 Usando sala desde URL:', code);
-    } else {
-        code = Math.random().toString(36).substring(2, 6).toUpperCase();
-        console.log('🏠 Nueva sala generada:', code);
-    }
-    
-    connectToRoom(code);
+    connectToRoom(sala.toUpperCase());
 }
 
 function joinRoom() {
     myName = getPlayerName();
     
-    // Usar sala preconfigurada si existe, sino usar input
-    var prefillSala = getPrefilledRoom(); // <-- NUEVO
+    var prefillSala = getPrefilledRoom();
     var code;
     
     if (prefillSala) {

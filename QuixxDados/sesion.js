@@ -96,14 +96,22 @@ function getRegistryEntry(room, name) {
 
 function reconnectToSession() {
     var session = loadSession();
-    if (!session) return;
+    if (!session) {
+        alert('No hay sesion guardada para reconectar.');
+        return;
+    }
 
+    // Cerrar el modal de lobby
+    document.getElementById('lobbyModal').style.display = 'none';
+    
+    // Restaurar datos de sesion
     myId = session.myId;
     myName = session.myName;
     moveHistory = session.moveHistory || [];
     updateVisuals();
     calculateScores();
 
+    // Conectar a la sala
     connectToRoom(session.roomCode, true);
 }
 
@@ -111,4 +119,11 @@ function dismissSession() {
     clearSession();
     var banner = document.getElementById('sessionBanner');
     if (banner) banner.style.display = 'none';
+    
+    var reconnectBtn = document.getElementById('reconnectBtn');
+    if (reconnectBtn) {
+        reconnectBtn.disabled = true;
+        reconnectBtn.style.opacity = '0.5';
+        reconnectBtn.style.cursor = 'not-allowed';
+    }
 }
