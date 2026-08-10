@@ -1,43 +1,21 @@
 // ============================================================
-// MULTIJUGADOR.JS - RECIBIR PARÁMETROS DEL LAUNCHER
+// MULTIJUGADOR.JS - CLEVERDADOS
 // ============================================================
 
-// ===== DETECTAR PARÁMETROS DE URL =====
-const urlParams = new URLSearchParams(window.location.search);
-const nombreDesdeURL = urlParams.get('nombre');
-const salaDesdeURL = urlParams.get('sala');
-
-// ===== GUARDAR EN LOCALSTORAGE =====
-if (nombreDesdeURL) {
-    localStorage.setItem('cleverdados_nombre', nombreDesdeURL);
-}
-
-if (salaDesdeURL && salaDesdeURL.length >= 4) {
-    localStorage.setItem('cleverdados_sala', salaDesdeURL.toUpperCase());
-}
-
-// ===== OBTENER DATOS GUARDADOS =====
-function obtenerNombreGuardado() {
-    return localStorage.getItem('cleverdados_nombre') || '';
-}
-
-function obtenerSalaGuardada() {
-    return localStorage.getItem('cleverdados_sala') || '';
-}
-
-// ===== VARIABLES GLOBALES =====
-let clienteMQTT = null;
-let miId = Math.random().toString(36).substr(2, 9);
-let salaActual = null;
-let datosJugadores = {};
-let miNombre = "";
+var clienteMQTT = null;
+var miId = Math.random().toString(36).substr(2, 9);
+var salaActual = null;
+var datosJugadores = {};
+var miNombre = "";
+var pendingClaim = null;
+var claimResolved = false;
 
 // ============================================================
-// FUNCIONES DE LOBBY (SOLO MULTIJUGADOR)
+// FUNCIONES DE LOBBY
 // ============================================================
 
 function obtenerNombre() {
-    return localStorage.getItem('cleverdados_nombre') || window.miNombre || "Jugador";
+    return localStorage.getItem('cleverdados_nombre_prefill') || window.miNombre || "Jugador";
 }
 
 function volverLobby() {
@@ -46,32 +24,114 @@ function volverLobby() {
 }
 
 // ============================================================
-// CONEXIÓN MQTT
+// CONEXION MQTT
 // ============================================================
 
-function conectarSala(codigo) {
-    mostrarCargando("Conectando con la sala...");
+function conectarSala(codigo, isReconnect) {
+    if (isReconnect === undefined) isReconnect = false;
     
+    // Asegurar que las variables globales estén definidas
+    if (!miNombre) {
+        miNombre = localStorage.getItem('cleverdados_nombre_prefill') || 'Jugador';
+    }
+    if (!miId) {
+        miId = Math.random().toString(36).substr(2, 9);
+    }
+    
+    // Sincronizar con window
+    window.miNombre = miNombre;
+    window.miId = miId;
+    window.currentRoom = codigo;
+    salaActual = codigo;
+    
+    mostrarCargando(isReconnect ? 'Reconectando a la sala...' : 'Conectando con la sala...');
+    claimResolved = isReconnect;
+    pendingClaim = null;
+
     clienteMQTT = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
-    clienteMQTT.on('connect', () => {
+    clienteMQTT.on('connect', function() {
         salaActual = codigo;
-        const topic = `cleverdados_app/room/${codigo}`;
+        window.currentRoom = codigo;
+        var topic = 'cleverdados_app/room/' + codigo;
         clienteMQTT.subscribe(topic);
         
-        actualizarDatosPropios();
+        datosJugadores[miId] = { 
+            nombre: miNombre, 
+            puntaje: 0,
+            movimientos: [],
+            valoresNaranja: null,
+            valoresMorado: null,
+            puntajesPorArea: null
+        };
+        
         unirseExitoso(codigo);
         broadcastPuntaje('join');
     });
 
-    clienteMQTT.on('message', (topic, message) => {
+    clienteMQTT.on('message', function(topic, message) {
         try {
-            const data = JSON.parse(message.toString());
+            var data = JSON.parse(message.toString());
             
+            if (data.action === 'claim_offer') {
+                if (data.targetId === miId && !claimResolved && historialMovimientos.length === 0 && (data.moves || []).length > 0) {
+                    claimResolved = true;
+                    pendingClaim = { 
+                        oldId: data.offeredId, 
+                        name: data.name, 
+                        score: data.score, 
+                        moves: data.moves || [] 
+                    };
+                    if (typeof showClaimModal === 'function') {
+                        showClaimModal(pendingClaim);
+                    }
+                }
+                return;
+            }
+
+            if (data.action === 'remove') {
+                delete datosJugadores[data.id];
+                if (typeof renderizarLeaderboard === 'function') {
+                    renderizarLeaderboard();
+                }
+                return;
+            }
+
+            if (data.action === 'reset_all') {
+                historialMovimientos = [];
+                window.historialMovimientos = historialMovimientos;
+                if (typeof actualizarVisuales === 'function') {
+                    actualizarVisuales();
+                }
+                if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
+                    PUNTAJES.calcularTotal();
+                }
+                if (typeof renderizarLeaderboard === 'function') {
+                    renderizarLeaderboard();
+                }
+                return;
+            }
+
+            if (data.id === miId) return;
+
+            if (!claimResolved && data.nombre === miNombre && historialMovimientos.length === 0 && (data.moves || []).length > 0) {
+                claimResolved = true;
+                pendingClaim = { 
+                    oldId: data.id, 
+                    name: data.nombre, 
+                    score: data.puntaje || 0, 
+                    moves: data.moves || [] 
+                };
+                if (typeof showClaimModal === 'function') {
+                    showClaimModal(pendingClaim);
+                }
+                return;
+            }
+
             datosJugadores[data.id] = { 
                 nombre: data.nombre, 
-                puntaje: data.puntaje,
-                movimientos: data.movimientos || [],
+                puntaje: data.puntaje || 0,
+                movimientos: data.moves || [],
                 valoresNaranja: data.valoresNaranja || null,
                 valoresMorado: data.valoresMorado || null,
                 puntajesPorArea: data.puntajesPorArea || null
@@ -81,17 +141,26 @@ function conectarSala(codigo) {
                 renderizarLeaderboard();
             }
 
-            if (data.accion === 'join') {
-                broadcastPuntaje('sync');
+            if (data.action === 'join') {
+                var cachedMatch = null;
+                for (var id in datosJugadores) {
+                    if (id !== data.id && datosJugadores[id].nombre === data.nombre && (datosJugadores[id].movimientos || []).length > 0) {
+                        cachedMatch = id;
+                        break;
+                    }
+                }
+                if (cachedMatch) {
+                    broadcastClaimOffer(data.id, cachedMatch);
+                }
             }
-        } catch(e) {
-            console.error("Mensaje inválido", e);
+        } catch(e) { 
+            console.error('Mensaje invalido', e); 
         }
     });
 
-    clienteMQTT.on('error', (err) => {
+    clienteMQTT.on('error', function(err) {
         ocultarCargando();
-        alert("Error de red. Revisa tu internet.");
+        alert('Error de red. Revisa tu internet.');
     });
 }
 
@@ -100,29 +169,40 @@ function conectarSala(codigo) {
 // ============================================================
 
 function actualizarDatosPropios() {
-    let puntajesPorArea = null;
+    var puntajesPorArea = null;
     if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
         puntajesPorArea = PUNTAJES.obtenerPuntajesPorArea();
     } else {
+        var total = 0;
+        var areas = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
+        for (var i = 0; i < areas.length; i++) {
+            var area = areas[i];
+            total += puntajesAreas[area] || 0;
+        }
+        total += puntosBonificacion || 0;
+        if (typeof lobos !== 'undefined' && lobos) {
+            total += lobos.totalPuntos || 0;
+        }
+        
         puntajesPorArea = {
-            gris: typeof puntajesAreas !== 'undefined' ? puntajesAreas.gris || 0 : 0,
-            amarilla: typeof puntajesAreas !== 'undefined' ? puntajesAreas.amarilla || 0 : 0,
-            azul: typeof puntajesAreas !== 'undefined' ? puntajesAreas.azul || 0 : 0,
-            verde: typeof puntajesAreas !== 'undefined' ? puntajesAreas.verde || 0 : 0,
-            naranja: typeof puntajesAreas !== 'undefined' ? puntajesAreas.naranja || 0 : 0,
-            morado: typeof puntajesAreas !== 'undefined' ? puntajesAreas.morado || 0 : 0,
+            gris: puntajesAreas.gris || 0,
+            amarilla: puntajesAreas.amarilla || 0,
+            azul: puntajesAreas.azul || 0,
+            verde: puntajesAreas.verde || 0,
+            naranja: puntajesAreas.naranja || 0,
+            morado: puntajesAreas.morado || 0,
             bonificacion: puntosBonificacion || 0,
             lobos: (typeof lobos !== 'undefined' && lobos) ? lobos.totalPuntos || 0 : 0,
-            total: puntajeTotal || 0
+            total: total
         };
     }
     
     datosJugadores[miId] = { 
         nombre: miNombre, 
         puntaje: puntajesPorArea.total || 0,
-        movimientos: [...historialMovimientos],
-        valoresNaranja: typeof valoresNaranja !== 'undefined' ? [...valoresNaranja] : null,
-        valoresMorado: typeof valoresMorado !== 'undefined' ? [...valoresMorado] : null,
+        movimientos: historialMovimientos.slice(),
+        valoresNaranja: typeof valoresNaranja !== 'undefined' ? valoresNaranja.slice() : null,
+        valoresMorado: typeof valoresMorado !== 'undefined' ? valoresMorado.slice() : null,
         puntajesPorArea: puntajesPorArea
     };
 }
@@ -131,21 +211,23 @@ function actualizarDatosPropios() {
 // BROADCAST
 // ============================================================
 
-function broadcastPuntaje(accion = 'sync') {
+function broadcastPuntaje(accion) {
+    if (accion === undefined) accion = 'sync';
     actualizarDatosPropios();
     
-    let puntajesPorArea = null;
-    let miPuntajeTotal = 0;
+    var puntajesPorArea = null;
+    var miPuntajeTotal = 0;
     
     if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
         puntajesPorArea = PUNTAJES.obtenerPuntajesPorArea();
         miPuntajeTotal = puntajesPorArea.total || 0;
     } else {
-        let total = 0;
-        const areas = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
-        areas.forEach(area => {
+        var total = 0;
+        var areas = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
+        for (var i = 0; i < areas.length; i++) {
+            var area = areas[i];
             total += puntajesAreas[area] || 0;
-        });
+        }
         total += puntosBonificacion || 0;
         if (typeof lobos !== 'undefined' && lobos) {
             total += lobos.totalPuntos || 0;
@@ -172,22 +254,22 @@ function broadcastPuntaje(accion = 'sync') {
     datosJugadores[miId] = { 
         nombre: miNombre, 
         puntaje: miPuntajeTotal,
-        movimientos: [...historialMovimientos],
-        valoresNaranja: typeof valoresNaranja !== 'undefined' ? [...valoresNaranja] : null,
-        valoresMorado: typeof valoresMorado !== 'undefined' ? [...valoresMorado] : null,
+        movimientos: historialMovimientos.slice(),
+        valoresNaranja: typeof valoresNaranja !== 'undefined' ? valoresNaranja.slice() : null,
+        valoresMorado: typeof valoresMorado !== 'undefined' ? valoresMorado.slice() : null,
         puntajesPorArea: puntajesPorArea
     };
     
     if (clienteMQTT && salaActual) {
-        const topic = `cleverdados_app/room/${salaActual}`;
-        const payload = JSON.stringify({
+        var topic = 'cleverdados_app/room/' + salaActual;
+        var payload = JSON.stringify({
             accion: accion,
             id: miId,
             nombre: miNombre,
             puntaje: miPuntajeTotal,
-            movimientos: [...historialMovimientos],
-            valoresNaranja: typeof valoresNaranja !== 'undefined' ? [...valoresNaranja] : null,
-            valoresMorado: typeof valoresMorado !== 'undefined' ? [...valoresMorado] : null,
+            moves: historialMovimientos.slice(),
+            valoresNaranja: typeof valoresNaranja !== 'undefined' ? valoresNaranja.slice() : null,
+            valoresMorado: typeof valoresMorado !== 'undefined' ? valoresMorado.slice() : null,
             puntajesPorArea: puntajesPorArea
         });
         clienteMQTT.publish(topic, payload);
@@ -199,23 +281,77 @@ function broadcastPuntaje(accion = 'sync') {
 }
 
 // ============================================================
+// BROADCAST ESPECIALES
+// ============================================================
+
+function broadcastReset() {
+    if (clienteMQTT && salaActual) {
+        var topic = 'cleverdados_app/room/' + salaActual;
+        var payload = JSON.stringify({
+            action: 'reset_all',
+            id: miId,
+            name: miNombre
+        });
+        clienteMQTT.publish(topic, payload);
+    }
+}
+
+function broadcastRemove(idToRemove) {
+    if (clienteMQTT && salaActual) {
+        var topic = 'cleverdados_app/room/' + salaActual;
+        var payload = JSON.stringify({
+            action: 'remove',
+            id: idToRemove
+        });
+        clienteMQTT.publish(topic, payload);
+    }
+}
+
+function broadcastClaimOffer(targetId, offeredId) {
+    if (clienteMQTT && salaActual) {
+        var cached = datosJugadores[offeredId];
+        if (!cached) return;
+        var topic = 'cleverdados_app/room/' + salaActual;
+        var payload = JSON.stringify({
+            action: 'claim_offer',
+            targetId: targetId,
+            offeredId: offeredId,
+            name: cached.nombre,
+            score: cached.puntaje || 0,
+            moves: cached.movimientos || []
+        });
+        clienteMQTT.publish(topic, payload);
+    }
+}
+
+// ============================================================
 // UI DE SALA
 // ============================================================
 
 function unirseExitoso(codigo) {
     ocultarCargando();
+    
+    // Asegurar que ambas variables estén sincronizadas
+    salaActual = codigo;
+    window.currentRoom = codigo;
+    
     document.getElementById('lobbyModal').style.display = 'none';
     document.getElementById('joinModal').style.display = 'none';
     
-    const info = document.getElementById('roomInfoDisplay');
+    var info = document.getElementById('roomInfoDisplay');
     if (info) {
         info.style.display = 'inline-block';
         info.textContent = 'SALA: ' + codigo;
     }
     
-    const leaderboardPanel = document.getElementById('leaderboardPanel');
+    var leaderboardPanel = document.getElementById('leaderboardPanel');
     if (leaderboardPanel) {
         leaderboardPanel.style.display = 'flex';
+    }
+    
+    // Guardar sesion despues de tener todos los datos
+    if (typeof saveSession === 'function') {
+        saveSession();
     }
     
     if (typeof renderizarLeaderboard === 'function') {
@@ -228,29 +364,24 @@ function unirseExitoso(codigo) {
 // ============================================================
 
 function mostrarCargando(texto) {
-    const loadingText = document.getElementById('loadingText');
-    const loadingModal = document.getElementById('loadingModal');
+    var loadingText = document.getElementById('loadingText');
+    var loadingModal = document.getElementById('loadingModal');
     if (loadingText) loadingText.textContent = texto;
     if (loadingModal) loadingModal.style.display = 'flex';
 }
 
 function ocultarCargando() {
-    const loadingModal = document.getElementById('loadingModal');
+    var loadingModal = document.getElementById('loadingModal');
     if (loadingModal) loadingModal.style.display = 'none';
 }
 
 // ============================================================
-// INICIALIZACIÓN AUTOMÁTICA
+// INICIALIZACION AUTOMATICA
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎮 CleverDados - Inicializando...');
-    
-    // Los datos ya vienen de los parámetros URL
-    miNombre = localStorage.getItem('cleverdados_nombre') || window.miNombre || 'Jugador';
-    
-    console.log(`👤 Nombre: ${miNombre}`);
-    console.log(`🏠 Sala: ${localStorage.getItem('cleverdados_sala') || '---'}`);
+    console.log('CleverDados - Inicializando multijugador...');
+    miNombre = localStorage.getItem('cleverdados_nombre_prefill') || window.miNombre || 'Jugador';
 });
 
 // ============================================================
@@ -262,13 +393,16 @@ window.miId = miId;
 window.salaActual = salaActual;
 window.datosJugadores = datosJugadores;
 window.miNombre = miNombre;
+window.pendingClaim = pendingClaim;
+window.claimResolved = claimResolved;
 window.obtenerNombre = obtenerNombre;
-window.obtenerNombreGuardado = obtenerNombreGuardado;
-window.obtenerSalaGuardada = obtenerSalaGuardada;
 window.volverLobby = volverLobby;
 window.conectarSala = conectarSala;
 window.unirseExitoso = unirseExitoso;
 window.mostrarCargando = mostrarCargando;
 window.ocultarCargando = ocultarCargando;
 window.broadcastPuntaje = broadcastPuntaje;
+window.broadcastReset = broadcastReset;
+window.broadcastRemove = broadcastRemove;
+window.broadcastClaimOffer = broadcastClaimOffer;
 window.actualizarDatosPropios = actualizarDatosPropios;

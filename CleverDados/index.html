@@ -18,24 +18,29 @@
     <div id="lobbyModal" class="modal-overlay">
         <div class="modal-box">
             <h2>CleverDados</h2>
-            <p>Ingresa a la partida</p>
-            <div class="lobby-info">
-                <div class="lobby-field">
-                    <label>Tu Nombre:</label>
-                    <span id="displayName" class="lobby-value">---</span>
-                </div>
-                <div class="lobby-field">
-                    <label>Sala:</label>
-                    <span id="displayRoom" class="lobby-value">---</span>
+            <p>Multijugador</p>
+
+            <div id="sessionBanner" class="session-banner" style="display: none;">
+                <p id="sessionBannerText" class="session-banner-text"></p>
+            </div>
+
+            <div id="urlDataDisplay" class="url-data-display" style="display: none; background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--color-azul);">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span>Nombre: <span id="urlPlayerName">---</span></span>
+                    <span>Sala: <span id="urlRoomCode">---</span></span>
                 </div>
             </div>
+
             <div class="modal-buttons">
-                <button class="modal-btn btn-primary" onclick="unirseSala()">Entrar</button>
+                <div class="row-btns">
+                    <button class="modal-btn btn-primary" onclick="entrarSala()">Entrar</button>
+                    <button id="reconnectBtn" class="modal-btn btn-primary" onclick="reconnectToSession()" disabled>Reconectar</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- UNIRSE A SALA (ELIMINADO - YA NO SE USA) -->
+    <!-- UNIRSE A SALA (respaldo - oculto) -->
     <div id="joinModal" class="modal-overlay" style="display: none;">
         <div class="modal-box">
             <h2>Unirse a Sala</h2>
@@ -44,9 +49,11 @@
                 <label>Código de la Sala (4 letras/números):</label>
                 <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform: uppercase;">
             </div>
-            <div class="modal-buttons row-btns">
-                <button class="modal-btn btn-outline" onclick="volverLobby()">Volver</button>
-                <button class="modal-btn btn-secondary" onclick="unirseSala()">Entrar</button>
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-outline" onclick="backToLobby()">Volver</button>
+                    <button class="modal-btn btn-secondary" onclick="joinRoom()">Entrar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -58,14 +65,30 @@
         </div>
     </div>
 
+    <!-- RECLAMO DE NOMBRE (RECONEXION DESDE OTRO DISPOSITIVO) -->
+    <div id="claimModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Jugador existente</h3>
+            <p id="claimText">Ya hay un jugador con este nombre en la sala.</p>
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-outline" onclick="declineClaim()">No, soy otro jugador</button>
+                    <button class="modal-btn btn-primary" onclick="acceptClaim()">Sí, soy yo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- REINICIAR -->
     <div id="confirmModal" class="modal-overlay">
         <div class="modal-box">
-            <h3>¿Reiniciar tablero?</h3>
-            <p>Se borrarán todas tus marcas.</p>
-            <div class="modal-buttons row-btns">
-                <button class="modal-btn btn-outline" onclick="cerrarModal()">Cancelar</button>
-                <button class="modal-btn btn-danger" onclick="confirmarReinicio()">Reiniciar</button>
+            <h3 id="confirmTitle">Reiniciar tablero</h3>
+            <p id="confirmText">Se borrarán todas tus marcas.</p>
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-outline" onclick="cerrarModal()">Cancelar</button>
+                    <button class="modal-btn btn-danger" onclick="confirmarReinicio()">Reiniciar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -133,7 +156,7 @@
                 <h3>Posiciones</h3>
                 <div id="playersList"></div>
                 <div class="controls">
-                    <button class="modal-btn btn-danger" onclick="mostrarModalReinicio()">Reiniciar</button>
+                    <button id="resetBtn" class="modal-btn btn-danger" onclick="mostrarModalReinicio()">Reiniciar Mi Tablero</button>
                 </div>
             </div>
         </div>
@@ -169,10 +192,13 @@
         <!-- 7. ZOOM -->
         <script src="js/zoom.js"></script>
 
-        <!-- 8. MULTIJUGADOR -->
+        <!-- 8. SESION (NUEVO) -->
+        <script src="sesion.js"></script>
+
+        <!-- 9. MULTIJUGADOR -->
         <script src="multijugador.js"></script>
 
-        <!-- 9. MAIN -->
+        <!-- 10. MAIN -->
         <script src="main.js"></script>
 </body>
 </html>

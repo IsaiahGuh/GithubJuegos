@@ -1,8 +1,7 @@
 // ============================================================
-// MAIN - CLEVERDADOS (VERSION SIMPLIFICADA - SIN FALLBACK)
+// MAIN - CLEVERDADOS
 // ============================================================
 
-// Estado global del juego
 var historialMovimientos = [];
 var puntajeTotal = 0;
 var puntosBonificacion = 0;
@@ -16,38 +15,6 @@ var puntajesAreas = {
 };
 
 var AREAS = ['gris', 'amarilla', 'azul', 'verde', 'naranja', 'morado'];
-
-// ============================================================
-// LEER PARAMETROS DE URL
-// ============================================================
-
-function obtenerParametrosURL() {
-    const params = new URLSearchParams(window.location.search);
-    return {
-        nombre: params.get('nombre') || '',
-        sala: params.get('sala') || ''
-    };
-}
-
-// ============================================================
-// MOSTRAR DATOS EN EL MODAL
-// ============================================================
-
-function mostrarDatosLobby() {
-    const params = obtenerParametrosURL();
-    const displayName = document.getElementById('displayName');
-    const displayRoom = document.getElementById('displayRoom');
-    
-    if (displayName) {
-        displayName.textContent = params.nombre || 'Jugador';
-    }
-    if (displayRoom) {
-        displayRoom.textContent = params.sala || '----';
-    }
-    
-    window.miNombre = params.nombre || 'Jugador';
-    window.salaRecibida = params.sala || '';
-}
 
 // ============================================================
 // SISTEMA DE PUNTUACION - USANDO PUNTAJES.JS
@@ -137,6 +104,7 @@ function mostrarFeedbackError(cell) {
 
 function reiniciarTablero() {
     historialMovimientos = [];
+    window.historialMovimientos = [];
     puntosBonificacion = 0;
     puntajesAreas = {
         gris: 0,
@@ -182,6 +150,15 @@ function reiniciarTablero() {
 // ============================================================
 
 function mostrarModalReinicio() {
+    var title = document.getElementById('confirmTitle');
+    var text = document.getElementById('confirmText');
+    if (typeof salaActual !== 'undefined' && salaActual) {
+        title.textContent = 'Reiniciar partida para todos';
+        text.textContent = 'Esto borrara los tableros de TODOS los jugadores en la sala, no solo el tuyo.';
+    } else {
+        title.textContent = 'Reiniciar tablero';
+        text.textContent = 'Se borraran tus marcas actuales.';
+    }
     document.getElementById('confirmModal').style.display = 'flex';
 }
 
@@ -190,54 +167,11 @@ function cerrarModal() {
 }
 
 function confirmarReinicio() {
+    if (typeof salaActual !== 'undefined' && salaActual && typeof broadcastReset === 'function') {
+        broadcastReset();
+    }
     reiniciarTablero();
     cerrarModal();
-}
-
-// ============================================================
-// UNIRSE A SALA (MULTIJUGADOR)
-// ============================================================
-
-function unirseSala() {
-    const params = obtenerParametrosURL();
-    const nombre = params.nombre || 'Jugador';
-    const codigo = params.sala || '';
-    
-    if (!codigo || codigo.length < 4) {
-        alert('Codigo de sala invalido. Asegurate de tener un codigo de 4 caracteres.');
-        return;
-    }
-    
-    document.getElementById('lobbyModal').style.display = 'none';
-    
-    window.miNombre = nombre;
-    window.salaActual = codigo;
-    
-    if (typeof datosJugadores !== 'undefined') {
-        datosJugadores = {};
-        datosJugadores[miId] = {
-            nombre: nombre,
-            puntaje: 0,
-            movimientos: [],
-            valoresNaranja: null,
-            valoresMorado: null,
-            puntajesPorArea: null
-        };
-    }
-    
-    if (typeof conectarSala === 'function') {
-        conectarSala(codigo);
-    }
-    
-    const info = document.getElementById('roomInfoDisplay');
-    if (info) {
-        info.style.display = 'inline-block';
-        info.textContent = 'SALA: ' + codigo;
-    }
-    
-    if (typeof renderizarLeaderboard === 'function') {
-        renderizarLeaderboard();
-    }
 }
 
 // ============================================================
@@ -250,7 +184,6 @@ window.reiniciarTablero = reiniciarTablero;
 window.mostrarModalReinicio = mostrarModalReinicio;
 window.cerrarModal = cerrarModal;
 window.confirmarReinicio = confirmarReinicio;
-window.unirseSala = unirseSala;
 window.mostrarFeedbackError = mostrarFeedbackError;
 
 window.historialMovimientos = historialMovimientos;
@@ -265,7 +198,9 @@ window.puntajesAreas = puntajesAreas;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Inicializando CleverDados...');
     
-    mostrarDatosLobby();
+    if (typeof mostrarDatosLobby === 'function') {
+        mostrarDatosLobby();
+    }
     
     if (typeof inicializarAreaGris === 'function') inicializarAreaGris();
     if (typeof inicializarAreaAmarilla === 'function') inicializarAreaAmarilla();

@@ -25,7 +25,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 body { background: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; }
 
-/* MODALES */
+/* ============================================================
+   MODALES Y LOBBY
+   ============================================================ */
+
 .modal-overlay {
     display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(38,38,38,0.95); z-index: 2000; justify-content: center; align-items: center; padding: 20px;
@@ -36,17 +39,62 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; flex-
 }
 .modal-box h2 { color: #ECE5DB; margin-bottom: 5px; font-size: 1.8rem; }
 .modal-box p { color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem; }
+
+.session-banner {
+    background: #2a2a2a;
+    border: 1px solid var(--color-azul);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+.session-banner-text {
+    color: var(--text-main);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+.url-data-display {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--color-azul);
+}
+
 .modal-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.row-btns { display: flex; gap: 10px; }
+
 .modal-btn {
-    padding: 14px 15px; border: none; border-radius: 8px; font-weight: bold;
-    cursor: pointer; flex: 1; font-size: 1rem; transition: transform 0.1s;
+    padding: 14px 15px; border: none; border-radius: 8px;
+    font-weight: bold; cursor: pointer; flex: 1; font-size: 1rem;
+    transition: transform 0.1s, opacity 0.2s;
 }
 .modal-btn:active { transform: scale(0.97); }
-.btn-primary { background: var(--color-verde); color: #ECE5DB; }
+
+.btn-primary { background: var(--color-azul); color: #262626; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-secondary { background: var(--color-azul); color: #262626; }
 .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
 .btn-danger { background: #8B3A3A; color: #ECE5DB; }
-#confirmModal, #joinModal, #loadingModal { display: none; }
-#loadingModal { z-index: 3000; }
+
+#confirmModal { display: none; }
+#joinModal { display: none; }
+#claimModal { display: none; }
+#loadingModal { display: none; z-index: 3000; }
+
+#claimModal .modal-box h3 {
+    color: var(--text-main);
+    margin-bottom: 10px;
+}
+#claimModal .modal-box p {
+    margin-bottom: 20px;
+}
+
+#reconnectBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 /* LOBBY - DATOS DEL JUGADOR (SOLO LECTURA) */
 .lobby-info {
@@ -79,7 +127,7 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
 .board-container { background: var(--bg-panel); border-radius: 16px; padding: 12px; width: 100%; border: 1px solid var(--border-color); }
 .board { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
-/* ÁREAS */
+/* AREAS */
 .area-clickable { cursor: pointer; position: relative; transition: border-color 0.2s; }
 .area-clickable:hover { border-color: rgba(236,229,219,0.3); }
 .area-gris.area-clickable { cursor: default !important; }
@@ -131,7 +179,7 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
 .puntaje-circulo { background: var(--bg-cell); opacity: 0.5; }
 .puntaje-circulo.puntaje-completado { background: var(--color-verde); border-color: var(--color-verde); color: #ECE5DB; box-shadow: 0 0 12px rgba(38,95,86,0.25); }
 
-/* ÁREA GRIS */
+/* AREA GRIS */
 .gris-section { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; }
 .gris-turnos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; justify-content: center; }
 .gris-etiqueta { font-size: 0.65rem; color: var(--text-muted); min-width: 55px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -170,7 +218,7 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
 .celda-habilidad.usada { opacity: 0.35; filter: grayscale(0.6); }
 .celda-habilidad.usada::after { content: "✓"; position: absolute; font-size: 1rem; font-weight: 900; color: var(--color-verde); }
 
-/* ÁREAS AMARILLA, AZUL, VERDE, NARANJA, MORADO */
+/* AREAS AMARILLA, AZUL, VERDE, NARANJA, MORADO */
 .amarilla-grid, .azul-grid, .verde-grid, .naranja-grid, .morado-grid {
     display: flex; flex-direction: column; gap: var(--cell-gap); width: 100%; align-items: center; justify-content: center;
 }
@@ -237,7 +285,7 @@ h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: u
 .controls { display: flex; justify-content: center; margin-top: 8px; }
 .controls .modal-btn { width: 100%; max-width: 200px; }
 
-/* MODAL NUMÉRICO */
+/* MODAL NUMERICO */
 .modal-numerico-overlay {
     display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(38,38,38,0.92); z-index: 5000; justify-content: center; align-items: center;
