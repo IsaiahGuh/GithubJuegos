@@ -30,6 +30,14 @@ const Config = {
                         color: '#808BC3',
                         topics: ['multijugador', 'dados', 'estrategia'],
                         badge: 'Online'
+                    },
+                    {
+                        id: 'JuegoCassettes',
+                        nombre: 'Cassettes',
+                        ruta: './JuegoCassettes/index.html',
+                        color: '#f5deb2',
+                        topics: ['multijugador', 'cartas', 'desafios'],
+                        badge: 'Online'
                     }
                 ];
             }
