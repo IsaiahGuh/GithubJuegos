@@ -1,8 +1,4 @@
 // ===== CONFIGURACION =====
-var urlParams = new URLSearchParams(window.location.search);
-var isAutoMode = urlParams.get('auto') === '1';
-var AUTO_ROOM_CODE = 'GRIL';
-
 var pointSystem = [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78];
 var rowsConfig = [
     { id: 'red', numbers: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
@@ -15,30 +11,16 @@ var moveHistory = [];
 var myTotalScore = 0;
 
 // ===== FUNCIONES DEL LOBBY =====
-function playSolo() {
-    document.getElementById('lobbyModal').style.display = 'none';
-}
-
 function showJoinModal() {
     document.getElementById('lobbyModal').style.display = 'none';
     document.getElementById('joinModal').style.display = 'flex';
     
-    if (isAutoMode) {
-        var roomInput = document.getElementById('roomCodeInput');
-        if (roomInput) {
-            roomInput.value = AUTO_ROOM_CODE;
-            roomInput.readOnly = true;
-            roomInput.style.opacity = '0.7';
-            roomInput.style.color = '#4CAF50';
-        }
-    } else {
-        var roomInput = document.getElementById('roomCodeInput');
-        if (roomInput) {
-            roomInput.value = '';
-            roomInput.readOnly = false;
-            roomInput.style.opacity = '1';
-            roomInput.style.color = 'white';
-        }
+    var roomInput = document.getElementById('roomCodeInput');
+    if (roomInput) {
+        roomInput.value = '';
+        roomInput.readOnly = false;
+        roomInput.style.opacity = '1';
+        roomInput.style.color = 'white';
     }
 }
 
@@ -62,16 +44,11 @@ function createRoom() {
 
 function joinRoom() {
     myName = getPlayerName();
-    var code;
+    var code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
     
-    if (isAutoMode) {
-        code = AUTO_ROOM_CODE;
-    } else {
-        code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-        if (code.length !== 4) {
-            alert('El codigo debe tener 4 letras/numeros.');
-            return;
-        }
+    if (code.length !== 4) {
+        alert('El codigo debe tener 4 letras/numeros.');
+        return;
     }
 
     var known = getRegistryEntry(code, myName);

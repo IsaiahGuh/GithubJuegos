@@ -1,11 +1,11 @@
 // ===== SISTEMA MULTIJUGADOR MQTT =====
-let mqttClient = null;
-let myId = Math.random().toString(36).substr(2, 9);
-let currentRoom = null;
-let playersData = {};
-let myName = 'Jugador';
-let claimResolved = false;
-let pendingClaim = null;
+var mqttClient = null;
+var myId = Math.random().toString(36).substr(2, 9);
+var currentRoom = null;
+var playersData = {};
+var myName = 'Jugador';
+var claimResolved = false;
+var pendingClaim = null;
 
 function connectToRoom(code, isReconnect) {
     if (isReconnect === undefined) isReconnect = false;

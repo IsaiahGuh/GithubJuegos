@@ -86,17 +86,6 @@ body {
 #joinModal { display: none; }
 #claimModal { display: none; }
 #loadingModal { display: none; z-index: 3000; }
-#gameOverModal { display: none; }
-#logModal { display: none; }
-
-.log-modal-box { max-width: 420px; }
-
-.bottom-log-bar { width: 100%; max-width: 600px; display: flex; justify-content: center; margin-top: 14px; padding-bottom: 10px; }
-.bottom-log-bar .modal-btn { width: 100%; max-width: 320px; }
-
-.standings-list { display: flex; flex-direction: column; gap: 6px; margin: 15px 0; text-align: left; }
-.standing-row { display: flex; justify-content: space-between; background: #2a2a2a; padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; border: 1px solid var(--border-color); color: var(--text-main); }
-.standing-row.is-loser { border-color: var(--color-red); color: var(--color-red); }
 
 .session-banner {
     background: #2a2a2a;
@@ -194,16 +183,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .mini-pbox.marked::after { content: "X"; }
 .mini-pbox.marked { background: var(--bg-box-marked); }
 
-/* --- LOG DE JUGADAS (dentro del modal) --- */
-.log-list { display: flex; flex-direction: column-reverse; gap: 4px; max-height: 320px; overflow-y: auto; margin-bottom: 5px; text-align: left; }
-.log-list:empty::before { content: "Todavia no hay jugadas registradas."; color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 10px; }
-.log-entry { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.8rem; padding: 6px 10px; border-radius: 6px; background: #2a2a2a; border-left: 3px solid var(--border-color); }
-.log-entry.mark { border-left-color: #4CAF50; }
-.log-entry.unmark { border-left-color: var(--color-red); }
-.log-entry .log-player { font-weight: bold; color: var(--text-main); white-space: nowrap; }
-.log-entry .log-detail { color: var(--text-muted); flex: 1; text-align: left; padding-left: 8px; }
-.log-entry .log-time { color: var(--text-muted); font-size: 0.7rem; white-space: nowrap; }
-
 @media (prefers-color-scheme: dark) {
     /* El favicon se adapta automáticamente */
 }
@@ -232,6 +211,4 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     .player-card-header { font-size: 0.8rem; }
     .mini-cell { max-width: 14px; font-size: 7px; }
     .mini-pbox { width: 12px; height: 12px; font-size: 7px; }
-    .bottom-log-bar { margin-top: 6px; padding-bottom: 4px; }
-    .bottom-log-bar .modal-btn { font-size: 0.75rem; padding: 6px; }
 }

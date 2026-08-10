@@ -1,6 +1,6 @@
 // ===== PERSISTENCIA DE SESION (RECONEXION) =====
-const SESSION_KEY = 'quixx_session_v1';
-const REGISTRY_KEY = 'quixx_players_v1';
+var SESSION_KEY = 'quixx_session_v1';
+var REGISTRY_KEY = 'quixx_players_v1';
 
 function saveSession() {
     if (!currentRoom) return;
@@ -19,7 +19,7 @@ function saveSession() {
 
 function loadSession() {
     try {
-        const raw = localStorage.getItem(SESSION_KEY);
+        var raw = localStorage.getItem(SESSION_KEY);
         return raw ? JSON.parse(raw) : null;
     } catch (e) { 
         return null; 
@@ -38,7 +38,7 @@ function registryKey(room, name) {
 
 function loadRegistry() {
     try {
-        const raw = localStorage.getItem(REGISTRY_KEY);
+        var raw = localStorage.getItem(REGISTRY_KEY);
         return raw ? JSON.parse(raw) : {};
     } catch (e) { 
         return {}; 
@@ -47,7 +47,7 @@ function loadRegistry() {
 
 function saveRegistryEntry(room, name, id, moves) {
     try {
-        const registry = loadRegistry();
+        var registry = loadRegistry();
         registry[registryKey(room, name)] = { id: id, moves: moves, updatedAt: Date.now() };
         localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry));
     } catch (e) { 
@@ -56,12 +56,12 @@ function saveRegistryEntry(room, name, id, moves) {
 }
 
 function getRegistryEntry(room, name) {
-    const registry = loadRegistry();
+    var registry = loadRegistry();
     return registry[registryKey(room, name)] || null;
 }
 
 function reconnectToSession() {
-    const session = loadSession();
+    var session = loadSession();
     if (!session) return;
 
     myId = session.myId;
@@ -75,6 +75,6 @@ function reconnectToSession() {
 
 function dismissSession() {
     clearSession();
-    const banner = document.getElementById('sessionBanner');
+    var banner = document.getElementById('sessionBanner');
     if (banner) banner.style.display = 'none';
 }
