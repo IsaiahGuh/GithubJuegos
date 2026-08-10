@@ -2,6 +2,40 @@
 var SESSION_KEY = 'quixx_session_v1';
 var REGISTRY_KEY = 'quixx_players_v1';
 
+// ===== DETECCIÓN DE PARÁMETROS URL =====
+(function detectarYGuardarParamsURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const nombre = urlParams.get('nombre');
+    const sala = urlParams.get('sala');
+    
+    console.log('📥 QuixxDados - Parámetros URL:', { nombre, sala });
+    
+    if (nombre) {
+        localStorage.setItem('quixx_nombre_prefill', nombre);
+    }
+    if (sala && sala.length >= 4) {
+        localStorage.setItem('quixx_sala_prefill', sala.toUpperCase());
+    }
+})();
+
+function getPrefilledName() {
+    const name = localStorage.getItem('quixx_nombre_prefill');
+    if (name) {
+        localStorage.removeItem('quixx_nombre_prefill');
+        return name;
+    }
+    return null;
+}
+
+function getPrefilledRoom() {
+    const room = localStorage.getItem('quixx_sala_prefill');
+    if (room && room.length === 4) {
+        localStorage.removeItem('quixx_sala_prefill');
+        return room;
+    }
+    return null;
+}
+
 function saveSession() {
     if (!currentRoom) return;
     try {

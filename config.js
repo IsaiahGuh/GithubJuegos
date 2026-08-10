@@ -22,6 +22,14 @@ const Config = {
                         color: '#D44D5C',
                         topics: ['multijugador', 'dados', 'estrategia'],
                         badge: 'Online'
+                    },
+                    {
+                        id: 'QuixxDados',
+                        nombre: 'QuixxDados',
+                        ruta: './QuixxDados/index.html',
+                        color: '#808BC3',
+                        topics: ['multijugador', 'dados', 'estrategia'],
+                        badge: 'Online'
                     }
                 ];
             }

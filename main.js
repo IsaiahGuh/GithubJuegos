@@ -127,17 +127,24 @@
         }
         
         let url = juego.ruta;
+        const nombre = PlayerData.getNombre() || 'Jugador';
+        const codigo = PlayerData.getCodigoSala() || Config.getDefaultRoomCode();
         
+        // Para CleverDados
         if (gameId === 'CleverDados') {
-            const nombre = PlayerData.getNombre() || 'Jugador';
-            const codigo = PlayerData.getCodigoSala() || Config.getDefaultRoomCode();
+            const separator = url.includes('?') ? '&' : '?';
+            url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
+        }
+        
+        // Para QuixxDados
+        if (gameId === 'QuixxDados') {
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
         
         window.open(url, '_blank');
     };
-    
+
     window.filterGamesByTopic = function(topic) {
         const filtered = FilterSystem.setFilter(topic);
         const juegosFiltrados = FilterSystem.filterGames(juegos, filtered);

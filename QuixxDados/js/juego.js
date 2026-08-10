@@ -38,16 +38,38 @@ function createRoom() {
     myName = getPlayerName();
     myId = Math.random().toString(36).substr(2, 9);
     moveHistory = [];
-    var code = Math.random().toString(36).substring(2, 6).toUpperCase();
+    
+    // Usar sala preconfigurada si existe
+    var prefillSala = getPrefilledRoom(); // <-- NUEVO
+    var code;
+    
+    if (prefillSala) {
+        code = prefillSala;
+        console.log('🏠 Usando sala desde URL:', code);
+    } else {
+        code = Math.random().toString(36).substring(2, 6).toUpperCase();
+        console.log('🏠 Nueva sala generada:', code);
+    }
+    
     connectToRoom(code);
 }
 
 function joinRoom() {
     myName = getPlayerName();
-    var code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+    
+    // Usar sala preconfigurada si existe, sino usar input
+    var prefillSala = getPrefilledRoom(); // <-- NUEVO
+    var code;
+    
+    if (prefillSala) {
+        code = prefillSala;
+        console.log('📥 Uniéndose a sala desde URL:', code);
+    } else {
+        code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+    }
     
     if (code.length !== 4) {
-        alert('El codigo debe tener 4 letras/numeros.');
+        alert('El código debe tener 4 letras/números.');
         return;
     }
 

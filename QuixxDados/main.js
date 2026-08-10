@@ -1,15 +1,38 @@
 // ===== PUNTO DE ENTRADA PRINCIPAL =====
 document.addEventListener('DOMContentLoaded', function() {
     renderBoard();
+    mostrarDatosURL();
     
     var session = loadSession();
     var banner = document.getElementById('sessionBanner');
     if (session && banner) {
         document.getElementById('sessionBannerText').textContent =
-            'Tenias una partida abierta en la sala ' + session.roomCode + ' como "' + session.myName + '".';
+            'Tenías una partida abierta en la sala ' + session.roomCode + ' como "' + session.myName + '".';
         banner.style.display = 'block';
     }
 });
+
+// ===== MOSTRAR DATOS DESDE URL =====
+function mostrarDatosURL() {
+    const nombre = localStorage.getItem('quixx_nombre_prefill');
+    const sala = localStorage.getItem('quixx_sala_prefill');
+    
+    if (nombre || sala) {
+        const display = document.getElementById('urlDataDisplay');
+        if (display) {
+            display.style.display = 'block';
+            document.getElementById('urlPlayerName').textContent = nombre || '---';
+            document.getElementById('urlRoomCode').textContent = sala || '---';
+            
+            if (nombre) {
+                document.getElementById('playerName').value = nombre;
+            }
+            if (sala) {
+                console.log('🏠 Sala preconfigurada:', sala);
+            }
+        }
+    }
+}
 
 // ===== EXPORTAR FUNCIONES GLOBALES =====
 window.createRoom = createRoom;
