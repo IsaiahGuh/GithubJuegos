@@ -247,6 +247,69 @@ function restaurarLobo(datos) {
 }
 
 // ============================================================
+// RECONSTRUIR TODO EL ESTADO DESDE historialMovimientos
+// (usado por reclamo de identidad / reconexión, donde el
+//  historial se restaura de golpe en vez de movimiento a
+//  movimiento como hace intentarDeshacer/manejarClick*)
+// ============================================================
+
+function reconstruirTodoDesdeHistorial() {
+    console.log('🔁 Reconstruyendo todo el estado desde el historial...');
+
+    if (typeof window.historialMovimientos === 'undefined' || !window.historialMovimientos) {
+        window.historialMovimientos = [];
+    }
+
+    // 1. Recalcular bonificaciones/filas/columnas completadas de cada área
+    //    (esto es lo que faltaba: sin esto, bonificacionesAmarilla, 
+    //    filasCompletadasAzul, bonificacionesVerde/Naranja/Morado quedan
+    //    en false aunque historialMovimientos ya tenga las marcas)
+    if (typeof actualizarEstadosAmarilla === 'function') actualizarEstadosAmarilla();
+    if (typeof actualizarEstadosAzul === 'function') actualizarEstadosAzul();
+    if (typeof actualizarEstadosVerde === 'function') actualizarEstadosVerde();
+    if (typeof actualizarEstadosNaranja === 'function') actualizarEstadosNaranja();
+    if (typeof actualizarEstadosMorado === 'function') actualizarEstadosMorado();
+
+    // 2. Reconstruir turnos y desbloqueos del área GRIS a partir de las
+    //    bonificaciones ya recalculadas arriba
+    if (typeof window.reconstruirGrisCompleto === 'function') {
+        window.reconstruirGrisCompleto();
+    }
+
+    // 3. Recalcular puntosBonificacion (espiral/+1/X/#) desde el historial,
+    //    ya que es un acumulador que no se deriva solo por marcar casillas
+    if (typeof window.recalcularBonificacionGrisDesdeHistorial === 'function') {
+        window.recalcularBonificacionGrisDesdeHistorial();
+    }
+
+    // 4. Recalcular lobos desde las bonificaciones ya actualizadas
+    if (typeof window.recalcularLobosDesdeBonificaciones === 'function') {
+        window.recalcularLobosDesdeBonificaciones();
+    }
+
+    // 5. Refrescar visuales de todas las áreas (marcar casillas)
+    if (typeof actualizarVisuales === 'function') actualizarVisuales();
+    if (typeof actualizarVisualesNaranja === 'function') actualizarVisualesNaranja();
+    if (typeof actualizarVisualesMorado === 'function') actualizarVisualesMorado();
+    if (typeof actualizarVisualesZoom === 'function') actualizarVisualesZoom();
+
+    // 6. Recalcular puntajes totales
+    if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
+        PUNTAJES.calcularTotal();
+    } else if (typeof calcularPuntajes === 'function') {
+        calcularPuntajes();
+    }
+
+    // 7. Actualizar tag de lobos y leaderboard
+    if (typeof actualizarUI === 'function') actualizarUI();
+    if (typeof renderizarLeaderboard === 'function') renderizarLeaderboard();
+
+    console.log('✅ Estado reconstruido completamente desde el historial');
+}
+
+window.reconstruirTodoDesdeHistorial = reconstruirTodoDesdeHistorial;
+
+// ============================================================
 // LIMPIAR PILA
 // ============================================================
 

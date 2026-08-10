@@ -69,6 +69,8 @@ function saveSession() {
             myId: miId,
             myName: miNombre,
             moveHistory: historialMovimientos.slice(),
+            valoresNaranja: typeof valoresNaranja !== 'undefined' ? valoresNaranja.slice() : null,
+            valoresMorado: typeof valoresMorado !== 'undefined' ? valoresMorado.slice() : null,
             updatedAt: Date.now()
         }));
         console.log('Sesion guardada correctamente:', { roomCode: currentRoom, myName: miNombre });
@@ -185,14 +187,25 @@ function reconnectToSession() {
     salaActual = session.roomCode;
     historialMovimientos = window.historialMovimientos;
     
-    if (typeof actualizarVisuales === 'function') {
-        actualizarVisuales();
+    // Restaurar valores elegidos en naranja/morado (números de dado)
+    if (typeof valoresNaranja !== 'undefined' && session.valoresNaranja) {
+        valoresNaranja = session.valoresNaranja.slice();
+        window.valoresNaranja = valoresNaranja;
     }
-    if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
-        PUNTAJES.calcularTotal();
+    if (typeof valoresMorado !== 'undefined' && session.valoresMorado) {
+        valoresMorado = session.valoresMorado.slice();
+        window.valoresMorado = valoresMorado;
     }
-    if (typeof renderizarLeaderboard === 'function') {
-        renderizarLeaderboard();
+
+    // Reconstruir TODO el estado derivado (bonificaciones por área, 
+    // desbloqueos y turnos de gris, puntosBonificacion, lobos, puntajes)
+    if (typeof window.reconstruirTodoDesdeHistorial === 'function') {
+        window.reconstruirTodoDesdeHistorial();
+    } else {
+        // Fallback por si el archivo no está cargado
+        if (typeof actualizarVisuales === 'function') actualizarVisuales();
+        if (typeof PUNTAJES !== 'undefined' && PUNTAJES) PUNTAJES.calcularTotal();
+        if (typeof renderizarLeaderboard === 'function') renderizarLeaderboard();
     }
 
     conectarSala(session.roomCode, true);
@@ -297,16 +310,35 @@ function acceptClaim() {
     // Actualizar con los datos del reclamo
     window.miId = pendingClaim.oldId;
     window.historialMovimientos = pendingClaim.moves.slice();
+    historialMovimientos = window.historialMovimientos;
     
-    // Actualizar visuales
-    if (typeof actualizarVisuales === 'function') {
-        actualizarVisuales();
+    // Restaurar valores elegidos en naranja/morado (números de dado),
+    // sin esto el puntaje de esas áreas queda en 0 aunque las casillas
+    // aparezcan marcadas
+    if (typeof valoresNaranja !== 'undefined' && pendingClaim.valoresNaranja) {
+        valoresNaranja = pendingClaim.valoresNaranja.slice();
+        window.valoresNaranja = valoresNaranja;
     }
-    if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
-        PUNTAJES.calcularTotal();
+    if (typeof valoresMorado !== 'undefined' && pendingClaim.valoresMorado) {
+        valoresMorado = pendingClaim.valoresMorado.slice();
+        window.valoresMorado = valoresMorado;
     }
-    if (typeof renderizarLeaderboard === 'function') {
-        renderizarLeaderboard();
+    
+    // Reconstruir TODO el estado derivado: bonificaciones desbloqueadas
+    // por área, turnos y habilidades de gris, puntosBonificacion, lobos
+    // y puntajes. Esto es lo que faltaba: antes solo se restauraba
+    // historialMovimientos y se recalculaba el total, pero el área gris
+    // y los acumuladores (bonificación, lobos) nunca se reconstruían.
+    if (typeof window.reconstruirTodoDesdeHistorial === 'function') {
+        window.reconstruirTodoDesdeHistorial();
+    } else {
+        if (typeof actualizarVisuales === 'function') actualizarVisuales();
+        if (typeof PUNTAJES !== 'undefined' && PUNTAJES) PUNTAJES.calcularTotal();
+        if (typeof renderizarLeaderboard === 'function') renderizarLeaderboard();
+    }
+    
+    if (typeof broadcastPuntaje === 'function') {
+        broadcastPuntaje('sync');
     }
     
     // Cerrar modal

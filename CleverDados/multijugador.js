@@ -80,7 +80,9 @@ function conectarSala(codigo, isReconnect) {
                         oldId: data.offeredId, 
                         name: data.name, 
                         score: data.score, 
-                        moves: data.moves || [] 
+                        moves: data.moves || [],
+                        valoresNaranja: data.valoresNaranja || null,
+                        valoresMorado: data.valoresMorado || null
                     };
                     if (typeof showClaimModal === 'function') {
                         showClaimModal(pendingClaim);
@@ -120,7 +122,9 @@ function conectarSala(codigo, isReconnect) {
                     oldId: data.id, 
                     name: data.nombre, 
                     score: data.puntaje || 0, 
-                    moves: data.moves || [] 
+                    moves: data.moves || [],
+                    valoresNaranja: data.valoresNaranja || null,
+                    valoresMorado: data.valoresMorado || null
                 };
                 if (typeof showClaimModal === 'function') {
                     showClaimModal(pendingClaim);
@@ -278,6 +282,14 @@ function broadcastPuntaje(accion) {
     if (typeof renderizarLeaderboard === 'function') {
         renderizarLeaderboard();
     }
+    
+    // Mantener la sesión guardada al día con cada acción, no solo al
+    // entrar a la sala. Sin esto, reconnectToSession()/el reclamo
+    // siempre recuperan el historial vacío del momento en que te
+    // uniste, en vez de tu progreso real.
+    if (salaActual && typeof saveSession === 'function') {
+        saveSession();
+    }
 }
 
 // ============================================================
@@ -318,7 +330,9 @@ function broadcastClaimOffer(targetId, offeredId) {
             offeredId: offeredId,
             name: cached.nombre,
             score: cached.puntaje || 0,
-            moves: cached.movimientos || []
+            moves: cached.movimientos || [],
+            valoresNaranja: cached.valoresNaranja || null,
+            valoresMorado: cached.valoresMorado || null
         });
         clienteMQTT.publish(topic, payload);
     }

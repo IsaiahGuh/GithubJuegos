@@ -754,6 +754,48 @@ function aplicarBonificacionGris(habilidadId) {
 }
 
 // ============================================================
+// RECALCULAR puntosBonificacion DESDE EL HISTORIAL
+// (necesario al restaurar una sesión/reclamo completo, ya que
+//  puntosBonificacion es un acumulador que normalmente solo
+//  crece dentro de aplicarBonificacionGris al hacer click)
+// ============================================================
+
+const PUNTOS_POR_HABILIDAD_GRIS = {
+    espiral: 1,
+    mas1: 1,
+    dados1: 0,
+    dados2: 0,
+    x: 2,
+    seis: 2
+};
+
+function recalcularBonificacionGrisDesdeHistorial() {
+    let total = 0;
+
+    if (typeof historialMovimientos !== 'undefined' && historialMovimientos) {
+        historialMovimientos.forEach(id => {
+            if (!id.startsWith('gris-') || id.includes('turno')) return;
+            const partes = id.split('-');
+            const habilidadId = partes[1];
+            if (PUNTOS_POR_HABILIDAD_GRIS.hasOwnProperty(habilidadId)) {
+                total += PUNTOS_POR_HABILIDAD_GRIS[habilidadId];
+            }
+        });
+    }
+
+    puntosBonificacion = total;
+    window.puntosBonificacion = total;
+
+    const bonusElement = document.getElementById('bonus-display');
+    if (bonusElement) bonusElement.textContent = total;
+
+    console.log(`💰 puntosBonificacion recalculado desde historial: ${total}`);
+    return total;
+}
+
+window.recalcularBonificacionGrisDesdeHistorial = recalcularBonificacionGrisDesdeHistorial;
+
+// ============================================================
 // RECALCULAR PUNTAJES
 // ============================================================
 
