@@ -8,7 +8,7 @@ var REGISTRY_KEY = 'quixx_players_v1';
     const nombre = urlParams.get('nombre');
     const sala = urlParams.get('sala');
     
-    console.log('📥 QuixxDados - Parámetros URL:', { nombre, sala });
+    console.log('QuixxDados - Parametros URL:', { nombre, sala });
     
     if (nombre) {
         localStorage.setItem('quixx_nombre_prefill', nombre);
@@ -101,17 +101,14 @@ function reconnectToSession() {
         return;
     }
 
-    // Cerrar el modal de lobby
     document.getElementById('lobbyModal').style.display = 'none';
     
-    // Restaurar datos de sesion
     myId = session.myId;
     myName = session.myName;
     moveHistory = session.moveHistory || [];
     updateVisuals();
     calculateScores();
 
-    // Conectar a la sala
     connectToRoom(session.roomCode, true);
 }
 

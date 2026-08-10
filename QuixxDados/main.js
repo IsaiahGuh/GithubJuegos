@@ -12,14 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
             'Tenías una partida abierta en la sala ' + session.roomCode + ' como "' + session.myName + '".';
         banner.style.display = 'block';
         
-        // Habilitar el boton de reconectar
         if (reconnectBtn) {
             reconnectBtn.disabled = false;
             reconnectBtn.style.opacity = '1';
             reconnectBtn.style.cursor = 'pointer';
         }
     } else {
-        // Deshabilitar el boton de reconectar si no hay sesion
         if (reconnectBtn) {
             reconnectBtn.disabled = true;
             reconnectBtn.style.opacity = '0.5';
@@ -47,7 +45,6 @@ function mostrarDatosURL() {
 
 // ===== EXPORTAR FUNCIONES GLOBALES =====
 window.entrarSala = entrarSala;
-window.backToLobby = backToLobby;
 window.showModal = showModal;
 window.closeModal = closeModal;
 window.confirmReset = confirmReset;

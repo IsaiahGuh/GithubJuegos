@@ -11,30 +11,13 @@ var moveHistory = [];
 var myTotalScore = 0;
 
 // ===== FUNCIONES DEL LOBBY =====
-function showJoinModal() {
-    document.getElementById('lobbyModal').style.display = 'none';
-    document.getElementById('joinModal').style.display = 'flex';
-    
-    var roomInput = document.getElementById('roomCodeInput');
-    if (roomInput) {
-        roomInput.value = '';
-        roomInput.readOnly = false;
-        roomInput.style.opacity = '1';
-        roomInput.style.color = 'white';
-    }
-}
-
-function backToLobby() {
-    document.getElementById('joinModal').style.display = 'none';
-    document.getElementById('lobbyModal').style.display = 'flex';
-}
-
 function entrarSala() {
     var nombre = localStorage.getItem('quixx_nombre_prefill');
     var sala = localStorage.getItem('quixx_sala_prefill');
     
     if (!nombre) {
-        nombre = 'Jugador_' + Math.floor(Math.random() * 1000);
+        alert('No se ha configurado un nombre. Usa ?nombre=XXX en la URL.');
+        return;
     }
     
     if (!sala || sala.length !== 4) {
@@ -52,43 +35,9 @@ function entrarSala() {
     connectToRoom(sala.toUpperCase());
 }
 
-function joinRoom() {
-    myName = getPlayerName();
-    
-    var prefillSala = getPrefilledRoom();
-    var code;
-    
-    if (prefillSala) {
-        code = prefillSala;
-        console.log('📥 Uniéndose a sala desde URL:', code);
-    } else {
-        code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-    }
-    
-    if (code.length !== 4) {
-        alert('El código debe tener 4 letras/números.');
-        return;
-    }
-
-    var known = getRegistryEntry(code, myName);
-    if (known) {
-        myId = known.id;
-        moveHistory = known.moves || [];
-        updateVisuals();
-        calculateScores();
-        connectToRoom(code, true);
-        return;
-    }
-
-    myId = Math.random().toString(36).substr(2, 9);
-    moveHistory = [];
-    connectToRoom(code);
-}
-
 function joinSuccess(code) {
     hideLoading();
     document.getElementById('lobbyModal').style.display = 'none';
-    document.getElementById('joinModal').style.display = 'none';
     
     var info = document.getElementById('roomInfoDisplay');
     info.style.display = 'inline-block';

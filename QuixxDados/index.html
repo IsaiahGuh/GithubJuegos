@@ -26,33 +26,15 @@
 
             <div id="urlDataDisplay" class="url-data-display" style="display: none; background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--color-blue);">
                 <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span>Nombre: <span id="urlPlayerName">---</span></span>
-                    <span>Sala: <span id="urlRoomCode">---</span></span>
+                    <span id="urlPlayerName">---</span>
+                    <span id="urlRoomCode">---</span>
                 </div>
             </div>
 
             <div class="modal-buttons">
                 <div class="row-btns">
-                    <button class="modal-btn btn-primary" onclick="entrarSala()">Entrar</button>
-                    <button id="reconnectBtn" class="modal-btn btn-primary" onclick="reconnectToSession()" disabled>Reconectar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- UNIRSE A SALA -->
-    <div id="joinModal" class="modal-overlay">
-        <div class="modal-box">
-            <h2>Unirse a Sala</h2>
-            <p>Pide el codigo al creador de la sala</p>
-            <div class="input-group">
-                <label>Codigo de la Sala (4 letras/numeros):</label>
-                <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform: uppercase;">
-            </div>
-            <div class="modal-buttons">
-                <div class="row-btns">
-                    <button class="modal-btn btn-outline" onclick="backToLobby()">Volver</button>
-                    <button class="modal-btn btn-secondary" onclick="joinRoom()">Entrar</button>
+                    <button class="modal-btn btn-primary" onclick="entrarSala()" style="flex: 1;">Entrar</button>
+                    <button id="reconnectBtn" class="modal-btn btn-outline" onclick="reconnectToSession()" disabled style="flex: 1;">Reconectar</button>
                 </div>
             </div>
         </div>
