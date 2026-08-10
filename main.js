@@ -141,6 +141,12 @@
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
+
+        // Para Cassettes
+        if (gameId === 'JuegoCassettes') {
+            const separator = url.includes('?') ? '&' : '?';
+            url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
+        }
         
         window.open(url, '_blank');
     };
