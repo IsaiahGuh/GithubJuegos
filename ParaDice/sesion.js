@@ -83,6 +83,9 @@ function loadSession() {
 function clearSession() {
     try { 
         localStorage.removeItem(SESSION_KEY); 
+        // También borramos el snapshot de progreso (cartas, tablero,
+        // tickets, etc.) guardado por mqtt.js para esta sesión.
+        localStorage.removeItem('paradice_snapshot_v1');
     } catch (e) {}
 }
 

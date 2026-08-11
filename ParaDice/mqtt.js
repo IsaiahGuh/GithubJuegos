@@ -20,6 +20,69 @@ export function setRenderStatusPanel(fn) {
 }
 
 // ============================================
+// SNAPSHOT LOCAL (PERSISTENCIA REAL PARA RECARGAS DE PAGINA)
+// ============================================
+// forzarRestauracionLocal() solo puede restaurar desde state.playersData,
+// que vive en memoria. Al recargar la página ese objeto se pierde por
+// completo, así que sin esto la reconexión "funcionaba" pero siempre
+// arrancaba con las cartas y el puntaje en blanco. Aquí guardamos una
+// copia en localStorage cada vez que sincronizamos, y la recargamos
+// cuando nos reconectamos a la misma sala con el mismo myId.
+
+const SNAPSHOT_KEY = 'paradice_snapshot_v1';
+
+function guardarSnapshotLocal() {
+    if (!state.currentRoom || !state.myId) return;
+    try {
+        const snapshot = {
+            roomCode: state.currentRoom,
+            myId: state.myId,
+            savedAt: Date.now(),
+            playerData: {
+                name: state.myName,
+                score: state.myTotalScore,
+                cartasJugador: state.cartasJugador,
+                cartasTerminadas: state.cartasTerminadas,
+                habilidadesUsadas: state.habilidadesUsadas,
+                mazoColores: state.mazoColores,
+                mazoEspecialDisponible: state.mazoEspecialDisponible,
+                cartasVisibles: state.cartasVisibles,
+                cartasRepartidas: state.cartasRepartidas,
+                tablero: state.tableroGlobal,
+                fichas: state.fichas,
+                progresoCartas: state.progresoCarta,
+                cartasEspecialesUsadas: state.cartasEspecialesUsadas || 0,
+                puntosEspeciales: state.playersData[state.myId]?.puntosEspeciales || [],
+                coloresMeta: state.coloresMeta || []
+            },
+            global: {
+                tickets: state.tickets,
+                bonusTicket: state.bonusTicket,
+                bonusReclamado: state.bonusReclamado,
+                resultadosFinales: state.resultadosFinales || {},
+                juegoTerminado: state.juegoTerminado || false,
+                coloresMeta: state.coloresMeta || []
+            }
+        };
+        localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+    } catch (e) {
+        console.error('No se pudo guardar el snapshot local', e);
+    }
+}
+
+function cargarSnapshotLocal(code, myId) {
+    try {
+        const raw = localStorage.getItem(SNAPSHOT_KEY);
+        if (!raw) return null;
+        const snapshot = JSON.parse(raw);
+        if (!snapshot || snapshot.roomCode !== code || snapshot.myId !== myId) return null;
+        return snapshot;
+    } catch (e) {
+        return null;
+    }
+}
+
+// ============================================
 // FUNCION PARA RESTAURAR ESTADO LOCAL DESDE PLAYERSDATA
 // ============================================
 
@@ -111,6 +174,24 @@ export function connectToRoom(code, isReconnect) {
         const topic = `paradice_xyz/room/${code}`;
         state.mqttClient.subscribe(topic);
         
+        // Si es una reconexión (recarga de página incluida), intentamos
+        // rellenar playersData[myId] con el snapshot guardado localmente
+        // ANTES de que forzarRestauracionLocal() intente usarlo.
+        if (isReconnect && !state.playersData[state.myId]) {
+            const snapshot = cargarSnapshotLocal(code, state.myId);
+            if (snapshot) {
+                state.playersData[state.myId] = { ...snapshot.playerData };
+                if (snapshot.global) {
+                    state.tickets = snapshot.global.tickets || state.tickets;
+                    state.bonusTicket = snapshot.global.bonusTicket ?? state.bonusTicket;
+                    state.bonusReclamado = snapshot.global.bonusReclamado || false;
+                    state.resultadosFinales = snapshot.global.resultadosFinales || {};
+                    state.juegoTerminado = snapshot.global.juegoTerminado || false;
+                    state.coloresMeta = snapshot.global.coloresMeta || [];
+                }
+            }
+        }
+        
         if (!state.playersData[state.myId]) {
             state.playersData[state.myId] = {
                 name: state.myName || 'Jugador',
@@ -176,6 +257,12 @@ export function connectToRoom(code, isReconnect) {
         
         joinSuccess(code);
         
+        // Siempre anunciamos el 'join': así los jugadores que siguen
+        // conectados nos reenvían SU versión más actual del tablero,
+        // mazo y tickets (estado compartido que no podemos reconstruir
+        // solo con nuestro propio snapshot local).
+        broadcastScore('join');
+        
         if (restaurado) {
             setTimeout(() => {
                 broadcastScore('sync');
@@ -184,8 +271,6 @@ export function connectToRoom(code, isReconnect) {
                 broadcastTickets();
                 mostrarMensaje('Datos restaurados y sincronizados', 'success');
             }, 500);
-        } else {
-            broadcastScore('join');
         }
         
         window.saveSession();
@@ -418,6 +503,7 @@ export function broadcastTickets() {
             bonusReclamado: state.bonusReclamado
         });
         state.mqttClient.publish(topic, payload);
+        guardarSnapshotLocal();
     }
 }
 
@@ -435,6 +521,7 @@ export function broadcastMazo() {
             cartasVisibles: state.cartasVisibles
         });
         state.mqttClient.publish(topic, payload);
+        guardarSnapshotLocal();
     }
 }
 
@@ -465,6 +552,7 @@ export function broadcastScore(action = 'sync') {
             coloresMeta: state.coloresMeta || []
         });
         state.mqttClient.publish(topic, payload);
+        guardarSnapshotLocal();
     }
 }
 
@@ -483,6 +571,7 @@ export function broadcastTablero() {
             coloresMeta: state.coloresMeta || []
         });
         state.mqttClient.publish(topic, payload);
+        guardarSnapshotLocal();
     }
 }
 
@@ -570,3 +659,7 @@ export function entrarSala() {
 
 window.entrarSala = entrarSala;
 window.forzarRestauracionLocal = forzarRestauracionLocal;
+// sesion.js (script clásico) llama a window.connectToRoom(...) al pulsar
+// "Reconectar"; sin esta línea la función nunca existía en window y el
+// botón no hacía nada (o lanzaba un error silencioso en consola).
+window.connectToRoom = connectToRoom;

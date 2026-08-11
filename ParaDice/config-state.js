@@ -136,6 +136,11 @@ export const state = {
     resultadosFinales: {}
 };
 
+// Exponer el estado en window: sesion.js es un script clásico (no un
+// módulo) y necesita leer/escribir currentRoom, myId y myName para poder
+// guardar y restaurar la sesión al recargar la página.
+window.state = state;
+
 // Inicializar estado
 export function initState() {
     COLORES.forEach(color => {
