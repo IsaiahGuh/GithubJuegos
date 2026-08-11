@@ -37,10 +37,6 @@ const UI = {
         const rutaBase = juego.ruta.substring(0, juego.ruta.lastIndexOf('/') + 1);
         const faviconPath = rutaBase + 'favicon.ico';
         
-        const topicsHTML = juego.topics && juego.topics.length > 0 
-            ? `<div class="game-topics">${juego.topics.map(topic => `<span class="game-topic">#${topic}</span>`).join('')}</div>`
-            : '';
-        
         return `
             <div class="project-item" data-game="${juego.id}" onclick="window.openGame('${juego.id}')">
                 <div class="favicon-wrapper" style="background: ${color}22; border-color: ${color}44;">
@@ -56,7 +52,6 @@ const UI = {
                     </div>
                 </div>
                 <div class="project-name">${juego.nombre}</div>
-                ${topicsHTML}
             </div>
         `;
     },
