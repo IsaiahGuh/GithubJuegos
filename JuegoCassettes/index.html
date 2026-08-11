@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cassettes</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+
+    <!-- ===== LOBBY PRINCIPAL ===== -->
+    <div id="lobbyModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Cassettes</h2>
+            <p>Multijugador</p>
+
+            <div id="sessionBanner" class="session-banner" style="display: none;">
+                <p id="sessionBannerText" class="session-banner-text"></p>
+            </div>
+
+            <div id="urlDataDisplay" class="url-data-display" style="display: none;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span id="urlPlayerName">---</span>
+                    <span id="urlRoomCode">---</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Equipo:</label>
+                <div class="equipo-toggle-group">
+                    <span class="equipo-label equipo-a-label active-a">A</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="equipoToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="equipo-label equipo-b-label">B</span>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-primary" onclick="entrarSala()" style="flex: 1;">Entrar</button>
+                    <button id="reconnectBtn" class="modal-btn btn-outline" onclick="reconnectToSession()" disabled style="flex: 1;">Reconectar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== UNIRSE A SALA ===== -->
+    <div id="joinModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <h2>Unirse a Sala</h2>
+            <p>Pide el codigo al creador de la sala</p>
+
+            <div class="input-group">
+                <label>Codigo de la Sala (4 letras/numeros):</label>
+                <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform: uppercase; text-align: center; font-size: 1.3rem; letter-spacing: 6px;">
+            </div>
+
+            <div class="input-group">
+                <label>Equipo:</label>
+                <div class="equipo-toggle-group">
+                    <span class="equipo-label equipo-a-label active-a">A</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="equipoToggleJoin">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="equipo-label equipo-b-label">B</span>
+                </div>
+            </div>
+
+            <div class="modal-buttons row-btns">
+                <button class="modal-btn btn-outline" onclick="volverLobby()">Volver</button>
+                <button class="modal-btn btn-secondary" onclick="unirseSala()">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CARGANDO ===== -->
+    <div id="loadingModal" class="modal-overlay" style="display:none; z-index: 9999;">
+        <div class="modal-box" style="background: var(--bg-panel); border: 1px solid var(--border-color);">
+            <h2 id="loadingText" style="color: #fff; font-size: 1.5rem;">Conectando...</h2>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <h1>Cassettes</h1>
+        <div id="roomInfoDisplay" class="room-info" style="display: none;"></div>
+    </header>
+
+    <!-- ===== CONTROLES DE EQUIPO ===== -->
+    <div class="controles-equipo">
+        <div class="equipo-control">
+            <button id="btnEquipo1" class="btn-equipo">Turno Equipo A</button>
+            <div class="temporizador" id="temporizador1">00:00</div>
+        </div>
+        <div class="equipo-control">
+            <button id="btnEquipo2" class="btn-equipo">Turno Equipo B</button>
+            <div class="temporizador" id="temporizador2">00:00</div>
+        </div>
+    </div>
+
+    <!-- ===== TABLERO ===== -->
+    <div id="areaTablero">
+        <h3>Tablero de Juego</h3>
+        <div id="tableroContainer" class="tablero-grid"></div>
+    </div>
+
+    <!-- ===== OPCIONES ===== -->
+    <div id="areaOpciones">
+        <h3>Escoge una carta</h3>
+        <div id="opcionesContainer"></div>
+    </div>
+
+    <!-- ===== BOTONES ===== -->
+    <div id="areaBotones">
+        <div class="botones-mazo">
+            <button id="btnOcultarCartas" class="btn-ocultar-header">Ocultar Cartas</button>
+            <button id="btnReinicio">Reinicio</button>
+            <button id="btnNuevaRonda">Nueva Ronda</button>
+        </div>
+    </div>
+
+    <!-- ===== SEPARADOR ===== -->
+    <hr class="leaderboard-divider">
+
+    <!-- ===== LEADERBOARD ===== -->
+    <div class="leaderboard" id="leaderboardPanel">
+        <h3>Leaderboard</h3>
+        <div id="playersList"></div>
+    </div>
+
+    <!-- ===== MODALES ===== -->
+    <!-- Modal Desafio -->
+    <div id="modalDesafio" class="modal">
+        <div class="modal-contenido desafio-contenido">
+            <h2>RONDA DE DESAFIO</h2>
+            <div id="cartaDesafio" class="carta-desafio-modal">
+                <img id="imgCartaDesafio" src="imagenes/desafios/desafio1.png" alt="Carta Desafio">
+            </div>
+            <div class="cronometro-central-modal">
+                <div id="cronometroDesafio" class="cronometro-grande">00:00</div>
+                <button id="btnTiempo" class="btn-tiempo">PRESIONAR</button>
+                <div id="turnoDesafioTexto" class="turno-texto">Esperando inicio</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Zoom -->
+    <div id="modalZoom" class="modal">
+        <div class="zoom-contenido">
+            <img id="zoomImg">
+            <button id="cerrarZoomBtn">X</button>
+        </div>
+    </div>
+
+    <!-- Modal Seleccionar Celda -->
+    <div id="modalSeleccionCelda" class="modal">
+        <div class="modal-contenido seleccion-celdas">
+            <h3>Selecciona donde colocar la carta</h3>
+            <div id="gridSeleccion"></div>
+            <button id="cancelarSeleccionBtn">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal Historial -->
+    <div id="modalHistorial" class="modal">
+        <div class="modal-contenido historial-contenido">
+            <h3 id="modalHistorialTitulo">Historial</h3>
+            <div id="historialLista" class="historial-lista"></div>
+            <button id="cerrarHistorialBtn" class="cerrar-btn">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Modal Canje -->
+    <div id="modalCanje" class="modal">
+        <div class="modal-contenido canje-contenido">
+            <h3 id="canjeTitulo">Selecciona una nueva categoria</h3>
+            <div id="canjeLista" class="canje-lista"></div>
+            <button id="cancelarCanjeBtn" class="cerrar-btn">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal Mensaje -->
+    <div id="modalMensaje" class="modal">
+        <div class="modal-contenido mensaje-contenido">
+            <h3 id="mensajeTitulo">Aviso</h3>
+            <p id="mensajeTexto" class="mensaje-texto"></p>
+            <button id="cerrarMensajeBtn" class="mensaje-btn">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- Modal Reclamacion -->
+    <div id="claimModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Jugador existente</h3>
+            <p id="claimText">Ya hay un jugador con este nombre en la sala.</p>
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-outline" onclick="declineClaim()">No, soy otro jugador</button>
+                    <button class="modal-btn btn-primary" onclick="acceptClaim()">Si, soy yo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SCRIPTS (en orden) ===== -->
+    <script src="sesion.js"></script>
+    <script src="js/core/cartas.js"></script>
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/juego.js"></script>
+    <script src="js/ui/modales.js"></script>
+    <script src="js/ui/render.js"></script>
+    <script src="js/ui/eventos.js"></script>
+    <script src="js/modulos/tiempos.js"></script>
+    <script src="js/modulos/tablero.js"></script>
+    <script src="js/modulos/desafio.js"></script>
+    <script src="js/modulos/puntaje.js"></script>
+    <script src="js/modulos/ocultar.js"></script>
+    <script src="js/modulos/leaderboard.js"></script>
+    <script src="js/mqtt/mqtt.js"></script>
+    <script src="js/mqtt/lobby.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
