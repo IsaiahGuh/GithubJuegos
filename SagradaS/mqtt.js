@@ -1,6 +1,6 @@
 // ===== MQTT.JS =====
 // Sistema multijugador - CREADOR SE ASIGNA AL PRIMER JUGADOR
-// CON SINCRONIZACIÓN DE JUGADORES EXISTENTES
+// CON SINCRONIZACION DE JUGADORES EXISTENTES
 
 let mqttClient = null;
 let currentRoom = null;
@@ -76,11 +76,11 @@ function connectToRoom(code) {
                         window.gameState.tools = [...data.tools] || [];
                         herramientasState.herramientas_seleccionadas = [...data.tools] || [];
                         herramientasState.herramientas_disponibles = [...data.tools] || [];
-                        console.log('✅ Objetivos recibidos del creador:', window.gameState.publicObjectives);
+                        console.log('Objetivos recibidos del creador:', window.gameState.publicObjectives);
                         if (window.gameState.initialCardSelectionDone) {
                             renderGameInfo();
                         }
-                        showTemporaryMessage('✅ Objetivos y herramientas recibidos del creador');
+                        showTemporaryMessage('Objetivos y herramientas recibidos del creador');
                     }
                 }
                 
@@ -92,7 +92,7 @@ function connectToRoom(code) {
             // 2. SYNC_PLAYERS - Solicitud de jugadores existentes
             // ============================================================
             if (data.action === 'sync_players') {
-                console.log(`📨 ${data.name} se unió, enviando mi presencia...`);
+                console.log(data.name + ' se unio, enviando mi presencia...');
                 
                 if (isRoomCreator) {
                     broadcastCreatorStatus();
@@ -117,7 +117,7 @@ function connectToRoom(code) {
                         cardState: typeof window.getCardStateForSync === 'function' ? window.getCardStateForSync() : null
                     };
                     mqttClient.publish(topic, JSON.stringify(payload));
-                    console.log(`📨 Enviando mis datos al nuevo jugador: ${data.name}`);
+                    console.log('Enviando mis datos al nuevo jugador: ' + data.name);
                 }
                 return;
             }
@@ -127,7 +127,7 @@ function connectToRoom(code) {
             // ============================================================
             if (data.action === 'player_list_response') {
                 if (data.targetId === myId) {
-                    console.log(`📨 Recibiendo datos de: ${data.name}`);
+                    console.log('Recibiendo datos de: ' + data.name);
                     
                     playersData[data.id] = { 
                         name: data.name, 
@@ -152,11 +152,11 @@ function connectToRoom(code) {
                             window.gameState.tools = [...data.tools] || [];
                             herramientasState.herramientas_seleccionadas = [...data.tools] || [];
                             herramientasState.herramientas_disponibles = [...data.tools] || [];
-                            console.log('✅ Objetivos recibidos del creador al sincronizar:', window.gameState.publicObjectives);
+                            console.log('Objetivos recibidos del creador al sincronizar:', window.gameState.publicObjectives);
                             if (window.gameState.initialCardSelectionDone) {
                                 renderGameInfo();
                             }
-                            showTemporaryMessage('✅ Objetivos y herramientas sincronizados');
+                            showTemporaryMessage('Objetivos y herramientas sincronizados');
                         }
                     }
                     
@@ -174,11 +174,11 @@ function connectToRoom(code) {
                     window.gameState.tools = [...data.tools] || [];
                     herramientasState.herramientas_seleccionadas = [...data.tools] || [];
                     herramientasState.herramientas_disponibles = [...data.tools] || [];
-                    console.log('✅ Objetivos confirmados por el creador:', window.gameState.publicObjectives);
+                    console.log('Objetivos confirmados por el creador:', window.gameState.publicObjectives);
                     if (window.gameState.initialCardSelectionDone) {
                         renderGameInfo();
                     }
-                    showTemporaryMessage('✅ Objetivos y herramientas recibidos del creador');
+                    showTemporaryMessage('Objetivos y herramientas recibidos del creador');
                 }
                 playersData[data.id] = { 
                     ...playersData[data.id],
@@ -202,7 +202,7 @@ function connectToRoom(code) {
                         tools: window.gameState.tools || []
                     };
                     mqttClient.publish(topic, JSON.stringify(payload));
-                    console.log('📨 Enviando objetivos al jugador:', data.id);
+                    console.log('Enviando objetivos al jugador:', data.id);
                 }
                 return;
             }
@@ -232,9 +232,9 @@ function connectToRoom(code) {
                     
                     if (window.myId && coloresState.asignaciones[window.myId]) {
                         coloresState.miColor = coloresState.asignaciones[window.myId];
-                        console.log(`🎨 Color asignado desde reparto: ${getNombreColor(coloresState.miColor)}`);
+                        console.log('Color asignado desde reparto: ' + getNombreColor(coloresState.miColor));
                         const colorNombre = getNombreColor(coloresState.miColor);
-                        showTemporaryMessage(`🎨 Tu color asignado: ${colorNombre}`, 2500);
+                        showTemporaryMessage('Tu color asignado: ' + colorNombre, 2500);
                     }
                     
                     if (typeof renderFavoresConColor === 'function') {
@@ -252,7 +252,7 @@ function connectToRoom(code) {
                     }
                     
                     if (window.gameState.availableCards.length > 0 && !window.gameState.initialCardSelectionDone) {
-                        showTemporaryMessage('📋 Cartillas repartidas, selecciona la tuya');
+                        showTemporaryMessage('Cartillas repartidas, selecciona la tuya');
                         if (typeof showInitialCardSelector === 'function') {
                             showInitialCardSelector(window.gameState.availableCards);
                         }
@@ -268,17 +268,15 @@ function connectToRoom(code) {
             }
             
             // ============================================================
-            // 7. SYNC - Sincronización normal (CON PUNTOS DE OBJETIVOS Y CARDSTATE)
+            // 7. SYNC - Sincronizacion normal (CON PUNTOS DE OBJETIVOS Y CARDSTATE)
             // ============================================================
             if (data.action === 'sync' || data.action === 'game_start') {
-                console.log(`📥 Recibido sync de ${data.name} - Score: ${data.score}, Moves: ${data.moves?.length || 0}`);
+                console.log('Recibido sync de ' + data.name + ' - Score: ' + data.score + ', Moves: ' + (data.moves?.length || 0));
                 
-                // ✅ GUARDAR DATOS DEL JUGADOR
                 if (!window.playersData) {
                     window.playersData = {};
                 }
                 
-                // Guardar el estado anterior para preservar datos que no vienen en el sync
                 const previousState = window.playersData[data.id] || {};
                 
                 window.playersData[data.id] = { 
@@ -298,20 +296,17 @@ function connectToRoom(code) {
                     cardState: data.cardState || previousState.cardState || null
                 };
                 
-                // ✅ GUARDAR EN EL MAPA SEPARADO PARA ACCESO RÁPIDO DEL ZOOM
                 if (data.cardState) {
                     if (!window._playerCardStates) {
                         window._playerCardStates = {};
                     }
                     window._playerCardStates[data.id] = data.cardState;
                     
-                    // ✅ ACTUALIZAR EL ZOOM EN TIEMPO REAL SI ESTÁ ABIERTO
                     if (typeof window.actualizarZoomEnTiempoReal === 'function') {
                         window.actualizarZoomEnTiempoReal(data.id);
                     }
                 }
                 
-                // ✅ ACTUALIZAR COLORES SI VIENEN EN EL SYNC
                 if (data.coloresAsignados) {
                     coloresState.asignaciones = {
                         ...coloresState.asignaciones,
@@ -322,32 +317,29 @@ function connectToRoom(code) {
                     }
                     coloresState.coloresAsignados = true;
                     
-                    // Si es mi ID, actualizar mi color
                     if (data.id === window.myId && data.coloresAsignados[window.myId]) {
                         coloresState.miColor = data.coloresAsignados[window.myId];
-                        console.log(`🎨 Mi color sincronizado: ${getNombreColor(coloresState.miColor)}`);
+                        console.log('Mi color sincronizado: ' + getNombreColor(coloresState.miColor));
                         if (typeof renderFavoresConColor === 'function') {
                             renderFavoresConColor();
                         }
                     }
                 }
                 
-                // ✅ FORZAR RENDER DEL LEADERBOARD
                 if (typeof window.renderLeaderboard === 'function') {
                     setTimeout(() => {
                         window.renderLeaderboard();
-                        console.log(`📊 Render forzado: ${data.name} = ${data.score}pts`);
+                        console.log('Render forzado: ' + data.name + ' = ' + data.score + 'pts');
                     }, 50);
                 }
                 
-                // ✅ SI EL JUGADOR ES EL CREADOR Y TIENE OBJETIVOS, ACTUALIZARLOS
                 if (data.isCreator && data.publicObjectives && data.publicObjectives.length > 0) {
                     if (window.gameState.publicObjectives.length === 0) {
                         window.gameState.publicObjectives = [...data.publicObjectives];
                         window.gameState.tools = [...data.tools] || [];
                         herramientasState.herramientas_seleccionadas = [...data.tools] || [];
                         herramientasState.herramientas_disponibles = [...data.tools] || [];
-                        console.log('✅ Objetivos sincronizados desde sync:', window.gameState.publicObjectives);
+                        console.log('Objetivos sincronizados desde sync:', window.gameState.publicObjectives);
                         if (window.gameState.initialCardSelectionDone) {
                             renderGameInfo();
                         }
@@ -358,7 +350,7 @@ function connectToRoom(code) {
             }
             
             // ============================================================
-            // 8. TOOL_USED - Sincronización de herramientas usadas
+            // 8. TOOL_USED - Sincronizacion de herramientas usadas
             // ============================================================
             if (data.action === 'tool_used') {
                 if (typeof window.sincronizarHerramientasDesdeMQTT === 'function') {
@@ -419,7 +411,7 @@ function connectToRoom(code) {
             }
             
             // ============================================================
-            // 10. COLORS_SYNC - Sincronización de colores
+            // 10. COLORS_SYNC - Sincronizacion de colores
             // ============================================================
             if (data.action === 'colors_sync') {
                 if (data.id !== myId) {
@@ -435,7 +427,7 @@ function connectToRoom(code) {
             // ============================================================
             if (data.action === 'full_reset') {
                 if (data.id !== myId) {
-                    console.log('🔄 Recibiendo reinicio completo de la partida');
+                    console.log('Recibiendo reinicio completo de la partida');
                     if (typeof window.receiveFullResetFromMQTT === 'function') {
                         window.receiveFullResetFromMQTT(data);
                     }
@@ -444,21 +436,18 @@ function connectToRoom(code) {
             }
 
             // ============================================================
-            // 12. GAME_FINISHED - Finalización de partida
+            // 12. GAME_FINISHED - Finalizacion de partida
             // ============================================================
             if (data.action === 'game_finished') {
                 if (data.id !== myId) {
-                    console.log('🏁 Recibiendo finalización de partida de:', data.id);
+                    console.log('Recibiendo finalizacion de partida de:', data.id);
                     
-                    // ✅ ACTUALIZAR ESTADO LOCAL
                     window.gameState.isFinished = true;
                     
-                    // ✅ GUARDAR TODOS LOS DATOS DEL OTRO JUGADOR
                     if (!window.playersData) {
                         window.playersData = {};
                     }
                     
-                    // Actualizar o crear el jugador con todos los detalles
                     window.playersData[data.id] = {
                         ...window.playersData[data.id],
                         name: data.name || window.playersData[data.id]?.name || 'Anonimo',
@@ -475,7 +464,6 @@ function connectToRoom(code) {
                         cardState: data.cardState || null
                     };
                     
-                    // ✅ GUARDAR EN EL MAPA SEPARADO
                     if (data.cardState) {
                         if (!window._playerCardStates) {
                             window._playerCardStates = {};
@@ -483,7 +471,6 @@ function connectToRoom(code) {
                         window._playerCardStates[data.id] = data.cardState;
                     }
                     
-                    // ✅ ACTUALIZAR COLORES DEL OTRO JUGADOR
                     if (data.coloresAsignados) {
                         coloresState.asignaciones = {
                             ...coloresState.asignaciones,
@@ -495,17 +482,15 @@ function connectToRoom(code) {
                         coloresState.coloresAsignados = true;
                     }
                     
-                    // ✅ FORZAR RENDER DEL LEADERBOARD
                     if (typeof window.renderLeaderboard === 'function') {
                         setTimeout(() => {
                             window.renderLeaderboard();
-                            console.log(`📊 Leaderboard actualizado con datos finales de ${data.name}`);
+                            console.log('Leaderboard actualizado con datos finales de ' + data.name);
                         }, 50);
                     }
                     
-                    showTemporaryMessage(`🏁 ${data.name} finalizó la partida`);
+                    showTemporaryMessage(data.name + ' finalizo la partida');
                     
-                    // Deshabilitar el botón de Terminar
                     const finishBtn = document.getElementById('finishGameBtn');
                     if (finishBtn) {
                         finishBtn.disabled = true;
@@ -524,7 +509,7 @@ function connectToRoom(code) {
 }
 
 // ============================================================
-// FUNCIONES DE SINCRONIZACIÓN
+// FUNCIONES DE SINCRONIZACION
 // ============================================================
 
 function encontrarCreador() {
@@ -549,15 +534,15 @@ function verificarYAsignarCreador() {
             generarObjetivosYHerramientas();
             broadcastCreatorStatus();
             
-            showTemporaryMessage('👑 Eres el creador de la sala');
-            console.log('👑 Asignado como creador (primer jugador en la sala)');
+            showTemporaryMessage('Eres el creador de la sala');
+            console.log('Asignado como creador (primer jugador en la sala)');
             
             renderLeaderboard();
             if (window.gameState.initialCardSelectionDone) {
                 renderGameInfo();
             }
         } else if (sortedIds.length > 0 && sortedIds[0] !== myId) {
-            console.log('⏳ Esperando que el primer jugador se declare creador...');
+            console.log('Esperando que el primer jugador se declare creador...');
             setTimeout(() => {
                 solicitarJugadoresExistentes();
             }, 1000);
@@ -567,7 +552,7 @@ function verificarYAsignarCreador() {
     
     if (creatorId !== myId) {
         if (window.gameState.publicObjectives.length === 0) {
-            console.log('📨 Solicitando objetivos al creador...');
+            console.log('Solicitando objetivos al creador...');
             solicitarObjetivosAlCreador(creatorId);
             
             setTimeout(() => {
@@ -587,7 +572,7 @@ function solicitarJugadoresExistentes() {
             isCreator: isRoomCreator
         };
         mqttClient.publish(topic, JSON.stringify(payload));
-        console.log('📨 Solicitando lista de jugadores existentes...');
+        console.log('Solicitando lista de jugadores existentes...');
     }
 }
 
@@ -600,7 +585,7 @@ function solicitarObjetivosAlCreador(creatorId) {
             targetId: creatorId
         };
         mqttClient.publish(topic, JSON.stringify(payload));
-        console.log('📨 Solicitando objetivos al creador:', creatorId);
+        console.log('Solicitando objetivos al creador:', creatorId);
     }
 }
 
@@ -620,8 +605,8 @@ function generarObjetivosYHerramientas() {
     herramientasState.herramientas_seleccionadas = tools;
     herramientasState.herramientas_disponibles = tools;
     
-    console.log('👑 Creador: Objetivos generados:', publicObjectives);
-    console.log('👑 Creador: Herramientas generadas:', tools.map(id => getHerramientaById(id)?.nombre));
+    console.log('Creador: Objetivos generados:', publicObjectives);
+    console.log('Creador: Herramientas generadas:', tools.map(id => getHerramientaById(id)?.nombre));
     
     if (window.gameState.initialCardSelectionDone) {
         renderGameInfo();
@@ -671,22 +656,18 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
     if (mqttClient && currentRoom) {
         const topic = `sagradas_app/room/${currentRoom}`;
         
-        // Obtener puntaje actual y detalles
         let currentScore = 0;
         let publicDetalle = [];
         let privateScore = 0;
         
-        // Intentar obtener desde playersData
         if (window.playersData && window.playersData[myId]) {
             currentScore = window.playersData[myId].score || 0;
         }
         
-        // Calcular detalles completos
         if (typeof window.calculateTotalScore === 'function') {
             const result = window.calculateTotalScore();
             currentScore = result.total || 0;
             
-            // Guardar detalles de públicos
             if (result.publicDetalle) {
                 publicDetalle = result.publicDetalle;
             }
@@ -695,14 +676,12 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
             }
         }
         
-        // Si sigue en 0, usar gameState
         if (currentScore === 0 && window.gameState && window.gameState.myTotalScore) {
             currentScore = window.gameState.myTotalScore;
         }
         
         const currentMoves = window.gameState.moveHistory ? [...window.gameState.moveHistory] : [];
         
-        // ✅ OBTENER ESTADO COMPLETO DE LA CARTILLA
         let cardState = null;
         if (typeof window.getCardStateForSync === 'function') {
             cardState = window.getCardStateForSync();
@@ -726,7 +705,6 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
             ...extraPayload
         };
         
-        // Manejar casos especiales
         if (action === 'cards_dealt') {
             payload.allPlayerCards = window.gameState.allPlayerCards;
             payload.allPlayerPrivateObjectives = window.gameState.allPlayerPrivateObjectives;
@@ -758,7 +736,7 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
         }
         
         mqttClient.publish(topic, JSON.stringify(payload));
-        console.log(`📤 ${action} - Score: ${currentScore}, CardState: ${cardState ? '✅' : '❌'}`);
+        console.log('Enviando ' + action + ' - Score: ' + currentScore + ', CardState: ' + (cardState ? 'SI' : 'NO'));
     }
 }
 
@@ -788,19 +766,10 @@ function joinRoom() {
     window.myId = myId;
     window.myName = myName;
     
-    const autoCode = window.AUTO_ROOM_CODE || 'GRIL';
-    const urlParams = new URLSearchParams(window.location.search);
-    const isAutoMode = urlParams.get('auto') === '1';
-    
-    let code;
-    if (isAutoMode) {
-        code = autoCode;
-    } else {
-        code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-        if (!isValidRoomCode(code)) {
-            alert("El codigo debe tener 4 letras/numeros.");
-            return;
-        }
+    const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+    if (!isValidRoomCode(code)) {
+        alert("El codigo debe tener 4 letras/numeros.");
+        return;
     }
     
     window.currentRoom = code;
@@ -825,25 +794,25 @@ function joinSuccess(code) {
     
     const info = document.getElementById('roomInfoDisplay');
     info.style.display = 'inline-block';
-    info.textContent = `SALA: ${code}`;
+    info.textContent = 'SALA: ' + code;
     
     document.getElementById('leaderboardPanel').style.display = 'flex';
     renderLeaderboard();
     renderBoard();
     
     if (isRoomCreator) {
-        showTemporaryMessage('👑 Eres el creador - Presiona "Vitrinas" para repartir cartillas');
+        showTemporaryMessage('Eres el creador - Presiona "Vitrinas" para repartir cartillas');
     } else {
         showTemporaryMessage('Presiona "Vitrinas" para comenzar');
     }
 }
 
 // ============================================================
-// FUNCIÓN DE DIAGNÓSTICO
+// FUNCION DE DIAGNOSTICO
 // ============================================================
 
 function diagnosticarPuntaje() {
-    console.log('===== DIAGNÓSTICO DE PUNTAJE =====');
+    console.log('===== DIAGNOSTICO DE PUNTAJE =====');
     console.log('myId:', myId);
     console.log('gameState.myTotalScore:', window.gameState?.myTotalScore);
     console.log('playersData[myId]?.score:', window.playersData?.[myId]?.score);
@@ -877,4 +846,4 @@ window.solicitarObjetivosAlCreador = solicitarObjetivosAlCreador;
 window.solicitarJugadoresExistentes = solicitarJugadoresExistentes;
 window.diagnosticarPuntaje = diagnosticarPuntaje;
 
-console.log('✅ mqtt.js cargado - Con soporte para reset completo y sincronización de objetivos');
+console.log('mqtt.js cargado - Con soporte para reset completo y sincronizacion de objetivos');
