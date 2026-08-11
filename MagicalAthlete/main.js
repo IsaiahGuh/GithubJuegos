@@ -1,16 +1,12 @@
-// ===== PUNTO DE ENTRADA PRINCIPAL =====
 document.addEventListener('DOMContentLoaded', function() {
     mostrarDatosURL();
-    
     var session = loadSession();
     var banner = document.getElementById('sessionBanner');
     var reconnectBtn = document.getElementById('reconnectBtn');
-    
     if (session && banner) {
         document.getElementById('sessionBannerText').textContent =
             'Tenías una partida abierta en la sala ' + session.roomCode + ' como "' + session.myName + '".';
         banner.style.display = 'block';
-        
         if (reconnectBtn) {
             reconnectBtn.disabled = false;
             reconnectBtn.style.opacity = '1';
@@ -23,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
             reconnectBtn.style.cursor = 'not-allowed';
         }
     }
-    
     renderizarCartas();
     renderizarMisCorredores();
     actualizarUI();
@@ -32,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
 function mostrarDatosURL() {
     var nombre = localStorage.getItem('magical_athlete_nombre_prefill');
     var sala = localStorage.getItem('magical_athlete_sala_prefill');
-    
     if (nombre || sala) {
         var display = document.getElementById('urlDataDisplay');
         if (display) {
@@ -47,35 +41,30 @@ function mostrarDatosURL() {
 function entrarSala() {
     var nombre = localStorage.getItem('magical_athlete_nombre_prefill');
     var sala = localStorage.getItem('magical_athlete_sala_prefill');
-    
     if (!nombre) {
         alert('No se ha configurado un nombre. Usa ?nombre=XXX en la URL.');
         return;
     }
-    
     if (!sala || sala.length !== 4) {
         alert('No se ha configurado una sala valida. Usa ?sala=XXXX en la URL.');
         return;
     }
-    
     myName = nombre;
     myId = Math.random().toString(36).substr(2, 9);
     misSelecciones = [];
-    
+    puntosPorJugador = {};
+    estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
     localStorage.removeItem('magical_athlete_nombre_prefill');
     localStorage.removeItem('magical_athlete_sala_prefill');
-    
     connectToRoom(sala.toUpperCase());
 }
 
 function joinSuccess(code) {
     hideLoading();
     document.getElementById('lobbyModal').style.display = 'none';
-    
     var info = document.getElementById('roomInfoDisplay');
     info.style.display = 'inline-block';
     info.textContent = 'SALA: ' + code;
-    
     document.getElementById('leaderboardPanel').style.display = 'flex';
     renderLeaderboard();
 }

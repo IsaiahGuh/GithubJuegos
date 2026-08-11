@@ -91,12 +91,23 @@
                     <div id="my-cards-container" class="my-cards-container">
                         <!-- Se llena dinámicamente -->
                     </div>
+                    
+                    <!-- Puntaje del jugador -->
+                    <div id="misPuntosDisplay" style="text-align:center; font-size:1.2rem; font-weight:bold; margin:8px 0;">Puntos: 0</div>
+                    
+                    <!-- Botones globales de puntuación (siempre visibles) -->
+                    <div id="puntaje-botones" class="puntaje-botones" style="margin-top: 10px;">
+                        <button class="btn-puntaje btn-3" id="btnPuntaje3" onclick="asignarPuntoGlobal('+3')">+3</button>
+                        <button class="btn-puntaje btn-2" id="btnPuntaje2" onclick="asignarPuntoGlobal('+2')">+2</button>
+                        <button class="btn-puntaje btn-menos" id="btnPuntajeMenos" onclick="asignarPuntoGlobal('-1')">-1</button>
+                        <button class="btn-puntaje btn-mas" id="btnPuntajeMas" onclick="asignarPuntoGlobal('+1')">+1</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tabla de posiciones con cartas seleccionadas -->
+            <!-- Tabla de posiciones con puntajes -->
             <div class="leaderboard" id="leaderboardPanel">
-                <h3>Jugadores y sus cartas</h3>
+                <h3>Jugadores y puntajes</h3>
                 <div id="playersList"></div>
             </div>
         </div>
@@ -106,6 +117,7 @@
     <script src="js/ui.js"></script>
     <script src="js/leaderboard.js"></script>
     <script src="js/zoom.js"></script>
+    <script src="js/puntaje.js"></script>
     <script src="sesion.js"></script>
     <script src="mqtt.js"></script>
     <script src="main.js"></script>

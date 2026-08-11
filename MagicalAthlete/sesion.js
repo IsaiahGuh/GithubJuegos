@@ -1,4 +1,3 @@
-// ===== PERSISTENCIA DE SESION (RECONEXION) =====
 var SESSION_KEY = 'magical_athlete_session_v1';
 var REGISTRY_KEY = 'magical_athlete_players_v1';
 
@@ -6,9 +5,7 @@ var REGISTRY_KEY = 'magical_athlete_players_v1';
     var urlParams = new URLSearchParams(window.location.search);
     var nombre = urlParams.get('nombre');
     var sala = urlParams.get('sala');
-    
     console.log('MagicalAthlete - Parametros URL:', { nombre: nombre, sala: sala });
-    
     if (nombre) {
         localStorage.setItem('magical_athlete_nombre_prefill', nombre);
     }
@@ -45,52 +42,66 @@ function saveSession() {
             misSelecciones: misSelecciones,
             cartas: cartas,
             gameStarted: gameStarted,
+            puntosPorJugador: puntosPorJugador,
+            estadoRonda: estadoRonda,
+            cartaActivaId: cartaActivaId,
+            playersData: playersData,
             updatedAt: Date.now()
         }));
-    } catch (e) { 
-        console.error('No se pudo guardar la sesion', e); 
+    } catch (e) {
+        console.error('No se pudo guardar la sesion', e);
     }
 }
 
 function loadSession() {
     try {
         var raw = localStorage.getItem(SESSION_KEY);
-        return raw ? JSON.parse(raw) : null;
-    } catch (e) { 
-        return null; 
+        if (raw) {
+            var data = JSON.parse(raw);
+            puntosPorJugador = data.puntosPorJugador || {};
+            estadoRonda = data.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+            cartaActivaId = data.cartaActivaId || null;
+            if (data.playersData) {
+                playersData = data.playersData;
+            }
+            return data;
+        }
+        return null;
+    } catch (e) {
+        return null;
     }
 }
 
 function clearSession() {
-    try { 
-        localStorage.removeItem(SESSION_KEY); 
+    try {
+        localStorage.removeItem(SESSION_KEY);
     } catch (e) {}
 }
 
-function registryKey(room, name) { 
-    return room + '::' + name; 
+function registryKey(room, name) {
+    return room + '::' + name;
 }
 
 function loadRegistry() {
     try {
         var raw = localStorage.getItem(REGISTRY_KEY);
         return raw ? JSON.parse(raw) : {};
-    } catch (e) { 
-        return {}; 
+    } catch (e) {
+        return {};
     }
 }
 
 function saveRegistryEntry(room, name, id, selecciones) {
     try {
         var registry = loadRegistry();
-        registry[registryKey(room, name)] = { 
-            id: id, 
-            selecciones: selecciones, 
-            updatedAt: Date.now() 
+        registry[registryKey(room, name)] = {
+            id: id,
+            selecciones: selecciones,
+            updatedAt: Date.now()
         };
         localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry));
-    } catch (e) { 
-        console.error('No se pudo guardar el registro de jugador', e); 
+    } catch (e) {
+        console.error('No se pudo guardar el registro de jugador', e);
     }
 }
 
@@ -105,19 +116,21 @@ function reconnectToSession() {
         alert('No hay sesion guardada para reconectar.');
         return;
     }
-
     document.getElementById('lobbyModal').style.display = 'none';
-    
     myId = session.myId;
     myName = session.myName;
     misSelecciones = session.misSelecciones || [];
     cartas = session.cartas || [];
     gameStarted = session.gameStarted || false;
-    
+    puntosPorJugador = session.puntosPorJugador || {};
+    estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+    cartaActivaId = session.cartaActivaId || null;
+    if (session.playersData) {
+        playersData = session.playersData;
+    }
     renderizarCartas();
     renderizarMisCorredores();
     actualizarUI();
-
     connectToRoom(session.roomCode, true);
 }
 
@@ -125,7 +138,6 @@ function dismissSession() {
     clearSession();
     var banner = document.getElementById('sessionBanner');
     if (banner) banner.style.display = 'none';
-    
     var reconnectBtn = document.getElementById('reconnectBtn');
     if (reconnectBtn) {
         reconnectBtn.disabled = true;

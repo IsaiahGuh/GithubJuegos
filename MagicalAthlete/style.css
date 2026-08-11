@@ -289,24 +289,40 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     font-style: italic;
 }
 
-.my-card-mini {
-    width: 60px;
-    height: 85px;
-    border-radius: 8px;
-    border: 2px solid #4CAF50;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    position: relative;
+/* --- NUEVOS ESTILOS PARA CARTAS EN MIS CORREDORES --- */
+.my-card-wrapper {
     background: #1a1a2e;
+    border-radius: 10px;
+    padding: 8px;
+    border: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 130px;
 }
-
-.my-card-mini img {
+.my-card-wrapper.activa {
+    border-color: #4CAF50;
+    box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
+}
+.my-card-wrapper.consumida {
+    opacity: 0.5;
+    border-color: #777;
+}
+.my-card-img {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3/4;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #0f0f1f;
+}
+.my-card-img img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-
-.my-card-mini .mini-number {
+.my-card-img .mini-number {
     position: absolute;
     top: 2px;
     left: 2px;
@@ -314,8 +330,89 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     color: white;
     padding: 1px 4px;
     border-radius: 3px;
-    font-size: 0.5rem;
+    font-size: 0.6rem;
     font-weight: bold;
+}
+.puntos-display {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--text-main);
+    background: #2a2a4a;
+    padding: 2px 8px;
+    border-radius: 12px;
+    width: 100%;
+    text-align: center;
+}
+.btn-usar {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+    width: 100%;
+    background: #355C7D;
+    color: white;
+}
+.btn-usar:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.btn-usar:not(:disabled):hover {
+    background: #4a7a9e;
+}
+
+/* Botones globales de puntuación */
+.puntaje-botones {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+.btn-puntaje {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+    min-width: 50px;
+}
+.btn-puntaje:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.btn-puntaje.btn-3 {
+    background: #F8B195;
+    color: #1a1a2e;
+}
+.btn-puntaje.btn-3:not(:disabled):hover {
+    background: #fccdb8;
+}
+.btn-puntaje.btn-2 {
+    background: #6C5B7B;
+    color: white;
+}
+.btn-puntaje.btn-2:not(:disabled):hover {
+    background: #8a759b;
+}
+.btn-puntaje.btn-menos {
+    background: #c7403f;
+    color: white;
+}
+.btn-puntaje.btn-menos:not(:disabled):hover {
+    background: #d95a5a;
+}
+.btn-puntaje.btn-mas {
+    background: #4CAF50;
+    color: white;
+}
+.btn-puntaje.btn-mas:not(:disabled):hover {
+    background: #66bb6a;
 }
 
 /* --- LEADERBOARD --- */
@@ -395,6 +492,16 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     font-size: 0.5rem;
     font-weight: bold;
 }
+.mini-puntos {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-size: 0.5rem;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
 
 .no-cards {
     color: var(--text-muted);
@@ -465,9 +572,8 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
         max-width: 100%;
     }
     
-    .my-card-mini {
-        width: 50px;
-        height: 70px;
+    .my-card-wrapper {
+        width: 100px;
     }
 }
 
@@ -484,5 +590,85 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     .leaderboard { padding: 8px; max-height: 300px; overflow-y: auto; }
     .player-card { padding: 6px; }
     .player-card-mini { width: 35px; height: 50px; }
-    .my-card-mini { width: 40px; height: 56px; }
+    .my-card-wrapper { width: 80px; }
+    .btn-puntaje { padding: 4px 10px; font-size: 0.8rem; min-width: 35px; }
+}
+
+.ganadora-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: gold;
+    color: #1a1a2e;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 2;
+}
+.my-card-wrapper.ganadora {
+    border-color: gold;
+    box-shadow: 0 0 15px rgba(255,215,0,0.6);
+}
+#misPuntosDisplay {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 8px 0;
+    color: var(--text-main);
+    background: #2a2a4a;
+    padding: 6px;
+    border-radius: 8px;
+}
+.puntaje-botones {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+.btn-puntaje {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+    min-width: 50px;
+}
+.btn-puntaje:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.btn-puntaje.btn-3 {
+    background: #F8B195;
+    color: #1a1a2e;
+}
+.btn-puntaje.btn-3:not(:disabled):hover {
+    background: #fccdb8;
+}
+.btn-puntaje.btn-2 {
+    background: #6C5B7B;
+    color: white;
+}
+.btn-puntaje.btn-2:not(:disabled):hover {
+    background: #8a759b;
+}
+.btn-puntaje.btn-menos {
+    background: #c7403f;
+    color: white;
+}
+.btn-puntaje.btn-menos:not(:disabled):hover {
+    background: #d95a5a;
+}
+.btn-puntaje.btn-mas {
+    background: #4CAF50;
+    color: white;
+}
+.btn-puntaje.btn-mas:not(:disabled):hover {
+    background: #66bb6a;
 }
