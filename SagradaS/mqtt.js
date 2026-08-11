@@ -28,7 +28,7 @@ function connectToRoom(code) {
             score: window.gameState.myTotalScore || 0, 
             moves: [...window.gameState.moveHistory],
             cardId: window.gameState.currentCardId || 1,
-            availableCards: window.gameState.availableCards.map(c => c.id) || [],
+            availableCards: window.cartillasState && window.cartillasState.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
             isCreator: isRoomCreator
         };
         
@@ -77,7 +77,7 @@ function connectToRoom(code) {
                         herramientasState.herramientas_seleccionadas = [...data.tools] || [];
                         herramientasState.herramientas_disponibles = [...data.tools] || [];
                         console.log('Objetivos recibidos del creador:', window.gameState.publicObjectives);
-                        if (window.gameState.initialCardSelectionDone) {
+                        if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
                             renderGameInfo();
                         }
                         showTemporaryMessage('Objetivos y herramientas recibidos del creador');
@@ -109,7 +109,7 @@ function connectToRoom(code) {
                         score: window.gameState.myTotalScore || 0,
                         moves: window.gameState.moveHistory || [],
                         cardId: window.gameState.currentCardId || 1,
-                        availableCards: window.gameState.availableCards.map(c => c.id) || [],
+                        availableCards: window.cartillasState && window.cartillasState.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
                         isCreator: isRoomCreator,
                         publicObjectives: isRoomCreator ? window.gameState.publicObjectives : [],
                         tools: isRoomCreator ? window.gameState.tools : [],
@@ -153,7 +153,7 @@ function connectToRoom(code) {
                             herramientasState.herramientas_seleccionadas = [...data.tools] || [];
                             herramientasState.herramientas_disponibles = [...data.tools] || [];
                             console.log('Objetivos recibidos del creador al sincronizar:', window.gameState.publicObjectives);
-                            if (window.gameState.initialCardSelectionDone) {
+                            if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
                                 renderGameInfo();
                             }
                             showTemporaryMessage('Objetivos y herramientas sincronizados');
@@ -175,7 +175,7 @@ function connectToRoom(code) {
                     herramientasState.herramientas_seleccionadas = [...data.tools] || [];
                     herramientasState.herramientas_disponibles = [...data.tools] || [];
                     console.log('Objetivos confirmados por el creador:', window.gameState.publicObjectives);
-                    if (window.gameState.initialCardSelectionDone) {
+                    if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
                         renderGameInfo();
                     }
                     showTemporaryMessage('Objetivos y herramientas recibidos del creador');
@@ -211,9 +211,9 @@ function connectToRoom(code) {
             // 6. CARDS_DEALT - Reparto de cartillas (con colores incluidos)
             // ============================================================
             if (data.action === 'cards_dealt' && data.allPlayerCards) {
-                window.gameState.allPlayerCards = data.allPlayerCards;
-                window.gameState.allPlayerPrivateObjectives = data.allPlayerPrivateObjectives || {};
-                window.gameState.cardsDealt = true;
+                window.cartillasState.allPlayerCards = data.allPlayerCards;
+                window.cartillasState.allPlayerPrivateObjectives = data.allPlayerPrivateObjectives || {};
+                window.cartillasState.cardsDealt = true;
                 
                 if (data.publicObjectives && data.publicObjectives.length > 0) {
                     window.gameState.publicObjectives = [...data.publicObjectives];
@@ -224,7 +224,6 @@ function connectToRoom(code) {
                     herramientasState.herramientas_disponibles = [...data.tools];
                 }
                 
-                // ===== RECIBIR COLORES ASIGNADOS =====
                 if (data.coloresAsignados && data.coloresAsignados !== null) {
                     coloresState.asignaciones = data.coloresAsignados;
                     coloresState.coloresUsados = data.coloresUsados || [];
@@ -245,21 +244,21 @@ function connectToRoom(code) {
                 
                 if (data.id !== myId) {
                     const myCards = data.allPlayerCards[myId] || [];
-                    window.gameState.availableCards = myCards.map(id => getCardById(id)).filter(c => c !== null);
+                    window.cartillasState.availableCards = myCards.map(id => getCardById(id)).filter(c => c !== null);
                     
                     if (data.allPlayerPrivateObjectives) {
                         window.gameState.privateObjectiveId = data.allPlayerPrivateObjectives[myId] || null;
                     }
                     
-                    if (window.gameState.availableCards.length > 0 && !window.gameState.initialCardSelectionDone) {
+                    if (window.cartillasState.availableCards.length > 0 && !window.cartillasState.initialCardSelectionDone) {
                         showTemporaryMessage('Cartillas repartidas, selecciona la tuya');
                         if (typeof showInitialCardSelector === 'function') {
-                            showInitialCardSelector(window.gameState.availableCards);
+                            showInitialCardSelector(window.cartillasState.availableCards);
                         }
                     }
                 }
                 
-                if (window.gameState.initialCardSelectionDone) {
+                if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
                     renderGameInfo();
                 }
                 
@@ -340,7 +339,7 @@ function connectToRoom(code) {
                         herramientasState.herramientas_seleccionadas = [...data.tools] || [];
                         herramientasState.herramientas_disponibles = [...data.tools] || [];
                         console.log('Objetivos sincronizados desde sync:', window.gameState.publicObjectives);
-                        if (window.gameState.initialCardSelectionDone) {
+                        if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
                             renderGameInfo();
                         }
                     }
@@ -538,7 +537,7 @@ function verificarYAsignarCreador() {
             console.log('Asignado como creador (primer jugador en la sala)');
             
             renderLeaderboard();
-            if (window.gameState.initialCardSelectionDone) {
+            if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
                 renderGameInfo();
             }
         } else if (sortedIds.length > 0 && sortedIds[0] !== myId) {
@@ -608,7 +607,7 @@ function generarObjetivosYHerramientas() {
     console.log('Creador: Objetivos generados:', publicObjectives);
     console.log('Creador: Herramientas generadas:', tools.map(id => getHerramientaById(id)?.nombre));
     
-    if (window.gameState.initialCardSelectionDone) {
+    if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
         renderGameInfo();
     }
 }
@@ -624,7 +623,7 @@ function broadcastPresence() {
             score: window.gameState.myTotalScore || 0,
             moves: window.gameState.moveHistory || [],
             cardId: window.gameState.currentCardId || 1,
-            availableCards: window.gameState.availableCards.map(c => c.id) || [],
+            availableCards: window.cartillasState && window.cartillasState.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
             isCreator: isRoomCreator,
             publicObjectives: isRoomCreator ? window.gameState.publicObjectives : [],
             tools: isRoomCreator ? window.gameState.tools : [],
@@ -694,7 +693,7 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
             score: currentScore,
             moves: currentMoves,
             cardId: window.gameState.currentCardId || 1,
-            availableCards: window.gameState.availableCards ? window.gameState.availableCards.map(c => c.id) : [],
+            availableCards: window.cartillasState && window.cartillasState.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
             privateObjectiveId: window.gameState.privateObjectiveId || null,
             publicObjectives: window.gameState.publicObjectives || [],
             tools: window.gameState.tools || [],
@@ -706,8 +705,8 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
         };
         
         if (action === 'cards_dealt') {
-            payload.allPlayerCards = window.gameState.allPlayerCards;
-            payload.allPlayerPrivateObjectives = window.gameState.allPlayerPrivateObjectives;
+            payload.allPlayerCards = window.cartillasState.allPlayerCards;
+            payload.allPlayerPrivateObjectives = window.cartillasState.allPlayerPrivateObjectives;
             if (coloresState.coloresAsignados) {
                 payload.coloresAsignados = coloresState.asignaciones;
                 payload.coloresUsados = coloresState.coloresUsados;

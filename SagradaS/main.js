@@ -1,30 +1,16 @@
 // ===== MAIN.JS =====
-// Punto de entrada del juego - SOLO INICIALIZACIÓN
+// Punto de entrada del juego - SOLO INICIALIZACION
 
 document.addEventListener('DOMContentLoaded', function() {
     // ============================================================
     // INICIALIZAR ESTADO DEL JUEGO
     // ============================================================
     
-    window.gameState.currentCardId = null;
-    window.gameState.moveHistory = [];
-    window.gameState.gameStarted = false;
-    window.gameState.initialCardSelectionDone = false;
-    window.gameState.availableCards = [];
-    window.gameState.cardsDealt = false;
-    window.gameState.allPlayerCards = {};
-    window.gameState.totalHits = 0;
-    window.gameState.totalMisses = 0;
-    window.gameState.myTotalScore = 0;
-    window.gameState.publicObjectives = [];
-    window.gameState.tools = [];
-    window.gameState.privateObjectiveId = null;
-    window.gameState.selectedCardId = null;
-    window.gameState.cardSelectionInProgress = false;
-    window.gameState.selectedDifficulty = 0;
+    // gameState (en juego.js) ya tiene: moveHistory, gameStarted, publicObjectives, tools, privateObjectiveId, selectedDifficulty, isFinished
+    // cartillasState (en cartillas.js) ya tiene: allPlayerCards, allPlayerPrivateObjectives, availableCards, cardsDealt, cardSelectionInProgress, currentCardId, selectedCardId, initialCardSelectionDone
     
     // ============================================================
-    // INICIALIZAR MÓDULOS
+    // INICIALIZAR MODULOS
     // ============================================================
     
     // Modales (desde modales.js)
@@ -85,5 +71,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    console.log('🎲 SagradaS - Juego cargado correctamente');
+    console.log('SagradaS - Juego cargado correctamente');
 });

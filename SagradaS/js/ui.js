@@ -46,18 +46,18 @@ function showTemporaryMessage(message, duration = 1500) {
 
 function showCardSelector() {
     if (window.gameState && window.gameState.isFinished) {
-        showTemporaryMessage('⛔ La partida ya finalizó');
+        showTemporaryMessage('La partida ya finalizo');
         return;
     }
     
-    if (window.gameState && window.gameState.gameStarted && window.gameState.initialCardSelectionDone) {
-        showTemporaryMessage('La partida ya está en curso');
+    if (window.gameState && window.gameState.gameStarted && window.cartillasState && window.cartillasState.initialCardSelectionDone) {
+        showTemporaryMessage('La partida ya esta en curso');
         return;
     }
     
-    if (window.gameState && window.gameState.cardsDealt && window.gameState.availableCards.length > 0) {
+    if (window.cartillasState && window.cartillasState.cardsDealt && window.cartillasState.availableCards.length > 0) {
         if (typeof showInitialCardSelector === 'function') {
-            showInitialCardSelector(window.gameState.availableCards);
+            showInitialCardSelector(window.cartillasState.availableCards);
         }
         return;
     }
@@ -75,7 +75,7 @@ function renderBoard() {
     const boardElement = document.getElementById('game-board');
     boardElement.innerHTML = '';
     
-    if (!window.gameState.gameStarted || !window.gameState.initialCardSelectionDone) {
+    if (!window.gameState.gameStarted || !window.cartillasState || !window.cartillasState.initialCardSelectionDone) {
         boardElement.innerHTML = `
             <div class="empty-board-message">
                 <div class="icon">🎲</div>
@@ -101,7 +101,6 @@ function renderBoard() {
         return;
     }
 
-    // Obtener patrón del objetivo privado y color del jugador
     let privatePattern = null;
     let miColorHex = null;
     let mostrarBordes = false;
@@ -162,7 +161,6 @@ function renderBoard() {
                 box.classList.add('marked');
             }
 
-            // Borde del objetivo privado
             if (privatePattern && miColorHex && mostrarBordes) {
                 if (privatePattern[rowIndex] && privatePattern[rowIndex][colIndex] === 1) {
                     box.style.setProperty('outline', `4px solid ${miColorHex}`, 'important');
@@ -186,7 +184,6 @@ function renderBoard() {
                 }
             }
 
-            // Si la partida está finalizada, deshabilitar clicks
             if (window.gameState.isFinished) {
                 box.style.cursor = 'default';
                 box.style.opacity = '0.85';
@@ -283,16 +280,15 @@ function renderGameInfo() {
     if (!window.gameState.publicObjectives || window.gameState.publicObjectives.length === 0) {
         const container = document.getElementById('publicObjectives');
         if (container) {
-            container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 8px;">⏳ Esperando objetivos del creador...</div>';
+            container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 8px;">Esperando objetivos del creador...</div>';
         }
         const toolsContainer = document.getElementById('toolsDisplay');
         if (toolsContainer) {
-            toolsContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 8px;">⏳ Esperando herramientas...</div>';
+            toolsContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 8px;">Esperando herramientas...</div>';
         }
         return;
     }
     
-    // Objetivos Públicos
     const container = document.getElementById('publicObjectives');
     if (container) {
         container.innerHTML = '';
@@ -311,7 +307,6 @@ function renderGameInfo() {
         });
     }
     
-    // Herramientas
     const toolsContainer = document.getElementById('toolsDisplay');
     if (toolsContainer) {
         toolsContainer.innerHTML = '';
@@ -363,7 +358,6 @@ function renderGameInfo() {
                         ${usuariosHtml}
                     `;
                     
-                    // Si la partida está finalizada, no permitir usar herramientas
                     if (window.gameState.isFinished) {
                         el.style.cursor = 'default';
                         el.style.opacity = '0.4';
@@ -386,7 +380,7 @@ function renderGameInfo() {
 }
 
 // ============================================================
-// RESTAURAR MODAL DE CONFIRMACIÓN
+// RESTAURAR MODAL DE CONFIRMACION
 // ============================================================
 
 function restaurarModalConfirmacion() {
@@ -416,18 +410,17 @@ function setupUIEvents() {
     if (startGameBtn) {
         startGameBtn.addEventListener('click', function() {
             if (window.gameState && window.gameState.isFinished) {
-                showTemporaryMessage('⛔ La partida ya finalizó');
+                showTemporaryMessage('La partida ya finalizo');
                 return;
             }
-            if (window.gameState && window.gameState.gameStarted && window.gameState.initialCardSelectionDone) {
-                showTemporaryMessage('La partida ya está en curso');
+            if (window.gameState && window.gameState.gameStarted && window.cartillasState && window.cartillasState.initialCardSelectionDone) {
+                showTemporaryMessage('La partida ya esta en curso');
                 return;
             }
             showCardSelector();
         });
     }
     
-    // ===== NUEVO: Botón Terminar =====
     const finishGameBtn = document.getElementById('finishGameBtn');
     if (finishGameBtn) {
         finishGameBtn.addEventListener('click', function() {
@@ -482,7 +475,7 @@ function setupUIEvents() {
 }
 
 // ============================================================
-// INICIALIZACIÓN
+// INICIALIZACION
 // ============================================================
 
 function initUI() {
@@ -503,4 +496,4 @@ window.showTemporaryMessage = showTemporaryMessage;
 window.initUI = initUI;
 window.restaurarModalConfirmacion = restaurarModalConfirmacion;
 
-console.log('✅ ui.js cargado - Con botón Terminar');
+console.log('ui.js cargado - Con boton Terminar');
