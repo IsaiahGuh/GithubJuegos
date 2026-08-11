@@ -148,8 +148,14 @@
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
 
-        // Para Cassettes
+        // Para ParaDice
         if (gameId === 'ParaDice') {
+            const separator = url.includes('?') ? '&' : '?';
+            url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
+        }
+
+        // Para SagradaS
+        if (gameId === 'SagradaS') {
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }

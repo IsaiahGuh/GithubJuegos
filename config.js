@@ -46,6 +46,14 @@ const Config = {
                         color: '#f5deb2',
                         topics: ['multijugador', 'cartas', 'desafios'],
                         badge: 'Online'
+                    },
+                    {
+                        id: 'SagradaS',
+                        nombre: 'SagradaS',
+                        ruta: './SagradaS/index.html',
+                        color: '#f5deb2',
+                        topics: ['multijugador', 'cartas', 'desafios'],
+                        badge: 'Online'
                     }
                 ];
             }
