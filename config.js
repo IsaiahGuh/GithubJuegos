@@ -8,43 +8,52 @@ const Config = {
         return [
             {
                 id: 'CleverDados',
-                nombre: 'CleverDados',
+                nombre: 'Clever',
                 ruta: './CleverDados/index.html',
                 color: '#D44D5C',
-                topics: ['multijugador', 'dados', 'estrategia'],
-                badge: 'Online'
+                topics: ['mqtt', 'dados']
             },
             {
                 id: 'QuixxDados',
-                nombre: 'QuixxDados',
+                nombre: 'Quixx',
                 ruta: './QuixxDados/index.html',
                 color: '#808BC3',
-                topics: ['multijugador', 'dados', 'estrategia'],
-                badge: 'Online'
+                topics: ['mqtt', 'dados']
             },
             {
                 id: 'JuegoCassettes',
                 nombre: 'Cassettes',
                 ruta: './JuegoCassettes/index.html',
                 color: '#f5deb2',
-                topics: ['multijugador', 'cartas', 'desafios'],
-                badge: 'Online'
+                topics: ['mqtt', 'cartas']
             },
             {
                 id: 'ParaDice',
-                nombre: 'ParaDice',
+                nombre: 'Paradice',
                 ruta: './ParaDice/index.html',
                 color: '#f5deb2',
-                topics: ['multijugador', 'cartas', 'desafios'],
-                badge: 'Online'
+                topics: ['mqtt', 'dados', 'cartas']
             },
             {
                 id: 'SagradaS',
-                nombre: 'SagradaS',
+                nombre: 'Sagrada',
                 ruta: './SagradaS/index.html',
                 color: '#f5deb2',
-                topics: ['multijugador', 'cartas', 'desafios'],
-                badge: 'Online'
+                topics: ['mqtt', 'dados']
+            },
+            {
+                id: 'MasterCartas',
+                nombre: 'Master',
+                ruta: './MasterCartas/index.html',
+                color: '#4CAF50',
+                topics: ['local', 'cartas']
+            },
+            {
+                id: 'FigurasDados',
+                nombre: 'Figuras',
+                ruta: './FigurasDados/index.html',
+                color: '#FF9800',
+                topics: ['local', 'dados']
             }
         ];
     },

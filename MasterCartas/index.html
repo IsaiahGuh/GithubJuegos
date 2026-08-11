@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MasterCartas</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="favicon.ico">
+</head>
+<body>
+
+    <!-- ============================================ -->
+    <!-- CREAR PARTIDA -->
+    <!-- ============================================ -->
+    <div id="lobbyModal" class="modal-overlay">
+        <div class="modal-box" id="lobbyModalBox">
+            <!-- VISTA PRINCIPAL -->
+            <div id="vistaPrincipal">
+                <h2>MasterCartas</h2>
+                <p>Crear nueva partida</p>
+                <div class="modal-buttons">
+                    <div class="row-btns">
+                        <button class="modal-btn btn-secondary" onclick="window.toggleVistaJugadores()">Jugadores</button>
+                        <button class="modal-btn btn-primary" onclick="window.iniciarPartida()">Entrar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA EDICIÓN DE JUGADORES -->
+            <div id="vistaJugadores" style="display:none;">
+                <h2>Jugadores</h2>
+                <div id="listaJugadoresContainer" class="lista-jugadores">
+                    <!-- Los inputs se generan dinámicamente -->
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-btn btn-outline" onclick="window.agregarJugador()" id="btnAgregarJugador" style="width:100%;">
+                        + Agregar Jugador
+                    </button>
+                    <button class="modal-btn btn-primary" onclick="window.toggleVistaJugadores()" style="margin-top:10px;">
+                        Listo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- UI DEL JUEGO -->
+    <!-- ============================================ -->
+    <header>
+        <h1>MasterCartas</h1>
+        <div id="turnoIndicador" class="turno-indicador" style="display:none;"></div>
+    </header>
+
+    <!-- AREA DE REGLAS -->
+    <div id="areaReglas">
+        <h3>Mandatos</h3>
+        <div id="reglasContainer"></div>
+    </div>
+
+    <!-- MAZO Y DESCARTE -->
+    <div class="columnas">
+        <div id="areaCartas">
+            <img id="mazo" src="imagenes/MasterCartas_Carta0.png" alt="Reverso de Carta">
+            <div>Restantes: <span id="contadorCartas" style="font-weight: bold">0</span></div>
+        </div>
+        
+        <div id="areaDescubierta">
+            <img id="cartaDescubierta" src="imagenes/MasterCartas_Vacio.png" alt="Mesa Vacia">
+            <div>Descartadas: <span id="contadorDescarte" style="font-weight: bold">0</span></div>
+        </div>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="controles-juego">
+        <button class="btn-control btn-historial" onclick="window.mostrarModalHistorial()">Historial</button>
+        <button class="btn-control btn-otorgar" onclick="window.abrirModalOtorgar()">Otorgar</button>
+        <button class="btn-control btn-reiniciar" onclick="window.reiniciarPartida()">Reiniciar</button>
+        <div class="info-mazo">
+            <span>Restantes: <strong id="contadorCartas">0</strong></span>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL ESPECIAL -->
+    <!-- ============================================ -->
+    <div id="modalEspecial" class="modal">
+        <div class="modal-contenido">
+            <h3>Regla Especial</h3>
+            <textarea id="textoRegla" rows="3" cols="30"></textarea>
+            <br><br>
+            <button id="guardarReglaBtn">Guardar</button>
+            <button onclick="document.getElementById('modalEspecial').style.display='none'" style="margin-left:10px;background:#555;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL HISTORIAL -->
+    <!-- ============================================ -->
+    <div id="modalHistorial" class="modal">
+        <div class="modal-contenido historial-contenido">
+            <h3>Cartas Descartadas</h3>
+            <button id="cerrarHistorialBtn" class="cerrar-btn">Cerrar</button>
+            <div id="historialLista" class="historial-lista"></div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL ZOOM -->
+    <!-- ============================================ -->
+    <div id="modalZoom" class="modal zoom-modal">
+        <div class="zoom-contenido">
+            <img id="zoomImg">
+            <div id="zoomTexto"></div>
+            <button id="cerrarZoomBtn" class="cerrar-zoom-btn">✕</button>
+        </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="leaderboard" id="leaderboardPanel" style="display: none;">
+        <div class="leaderboard-header" onclick="window.toggleLeaderboard()">
+            <h3>Jugadores</h3>
+            <span id="toggleIcon">▲</span>
+        </div>
+        <div id="leaderboardContent" class="leaderboard-content">
+            <div id="playersList"></div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================ -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

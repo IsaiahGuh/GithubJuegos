@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Figuras Dados</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- MODAL DE INICIO -->
+    <div id="startModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Figuras Dados</h2>
+            <p>Marca las celdas para completar la figura</p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-primary" id="btnEntrar">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI DEL JUEGO -->
+    <header>
+        <h1>Figuras Dados</h1>
+    </header>
+
+    <div class="app-container">
+        <div class="board-container">
+            <div class="board" id="game-board">
+                <div style="text-align:center; padding: 30px; color: var(--text-muted);">
+                    <p style="font-size: 1.2rem; margin-bottom: 10px;">Esperando figura...</p>
+                    <p style="font-size: 0.9rem;">Presiona "Figura Simple" o "Figura Grupal" para comenzar</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="scoreboard">
+                <div style="display: flex; gap: 8px; margin-top: 0;">
+                    <button class="modal-btn btn-primary" id="btnFiguraSimple" style="flex:1; padding: 8px; font-size: 0.8rem;">
+                        Figura Simple
+                    </button>
+                    <button class="modal-btn btn-secondary" id="btnFiguraGrupal" style="flex:1; padding: 8px; font-size: 0.8rem;">
+                        Figura Grupal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/figuras.js"></script>
+    <script type="module" src="js/deshacer.js"></script>
+    <script type="module" src="js/juego.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

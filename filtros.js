@@ -1,6 +1,6 @@
 // Sistema de filtrado de juegos
 const FilterSystem = {
-    TEMAS_FIJOS: ['mqtt', 'local', 'dados', 'cartas'],
+    TEMAS_FIJOS: ['mqtt', 'local', 'solo', 'dados', 'cartas'], // Actualizado con los nuevos temas
     currentFilter: null,
     
     getTopicsArray() {
