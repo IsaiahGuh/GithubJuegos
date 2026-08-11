@@ -373,6 +373,7 @@ function repartirCartillasUnicas() {
             herramientasState.herramientas_seleccionadas = tools;
             herramientasState.herramientas_disponibles = tools;
         }
+        continuarReparto(isCreator, playerIds, playerCards, playerPrivateObjectives);
     } else {
         if (window.gameState.publicObjectives.length === 0) {
             showTemporaryMessage('Esperando objetivos del creador...');

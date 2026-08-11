@@ -52,15 +52,30 @@ function getPrefilledRoom() {
 function saveSession() {
     if (!window.currentRoom) return;
     try {
+        var cardState = (typeof window.getCardStateForSync === 'function')
+            ? window.getCardStateForSync()
+            : null;
+
+        var favores = (window.herramientasState && window.herramientasState.favores)
+            ? { ...window.herramientasState.favores }
+            : null;
+
         localStorage.setItem(SESSION_KEY, JSON.stringify({
             roomCode: window.currentRoom,
             myId: window.myId,
             myName: window.myName,
             moveHistory: window.gameState ? window.gameState.moveHistory : [],
             cardId: window.gameState ? window.gameState.currentCardId : null,
+            cardState: cardState,
             privateObjectiveId: window.gameState ? window.gameState.privateObjectiveId : null,
+            publicObjectives: window.gameState ? window.gameState.publicObjectives : [],
+            tools: window.gameState ? window.gameState.tools : [],
             gameStarted: window.gameState ? window.gameState.gameStarted : false,
+            isFinished: window.gameState ? window.gameState.isFinished : false,
             initialCardSelectionDone: window.cartillasState ? window.cartillasState.initialCardSelectionDone : false,
+            favores: favores,
+            herramientasUsadas: window.herramientasState ? window.herramientasState.herramientas_usadas : [],
+            miColor: window.coloresState ? window.coloresState.miColor : null,
             updatedAt: Date.now()
         }));
     } catch (e) { 
@@ -155,17 +170,87 @@ function reconnectToSession() {
         window.gameState.moveHistory = session.moveHistory || [];
         window.gameState.currentCardId = session.cardId || null;
         window.gameState.privateObjectiveId = session.privateObjectiveId || null;
+        window.gameState.publicObjectives = session.publicObjectives || [];
+        window.gameState.tools = session.tools || [];
         window.gameState.gameStarted = session.gameStarted || false;
+        window.gameState.isFinished = session.isFinished || false;
     }
     
     if (window.cartillasState) {
         window.cartillasState.initialCardSelectionDone = session.initialCardSelectionDone || false;
+        window.cartillasState.currentCardId = session.cardId || null;
+    }
+
+    // ===== RESTAURAR EL TABLERO EXACTO (colores/valores elegidos por el jugador) =====
+    // getCurrentCard() devuelve la carta original desde CARTILLAS; sin esto,
+    // las casillas que el jugador llenó libremente (sin color o valor predefinido)
+    // volverían a aparecer vacías tras recargar la página.
+    if (session.cardId && session.cardState && session.cardState.rows && typeof getCardById === 'function') {
+        var originalCard = getCardById(session.cardId);
+        if (originalCard && originalCard.rows) {
+            session.cardState.rows.forEach(function(row, r) {
+                row.forEach(function(savedCell, c) {
+                    if (originalCard.rows[r] && originalCard.rows[r][c]) {
+                        originalCard.rows[r][c].value = savedCell.value;
+                        originalCard.rows[r][c].color = savedCell.color;
+                    }
+                });
+            });
+        }
+    }
+
+    // ===== RESTAURAR HERRAMIENTAS / FAVORES =====
+    if (window.herramientasState) {
+        if (session.favores) {
+            window.herramientasState.favores.total = session.favores.total || 0;
+            window.herramientasState.favores.gastados = session.favores.gastados || 0;
+            window.herramientasState.favores.disponibles = session.favores.disponibles || 0;
+        }
+        window.herramientasState.herramientas_usadas = session.herramientasUsadas || [];
+        window.herramientasState.herramientas_seleccionadas = session.tools || [];
+        window.herramientasState.herramientas_disponibles = session.tools || [];
+    }
+
+    // ===== RESTAURAR COLOR ASIGNADO =====
+    if (window.coloresState && session.miColor) {
+        window.coloresState.miColor = session.miColor;
+        window.coloresState.asignaciones = window.coloresState.asignaciones || {};
+        window.coloresState.asignaciones[window.myId] = session.miColor;
+    }
+
+    // ===== RESTAURAR HISTORIAL DE DESHACER (para resaltar la última marcada) =====
+    if (window.undoState) {
+        window.undoState.history = [...(session.moveHistory || [])];
+        window.undoState.lastMarked = window.undoState.history.length > 0
+            ? window.undoState.history[window.undoState.history.length - 1]
+            : null;
+    }
+
+    // ===== RESTAURAR VISIBILIDAD DE LA UI DE PARTIDA EN CURSO =====
+    if (session.gameStarted || session.initialCardSelectionDone) {
+        var gameInfo = document.getElementById('gameInfo');
+        if (gameInfo) gameInfo.style.display = 'block';
+
+        var finishBtn = document.getElementById('finishGameBtn');
+        if (finishBtn) {
+            finishBtn.disabled = false;
+            finishBtn.style.opacity = '1';
+            finishBtn.style.cursor = 'pointer';
+        }
+
+        var startBtn = document.getElementById('startGameBtn');
+        if (startBtn) {
+            startBtn.textContent = 'Vitrinas';
+            startBtn.style.opacity = '0.7';
+            startBtn.style.cursor = 'default';
+        }
     }
 
     if (typeof renderBoard === 'function') renderBoard();
     if (typeof calculateScores === 'function') calculateScores();
     if (typeof renderGameInfo === 'function') renderGameInfo();
     if (typeof renderLeaderboard === 'function') renderLeaderboard();
+    if (typeof renderFavoresConColor === 'function') renderFavoresConColor();
 
     if (typeof connectToRoom === 'function') {
         connectToRoom(session.roomCode, true);

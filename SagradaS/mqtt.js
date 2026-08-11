@@ -18,9 +18,11 @@ function connectToRoom(code, isReconnect) {
     showLoading(isReconnect ? 'Reconectando a la sala...' : 'Conectando con la sala...');
 
     mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+    window.mqttClient = mqttClient;
 
     mqttClient.on('connect', () => {
         currentRoom = code;
+        window.currentRoom = currentRoom;
         const topic = `sagradas_app/room/${code}`;
         mqttClient.subscribe(topic);
         
@@ -621,6 +623,7 @@ function verificarYAsignarCreador() {
     if (!creatorId) {
         if (sortedIds.length > 0 && sortedIds[0] === myId) {
             isRoomCreator = true;
+            window.isRoomCreator = isRoomCreator;
             playersData[myId].isCreator = true;
             
             generarObjetivosYHerramientas();
@@ -739,6 +742,12 @@ function broadcastCreatorStatus() {
 // ============================================================
 
 function broadcastScore(action = 'sync', extraPayload = {}) {
+    // Guardar sesion localmente en cada broadcast para que un reload siempre
+    // recupere el ultimo estado (tablero, objetivos, favores, etc.)
+    if (typeof saveSession === 'function') {
+        saveSession();
+    }
+
     if (mqttClient && currentRoom) {
         const topic = `sagradas_app/room/${currentRoom}`;
         
@@ -861,6 +870,10 @@ function disconnectFromRoom() {
     currentRoom = null;
     playersData = {};
     isRoomCreator = false;
+    window.mqttClient = null;
+    window.currentRoom = null;
+    window.playersData = playersData;
+    window.isRoomCreator = false;
 }
 
 // ============================================================
