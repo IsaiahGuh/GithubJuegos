@@ -21,8 +21,7 @@ import {
     cerrarPodio
 } from './js/juego.js';
 import { 
-    showJoinModal, backToLobby, 
-    createRoom, joinRoom,
+    entrarSala,
     setRenderStatusPanel,
     forzarRestauracionLocal
 } from './mqtt.js';
@@ -44,11 +43,30 @@ import {
 } from './js/deshacer.js';
 
 // ============================================
-// INICIALIZACIÓN
+// MOSTRAR DATOS DESDE URL
+// ============================================
+
+function mostrarDatosURL() {
+    const nombre = localStorage.getItem('paradice_nombre_prefill');
+    const sala = localStorage.getItem('paradice_sala_prefill');
+    
+    if (nombre || sala) {
+        const display = document.getElementById('urlDataDisplay');
+        if (display) {
+            display.style.display = 'block';
+            document.getElementById('urlPlayerName').textContent = nombre || '---';
+            document.getElementById('urlRoomCode').textContent = sala || '---';
+            
+            console.log('Datos configurados:', { nombre, sala });
+        }
+    }
+}
+
+// ============================================
+// INICIALIZACION
 // ============================================
 
 function init() {
-    // Registrar renderStatusPanel para que mqtt.js pueda usarlo
     setRenderStatusPanel(renderStatusPanel);
     
     initState();
@@ -58,6 +76,29 @@ function init() {
     calculateScores();
     renderStatusPanel();
     actualizarBotonEspecial();
+    mostrarDatosURL();
+    
+    var session = window.loadSession();
+    var banner = document.getElementById('sessionBanner');
+    var reconnectBtn = document.getElementById('reconnectBtn');
+    
+    if (session && banner) {
+        document.getElementById('sessionBannerText').textContent =
+            'Tenías una partida abierta en la sala ' + session.roomCode + ' como "' + session.myName + '".';
+        banner.style.display = 'block';
+        
+        if (reconnectBtn) {
+            reconnectBtn.disabled = false;
+            reconnectBtn.style.opacity = '1';
+            reconnectBtn.style.cursor = 'pointer';
+        }
+    } else {
+        if (reconnectBtn) {
+            reconnectBtn.disabled = true;
+            reconnectBtn.style.opacity = '0.5';
+            reconnectBtn.style.cursor = 'not-allowed';
+        }
+    }
     
     if (window.innerWidth <= 768) {
         const content = document.getElementById('leaderboardContent');
@@ -66,14 +107,10 @@ function init() {
         if (icon) icon.textContent = '▼';
     }
     
-    // EXPONER FUNCIONES GLOBALES
+    window.entrarSala = entrarSala;
     window.repartirCartas = repartirCartas;
     window.reiniciarTablero = reiniciarTablero;
     window.limpiarMano = limpiarMano;
-    window.createRoom = createRoom;
-    window.joinRoom = joinRoom;
-    window.showJoinModal = showJoinModal;
-    window.backToLobby = backToLobby;
     window.cerrarZoom = cerrarZoom;
     window.toggleLeaderboard = toggleLeaderboard;
     window.abrirZoomLeaderboardDesdeCard = abrirZoomLeaderboardDesdeCard;
@@ -92,7 +129,6 @@ function init() {
     window.refrescarSincronizacion = refrescarSincronizacion;
     window.forzarRestauracionLocal = forzarRestauracionLocal;
     
-    // Funciones de completas
     window.abrirCompletas = abrirCompletas;
     window.cerrarCompletas = cerrarCompletas;
     window.verHistorial = verHistorial;
@@ -102,7 +138,6 @@ function init() {
     window.abrirCompletasDeJugador = abrirCompletasDeJugador;
     window.verHistorialDeJugador = verHistorialDeJugador;
 
-    // Funciones de deshacer (para debug y consola)
     window._debugDeshacer = {
         push: pushMovimiento,
         pop: () => { const m = popMovimiento(); if(m) console.log('Pop:', m); return m; },
@@ -119,13 +154,13 @@ function init() {
     };
     
     console.log('ParaDice - Iniciado');
-    console.log(`Cartas en mazo: ${state.mazoColores.length}`);
-    console.log(`Cartas especiales: ${state.mazoEspecialDisponible.length}`);
+    console.log('Cartas en mazo: ' + state.mazoColores.length);
+    console.log('Cartas especiales: ' + state.mazoEspecialDisponible.length);
     console.log('Completa una carta Lima y usa su habilidad para desbloquear Cartas Especiales');
     console.log('Haz clic en el panel de estado para ver tus cartas completadas');
-    console.log('🔄 Sistema de deshacer: haz clic en la última casilla marcada para desmarcarla');
-    console.log('📊 Para debug: window._debugDeshacer');
-    console.log('🔄 Para restaurar estado: window.forzarRestauracionLocal()');
+    console.log('Sistema de deshacer: haz clic en la ultima casilla marcada para desmarcarla');
+    console.log('Para debug: window._debugDeshacer');
+    console.log('Para restaurar estado: window.forzarRestauracionLocal()');
 }
 
 // ============================================
@@ -134,7 +169,6 @@ function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
-// Evento para abrir completas al hacer clic en el panel de estado
 document.addEventListener('click', function(event) {
     const panel = document.getElementById('status-panel-content');
     if (panel && panel.contains(event.target)) {
@@ -191,10 +225,7 @@ export {
     repartirCartas, 
     reiniciarTablero, 
     limpiarMano,
-    createRoom,
-    joinRoom,
-    showJoinModal,
-    backToLobby,
+    entrarSala,
     cerrarZoom,
     toggleLeaderboard,
     abrirZoomLeaderboardDesdeCard,
@@ -220,7 +251,6 @@ export {
     abrirZoomTerminadaDesdeCompletas,
     abrirCompletasDeJugador,
     verHistorialDeJugador,
-    // Funciones de deshacer
     pushMovimiento,
     eliminarMovimientosDeCarta,
     limpiarPilaMovimientos,

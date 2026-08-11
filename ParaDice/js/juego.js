@@ -1,5 +1,5 @@
 // ============================================
-// LÓGICA DEL JUEGO
+// LOGICA DEL JUEGO
 // ============================================
 
 import { COLORES, state, PUNTAJES, TICKETS, HABILIDADES, initState } from '../config-state.js';
@@ -47,7 +47,7 @@ export function contarCartasEspecialesUsadas() {
 }
 
 // ============================================
-// VERIFICAR SI MAZO ESPECIAL ESTÁ DISPONIBLE
+// VERIFICAR SI MAZO ESPECIAL ESTA DISPONIBLE
 // ============================================
 
 export function isMazoEspecialDisponible() {
@@ -92,25 +92,6 @@ export function getCartasCompletadasPorColor(jugadorId, color) {
 }
 
 // ============================================
-// OBTENER PUNTAJE DE CARTAS DE UN COLOR (sin tickets)
-// ============================================
-
-function getPuntajeCartasColor(jugadorId, color) {
-    const player = state.playersData[jugadorId];
-    if (!player || !player.progresoCartas) return 0;
-    
-    let puntaje = 0;
-    for (let i = 1; i <= 9; i++) {
-        const key = `${color}-${i}`;
-        const data = player.progresoCartas[key];
-        if (data && data.completada === true) {
-            puntaje += PUNTAJES[color][i - 1] || 0;
-        }
-    }
-    return puntaje;
-}
-
-// ============================================
 // TICKETS
 // ============================================
 
@@ -146,13 +127,11 @@ function verificarTicketsColor() {
 }
 
 function verificarTicketBonus(jugadorId) {
-    // Si ya se reclamó el bonus, no hacer nada
     if (state.bonusReclamado) return false;
     
     const player = state.playersData[jugadorId];
     if (!player || !player.progresoCartas) return false;
     
-    // Contar cuántos COLORES DIFERENTES tienen al menos 1 carta completada
     let coloresCompletos = 0;
     COLORES.forEach(color => {
         let tieneCartaCompletada = false;
@@ -161,7 +140,7 @@ function verificarTicketBonus(jugadorId) {
             const data = player.progresoCartas[key];
             if (data && data.completada === true) {
                 tieneCartaCompletada = true;
-                break; // Solo necesitamos saber si tiene al menos 1 carta de este color
+                break;
             }
         }
         if (tieneCartaCompletada) {
@@ -169,19 +148,16 @@ function verificarTicketBonus(jugadorId) {
         }
     });
     
-    // Necesita los 5 colores para obtener el bonus
     if (coloresCompletos >= 5) {
         state.bonusTicket = jugadorId;
         state.bonusReclamado = true;
         const nombreJugador = state.playersData[jugadorId]?.name || 'Jugador';
         mostrarMensaje(`Ticket BONUS (+${TICKETS.bonus.puntaje} pts) obtenido por ${nombreJugador}`, 'success');
         
-        // Broadcast inmediato
         if (state.currentRoom) {
             broadcastTickets();
         }
         
-        // Recalcular scores
         calculateScores();
         renderLeaderboard();
         renderStatusPanel();
@@ -201,7 +177,6 @@ function actualizarPuntajesConTickets() {
         const player = state.playersData[jugadorId];
         if (!player || !player.progresoCartas) return;
         
-        // 1. Sumar puntajes de cartas
         COLORES.forEach(color => {
             for (let i = 1; i <= 9; i++) {
                 const key = `${color}-${i}`;
@@ -214,19 +189,16 @@ function actualizarPuntajesConTickets() {
             }
         });
         
-        // 2. Sumar tickets de color
         COLORES.forEach(color => {
             if (state.tickets[color] === jugadorId) {
                 puntaje += TICKETS[color].puntaje;
             }
         });
         
-        // 3. BONUS TICKET - SOLO si el jugador es el dueño del bonus
         if (state.bonusTicket === jugadorId) {
             puntaje += TICKETS.bonus.puntaje;
         }
         
-        // 4. Sumar puntos de cartas especiales
         if (player.puntosEspeciales && player.puntosEspeciales.length > 0) {
             const totalPuntosEspeciales = player.puntosEspeciales.reduce((sum, pts) => sum + pts, 0);
             puntaje += totalPuntosEspeciales;
@@ -240,7 +212,7 @@ function actualizarPuntajesConTickets() {
 }
 
 // ============================================
-// ACTUALIZAR PUNTAJES EN VIVO (CUANDO UN COLOR LLEGA A META)
+// ACTUALIZAR PUNTAJES EN VIVO
 // ============================================
 
 function actualizarPuntajesEnVivo() {
@@ -271,7 +243,6 @@ function actualizarPuntajesEnVivo() {
             }
         });
         
-        // BONUS TICKET
         if (state.bonusTicket === state.myId) {
             puntajeTotal += TICKETS.bonus.puntaje;
         }
@@ -297,7 +268,7 @@ function actualizarPuntajesEnVivo() {
 }
 
 // ============================================
-// ACTUALIZAR PUNTAJES CON DOBLE (CUANDO EL SEGUNDO COLOR LLEGA A META)
+// ACTUALIZAR PUNTAJES CON DOBLE
 // ============================================
 
 function actualizarPuntajesConDoble() {
@@ -306,7 +277,6 @@ function actualizarPuntajesConDoble() {
     const primerColor = coloresMeta[0];
     const segundoColor = coloresMeta[1];
     
-    // Encontrar el color más atrás
     let colorMasAtras = null;
     let casillaMasBaja = Infinity;
     let coloresEnEmpate = [];
@@ -365,7 +335,6 @@ function actualizarPuntajesConDoble() {
             puntajeFinal = puntajeCartas;
         }
         
-        // SUMAR TICKET DE COLOR (si aplica)
         if (state.tickets[color] === state.myId) {
             puntajeFinal += TICKETS[color].puntaje;
         }
@@ -380,12 +349,10 @@ function actualizarPuntajesConDoble() {
         puntajeTotal += puntajeFinal;
     });
     
-    // SUMAR BONUS TICKET
     if (state.bonusTicket === state.myId) {
         puntajeTotal += TICKETS.bonus.puntaje;
     }
     
-    // Sumar puntos de cartas especiales
     if (playerData && playerData.puntosEspeciales && playerData.puntosEspeciales.length > 0) {
         const totalEspeciales = playerData.puntosEspeciales.reduce((sum, pts) => sum + pts, 0);
         puntajeTotal += totalEspeciales;
@@ -415,13 +382,10 @@ export function finalizarJuego() {
     if (state.juegoTerminado) return;
     state.juegoTerminado = true;
     
-    // Asegurar que todos los jugadores tengan sus scores actualizados
     calculateScores();
     
-    // Mostrar modal de podio con TOP 3
     mostrarPodio();
     
-    // Broadcast si está en sala
     if (state.currentRoom) {
         broadcastJuegoTerminado();
     }
@@ -432,7 +396,6 @@ function mostrarPodio() {
     const content = document.getElementById('podioContent');
     if (!modal || !content) return;
     
-    // Obtener todos los jugadores y ordenar por score (mayor a menor)
     const jugadores = Object.keys(state.playersData).map(id => ({
         id: id,
         nombre: state.playersData[id].name || 'Jugador',
@@ -441,32 +404,28 @@ function mostrarPodio() {
     }));
     
     jugadores.sort((a, b) => b.score - a.score);
-    
-    // Tomar TOP 3
     const top3 = jugadores.slice(0, 3);
-    
-    const medallas = ['🥇', '🥈', '🥉'];
+    const medallas = ['1.', '2.', '3.'];
     
     let html = `
         <div style="text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 3rem;">🏆</div>
+            <div style="font-size: 3rem;">T</div>
             <h2 style="color: #ffd700; margin-bottom: 4px;">JUEGO TERMINADO</h2>
         </div>
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
     `;
     
     top3.forEach((jugador, index) => {
-        const esLocal = jugador.esLocal ? ' (Tú)' : '';
+        const esLocal = jugador.esLocal ? ' (Tu)' : '';
         html += `
             <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-                <span style="font-size: 1.8rem; min-width: 45px; text-align: center;">${medallas[index] || `${index+1}.`}</span>
+                <span style="font-size: 1.8rem; min-width: 45px; text-align: center;">${medallas[index]}</span>
                 <span style="flex: 1; font-weight: bold; color: #fff; font-size: 1.1rem;">${jugador.nombre}${esLocal}</span>
                 <span style="font-weight: bold; color: #ffd700; font-size: 1.2rem; min-width: 60px; text-align: right;">${jugador.score} pts</span>
             </div>
         `;
     });
     
-    // Si hay más de 3 jugadores, mostrar posición del jugador local si no está en TOP 3
     const localEnTop3 = top3.some(j => j.esLocal);
     if (!localEnTop3 && jugadores.length > 3) {
         const posLocal = jugadores.findIndex(j => j.esLocal) + 1;
@@ -475,7 +434,7 @@ function mostrarPodio() {
             html += `
                 <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 6px; border: 1px dashed rgba(255,255,255,0.1); margin-top: 4px;">
                     <span style="font-size: 1rem; min-width: 45px; text-align: center; color: #888;">#${posLocal}</span>
-                    <span style="flex: 1; color: #888; font-size: 0.9rem;">${local.nombre} (Tú)</span>
+                    <span style="flex: 1; color: #888; font-size: 0.9rem;">${local.nombre} (Tu)</span>
                     <span style="color: #666; font-size: 1rem; min-width: 60px; text-align: right;">${local.score} pts</span>
                 </div>
             `;
@@ -506,51 +465,41 @@ export function cerrarPodio() {
 // ============================================
 
 export function completarCarta(carta, casillaNumero) {
-    // Si el juego terminó, no permitir más acciones
     if (state.juegoTerminado) {
-        mostrarMensaje('El juego ya terminó. Reinicia para jugar de nuevo.', 'warning');
+        mostrarMensaje('El juego ya termino. Reinicia para jugar de nuevo.', 'warning');
         return;
     }
     
     const key = `${carta.color}-${carta.numero}`;
     
-    // Inicializar como objeto con casillas marcadas
     if (!state.progresoCarta[key]) {
         state.progresoCarta[key] = { marcadas: [], completada: false };
     }
     
     const progreso = state.progresoCarta[key];
     
-    // Verificar si la carta ya está completada
     if (progreso.completada) {
-        mostrarMensaje(`Esta carta ya está completada`, 'warning');
+        mostrarMensaje('Esta carta ya esta completada', 'warning');
         return;
     }
     
-    // Verificar si esta casilla ya fue marcada
     if (progreso.marcadas.includes(casillaNumero)) {
-        mostrarMensaje(`La casilla ${casillaNumero} ya está marcada`, 'warning');
+        mostrarMensaje(`La casilla ${casillaNumero} ya esta marcada`, 'warning');
         return;
     }
     
-    // GUARDAR MOVIMIENTO EN LA PILA (antes de marcar)
     pushMovimiento(carta.color, carta.numero, casillaNumero);
     
-    // Marcar la casilla
     progreso.marcadas.push(casillaNumero);
     const totalMarcadas = progreso.marcadas.length;
     
-    // Verificar si se completaron las 3 casillas
     if (totalMarcadas === 3) {
         progreso.completada = true;
         
-        // ELIMINAR MOVIMIENTOS DE ESTA CARTA DE LA PILA
         eliminarMovimientosDeCarta(key);
         
-        // Verificar si la ficha ya está en la meta (casilla 6)
         const posicionActual = state.fichas[carta.color] || 0;
         
-        // Avanzar ficha SOLO si no está en la meta
         if (posicionActual < 5) {
             if (!state.fichas[carta.color]) {
                 state.fichas[carta.color] = 0;
@@ -559,19 +508,15 @@ export function completarCarta(carta, casillaNumero) {
                 state.fichas[carta.color]++;
             }
             
-            // Verificar si la ficha llegó a la meta (casilla 6)
             const nuevaPosicion = state.fichas[carta.color] || 0;
-            if (nuevaPosicion === 5) { // 5 = casilla 6 (0-index)
-                // Registrar el color en coloresMeta si no está ya
+            if (nuevaPosicion === 5) {
                 if (!state.coloresMeta.includes(carta.color)) {
                     state.coloresMeta.push(carta.color);
                     
-                    // Si es el PRIMER color en llegar a meta
                     if (state.coloresMeta.length === 1) {
-                        mostrarMensaje(`🎉 ¡${carta.color} llegó a la META! (1/2)`, 'success');
-                        mostrarMensaje(`⚠️ Las cartas de ${carta.color} ahora valen 0 pts (solo ticket)`, 'warning');
+                        mostrarMensaje(`${carta.color} llego a la META! (1/2)`, 'success');
+                        mostrarMensaje(`Las cartas de ${carta.color} ahora valen 0 pts (solo ticket)`, 'warning');
                         
-                        // MOVER CARTA A TERMINADAS
                         const cartaIndex = state.cartasJugador.findIndex(c => c && c.id === carta.id);
                         if (cartaIndex !== -1) {
                             state.cartasJugador[cartaIndex] = null;
@@ -579,16 +524,13 @@ export function completarCarta(carta, casillaNumero) {
                             state.habilidadesUsadas[carta.id] = false;
                         }
                         
-                        // ACTUALIZAR PUNTAJES EN VIVO - Este color ahora vale 0
                         actualizarPuntajesEnVivo();
                         
-                        // Broadcast para sincronizar con otros jugadores
                         if (state.currentRoom) {
                             broadcastScore('sync');
                             broadcastTablero();
                         }
                         
-                        // Actualizar UI (sin llamar a calculateScores que sobrescribiría)
                         updateVisuals();
                         renderCartasJugador();
                         renderBoard();
@@ -596,15 +538,13 @@ export function completarCarta(carta, casillaNumero) {
                         renderStatusPanel();
                         actualizarBotonEspecial();
                         
-                        // Cerrar zoom
                         cerrarZoom();
                         
-                        return; // Salir para no ejecutar el resto
+                        return;
                         
                     } else if (state.coloresMeta.length === 2) {
-                        mostrarMensaje(`🎉 ¡${carta.color} llegó a la META! (2/2) - Calculando resultados...`, 'success');
+                        mostrarMensaje(`${carta.color} llego a la META! (2/2) - Calculando resultados...`, 'success');
                         
-                        // MOVER CARTA A TERMINADAS
                         const cartaIndex = state.cartasJugador.findIndex(c => c && c.id === carta.id);
                         if (cartaIndex !== -1) {
                             state.cartasJugador[cartaIndex] = null;
@@ -612,16 +552,13 @@ export function completarCarta(carta, casillaNumero) {
                             state.habilidadesUsadas[carta.id] = false;
                         }
                         
-                        // ACTUALIZAR PUNTAJES CON DOBLE (antes de mostrar el podio)
                         actualizarPuntajesConDoble();
                         
-                        // Broadcast para sincronizar
                         if (state.currentRoom) {
                             broadcastScore('sync');
                             broadcastTablero();
                         }
                         
-                        // Actualizar UI
                         updateVisuals();
                         renderCartasJugador();
                         renderBoard();
@@ -630,20 +567,18 @@ export function completarCarta(carta, casillaNumero) {
                         actualizarBotonEspecial();
                         cerrarZoom();
                         
-                        // FINALIZAR EL JUEGO (mostrar podio) después de 800ms
                         setTimeout(() => {
                             finalizarJuego();
                         }, 800);
                         
-                        return; // Salir para no ejecutar el resto
+                        return;
                     }
                 }
             }
         } else {
-            mostrarMensaje(`La ficha de ${carta.color} ya está en la META (no avanza más)`, 'info');
+            mostrarMensaje(`La ficha de ${carta.color} ya esta en la META (no avanza mas)`, 'info');
         }
         
-        // MOVER CARTA A TERMINADAS (si no se movió en los casos anteriores)
         const cartaIndex = state.cartasJugador.findIndex(c => c && c.id === carta.id);
         if (cartaIndex !== -1) {
             state.cartasJugador[cartaIndex] = null;
@@ -666,10 +601,8 @@ export function completarCarta(carta, casillaNumero) {
             broadcastTablero();
         }
         
-        // Cerrar zoom SOLO cuando se completa la carta
         cerrarZoom();
     } else {
-        // Actualizar zoom sin cerrarlo
         actualizarZoomJugador(carta);
     }
     
@@ -686,14 +619,13 @@ export function completarCarta(carta, casillaNumero) {
 }
 
 // ============================================
-// ACTUALIZAR BOTÓN ESPECIAL
+// ACTUALIZAR BOTON ESPECIAL
 // ============================================
 
 export function actualizarBotonEspecial() {
     const btn = document.querySelector('.btn-especial');
     if (!btn) return;
     
-    // Si el juego terminó, deshabilitar botón
     if (state.juegoTerminado) {
         btn.disabled = true;
         btn.style.opacity = '0.4';
@@ -729,9 +661,8 @@ export function actualizarBotonEspecial() {
 // ============================================
 
 export function agregarCartaAJugador(indexVisible) {
-    // Si el juego terminó, no permitir más acciones
     if (state.juegoTerminado) {
-        mostrarMensaje('El juego ya terminó. Reinicia para jugar de nuevo.', 'warning');
+        mostrarMensaje('El juego ya termino. Reinicia para jugar de nuevo.', 'warning');
         return;
     }
     
@@ -780,7 +711,7 @@ export function agregarCartaAJugador(indexVisible) {
 
 export function usarHabilidad(carta) {
     if (state.juegoTerminado) {
-        mostrarMensaje('El juego ya terminó.', 'warning');
+        mostrarMensaje('El juego ya termino.', 'warning');
         return;
     }
     
@@ -825,7 +756,6 @@ function mostrarModalHabilidad(carta, habilidad) {
     };
     const color = colorMap[carta.color] || '#888';
     
-    // Contar cuántas habilidades Lima se han usado
     const habLima = contarHabilidadesLimaUsadas();
     const espUsadas = contarCartasEspecialesUsadas();
     const disponibles = habLima - espUsadas;
@@ -870,7 +800,7 @@ export function cerrarHabilidad() {
 
 export function usarCartaEspecial() {
     if (state.juegoTerminado) {
-        mostrarMensaje('El juego ya terminó.', 'warning');
+        mostrarMensaje('El juego ya termino.', 'warning');
         return;
     }
     
@@ -910,14 +840,13 @@ function mostrarCartaEspecial(carta) {
     const efectosInternos = ['puntos', 'mover_ficha', 'recuperar_habilidad'];
     const esEfectoInterno = efectosInternos.includes(carta.tipo);
     
-    // Mostrar cuántas especiales quedan
     const habLima = contarHabilidadesLimaUsadas();
     const espUsadas = contarCartasEspecialesUsadas() + 1;
     const restantes = habLima - espUsadas;
     
     content.innerHTML = `
         <div style="text-align: center; padding: 10px;">
-            <div style="font-size: 2rem; margin-bottom: 5px;">${carta.icono || '🃏'}</div>
+            <div style="font-size: 2rem; margin-bottom: 5px;">${carta.icono || 'C'}</div>
             <img src="${imagenPath}" alt="Carta Especial ${numCarta}" 
                  style="max-width: 200px; max-height: 280px; border-radius: 8px; margin: 10px auto; display: block;"
                  onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-text').style.display='block';">
@@ -928,7 +857,7 @@ function mostrarCartaEspecial(carta) {
                 ${carta.descripcion}
             </div>
             <div style="margin-top: 4px; color: #ffd700; font-size: 0.7rem;">
-                ⭐ Restantes: ${restantes}
+                Restantes: ${restantes}
             </div>
             ${esEfectoInterno ? `
                 <button onclick="window.ejecutarEfectoEspecial()" 
@@ -937,7 +866,7 @@ function mostrarCartaEspecial(carta) {
                 </button>
             ` : `
                 <div style="margin-top: 12px; color: #ffd700; font-size: 0.85rem;">
-                    ⚡ Efecto automático
+                    Efecto automatico
                 </div>
                 <button onclick="window.ejecutarEfectoEspecial()" 
                         style="margin-top: 8px; background: #ff9800; border: none; color: white; padding: 8px 25px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; cursor: pointer; transition: all 0.2s;">
@@ -956,7 +885,7 @@ function mostrarCartaEspecial(carta) {
 
 export function ejecutarEfectoEspecial() {
     if (state.juegoTerminado) {
-        mostrarMensaje('El juego ya terminó.', 'warning');
+        mostrarMensaje('El juego ya termino.', 'warning');
         cerrarEspecial();
         return;
     }
@@ -964,7 +893,6 @@ export function ejecutarEfectoEspecial() {
     const carta = state.cartaEspecialActual;
     if (!carta) return;
     
-    // Marcar que se usó una carta especial
     if (!state.cartasEspecialesUsadas) {
         state.cartasEspecialesUsadas = 0;
     }
@@ -983,10 +911,10 @@ export function ejecutarEfectoEspecial() {
             ejecutarRecuperarHabilidad();
             break;
         case 'turno_extra':
-            mostrarMensaje('⏭️ Turno Extra - Se desarrolla fuera de la página', 'info');
+            mostrarMensaje('Turno Extra - Se desarrolla fuera de la pagina', 'info');
             break;
         case 'tomar_dado':
-            mostrarMensaje('🎲 Tomar Dado - Se desarrolla fuera de la página', 'info');
+            mostrarMensaje('Tomar Dado - Se desarrolla fuera de la pagina', 'info');
             break;
         default:
             mostrarMensaje('Efecto de carta especial no implementado', 'warning');
@@ -1009,30 +937,24 @@ export function ejecutarEfectoEspecial() {
 // ============================================
 
 function ejecutarPuntos(puntos) {
-    // Mostrar mensaje con el puntaje extra
-    mostrarMensaje(`✨ +${puntos} puntos extra!`, 'success');
+    mostrarMensaje(`+${puntos} puntos extra!`, 'success');
     
-    // Agregar el punto al array de puntosEspeciales del jugador
     if (!state.playersData[state.myId].puntosEspeciales) {
         state.playersData[state.myId].puntosEspeciales = [];
     }
     state.playersData[state.myId].puntosEspeciales.push(puntos);
     
-    // Actualizar puntaje total del jugador
     state.myTotalScore += puntos;
     
-    // Actualizar el score en playersData
     if (state.currentRoom) {
         state.playersData[state.myId].score = state.myTotalScore;
     }
     
-    // Actualizar visuales
     calculateScores();
     renderCartasJugador();
     renderLeaderboard();
     renderStatusPanel();
     
-    // Broadcast si está en sala
     if (state.currentRoom) {
         broadcastScore('sync');
     }
@@ -1060,14 +982,14 @@ function ejecutarMoverFicha() {
             rosa: '#f06292'
         }[color] || '#888';
         const fichaPos = state.fichas[color] || 0;
-        const enMeta = fichaPos >= 5; // Casilla 6 (0-index = 5)
+        const enMeta = fichaPos >= 5;
         const puedeAdelante = fichaPos < 5;
-        const puedeAtras = fichaPos > 0 && !enMeta; // No puede retroceder si está en meta
+        const puedeAtras = fichaPos > 0 && !enMeta;
         
         buttonsHtml += `
             <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:4px; border:1px solid ${colorHex}44;">
                 <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${colorHex};"></span>
-                <span style="flex:1; color:#fff; font-weight:bold; text-transform:capitalize; font-size:0.85rem;">${color} ${enMeta ? '🏆 META' : ''}</span>
+                <span style="flex:1; color:#fff; font-weight:bold; text-transform:capitalize; font-size:0.85rem;">${color} ${enMeta ? 'META' : ''}</span>
                 <span style="color:#888; font-size:0.65rem;">${fichaPos + 1}/6</span>
                 <button onclick="window.moverFicha('${color}', -1)" ${!puedeAtras ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''} 
                         style="background:#ff6b6b; border:none; color:white; padding:2px 10px; border-radius:3px; cursor:pointer; font-weight:bold; font-size:0.8rem;">
@@ -1090,8 +1012,8 @@ function ejecutarMoverFicha() {
     `;
     
     content.innerHTML = `
-        <h3 style="color:#fff; margin-bottom:4px; font-size:1.1rem;">↕️ Mover Ficha</h3>
-        <p style="color:#aaa; font-size:0.8rem; margin-bottom:8px;">Elige un color y dirección para mover la ficha</p>
+        <h3 style="color:#fff; margin-bottom:4px; font-size:1.1rem;">Mover Ficha</h3>
+        <p style="color:#aaa; font-size:0.8rem; margin-bottom:8px;">Elige un color y direccion para mover la ficha</p>
         ${buttonsHtml}
     `;
     
@@ -1100,7 +1022,7 @@ function ejecutarMoverFicha() {
 
 export function moverFicha(color, direccion) {
     if (state.juegoTerminado) {
-        mostrarMensaje('El juego ya terminó.', 'warning');
+        mostrarMensaje('El juego ya termino.', 'warning');
         cerrarEspecial();
         return;
     }
@@ -1109,25 +1031,23 @@ export function moverFicha(color, direccion) {
     const enMeta = fichaPos >= 5;
     const nuevaPos = fichaPos + direccion;
     
-    // No permitir mover si está en meta
     if (enMeta) {
-        mostrarMensaje(`La ficha de ${color} ya está en la META y no se puede mover`, 'warning');
+        mostrarMensaje(`La ficha de ${color} ya esta en la META y no se puede mover`, 'warning');
         return;
     }
     
     if (nuevaPos < 0 || nuevaPos > 5) {
-        mostrarMensaje('No puedes mover la ficha más allá de los límites', 'warning');
+        mostrarMensaje('No puedes mover la ficha mas alla de los limites', 'warning');
         return;
     }
     
     state.fichas[color] = nuevaPos;
     mostrarMensaje(`Ficha de ${color} movida a casilla ${nuevaPos + 1}`, 'success');
     
-    // Verificar si llegó a la meta
     if (nuevaPos === 5) {
         if (!state.coloresMeta.includes(color)) {
             state.coloresMeta.push(color);
-            mostrarMensaje(`🎉 ¡${color} llegó a la META! (${state.coloresMeta.length}/2)`, 'success');
+            mostrarMensaje(`${color} llego a la META! (${state.coloresMeta.length}/2)`, 'success');
             
             if (state.coloresMeta.length >= 2) {
                 setTimeout(() => {
@@ -1200,7 +1120,7 @@ function ejecutarRecuperarHabilidad() {
     `;
     
     content.innerHTML = `
-        <h3 style="color:#fff; margin-bottom:4px; font-size:1.1rem;">🔄 Recuperar Habilidad</h3>
+        <h3 style="color:#fff; margin-bottom:4px; font-size:1.1rem;">Recuperar Habilidad</h3>
         <p style="color:#aaa; font-size:0.8rem; margin-bottom:8px;">Selecciona una habilidad usada para recuperarla</p>
         ${buttonsHtml}
     `;
@@ -1216,13 +1136,13 @@ export function recuperarHabilidad(cartaId) {
     }
     
     if (state.habilidadesUsadas[carta.id] !== true) {
-        mostrarMensaje('Esta habilidad no está usada', 'warning');
+        mostrarMensaje('Esta habilidad no esta usada', 'warning');
         return;
     }
     
     state.habilidadesUsadas[carta.id] = false;
     const habilidad = HABILIDADES[carta.color];
-    mostrarMensaje(`✅ Habilidad ${habilidad.nombre} recuperada para ${carta.color} ${carta.numero}`, 'success');
+    mostrarMensaje(`Habilidad ${habilidad.nombre} recuperada para ${carta.color} ${carta.numero}`, 'success');
     
     cerrarEspecial();
     state.modoEspecial = null;
@@ -1246,7 +1166,6 @@ export function cerrarEspecial() {
 // ============================================
 
 export function calculateScores() {
-    // Si el juego terminó, no recalcular
     if (state.juegoTerminado) {
         const scoreTotal = document.getElementById('score-total');
         if (scoreTotal) {
@@ -1261,7 +1180,6 @@ export function calculateScores() {
     let puntajeTotal = 0;
     
     if (playerData && playerData.progresoCartas) {
-        // 1. Sumar puntajes de cartas por color
         COLORES.forEach(color => {
             let puntajeColor = 0;
             for (let i = 1; i <= 9; i++) {
@@ -1277,19 +1195,16 @@ export function calculateScores() {
             puntajeTotal += puntajeColor;
         });
         
-        // 2. Sumar tickets de color
         COLORES.forEach(color => {
             if (state.tickets[color] === state.myId) {
                 puntajeTotal += TICKETS[color].puntaje;
             }
         });
         
-        // 3. Sumar BONUS TICKET
         if (state.bonusTicket === state.myId) {
             puntajeTotal += TICKETS.bonus.puntaje;
         }
         
-        // 4. Sumar puntos de cartas especiales
         if (playerData.puntosEspeciales && playerData.puntosEspeciales.length > 0) {
             const totalEspeciales = playerData.puntosEspeciales.reduce((sum, pts) => sum + pts, 0);
             puntajeTotal += totalEspeciales;
@@ -1301,7 +1216,6 @@ export function calculateScores() {
         playerData.score = puntajeTotal;
     }
     
-    // Actualizar UI
     const scoreTotal = document.getElementById('score-total');
     if (scoreTotal) {
         scoreTotal.textContent = state.myTotalScore;
@@ -1317,7 +1231,6 @@ export function calculateScores() {
         mazoEspecialRestantes.textContent = state.mazoEspecialDisponible.length;
     }
 
-    // Actualizar playersData para broadcast
     if (state.currentRoom) {
         state.playersData[state.myId] = {
             name: state.myName,
@@ -1343,9 +1256,8 @@ export function calculateScores() {
 // ============================================
 
 export function repartirCartas() {
-    // Si el juego terminó, no permitir repartir
     if (state.juegoTerminado) {
-        mostrarMensaje('El juego ya terminó. Reinicia para jugar de nuevo.', 'warning');
+        mostrarMensaje('El juego ya termino. Reinicia para jugar de nuevo.', 'warning');
         return;
     }
     
@@ -1366,12 +1278,10 @@ export function repartirCartas() {
     state.habilidadesUsadas = {};
     state.cartasEspecialesUsadas = 0;
     
-    // Resetear puntosEspeciales
     if (state.playersData[state.myId]) {
         state.playersData[state.myId].puntosEspeciales = [];
     }
     
-    // LIMPIAR PILA DE MOVIMIENTOS AL REPARTIR
     limpiarPilaMovimientos();
     
     for (let i = 0; i < 4; i++) {
@@ -1391,7 +1301,6 @@ export function repartirCartas() {
     state.bonusReclamado = false;
     state.myTotalScore = 0;
     
-    // Resetear estado de fin del juego
     state.juegoTerminado = false;
     state.coloresMeta = [];
     state.resultadosFinales = {};
@@ -1420,16 +1329,12 @@ export function repartirCartas() {
 // ============================================
 
 export function reiniciarTodo() {
-    // 1. Reiniciar estado global
     initState();
     
-    // 2. Regenerar mazos
     generarMazos();
     
-    // 3. LIMPIAR PILA DE MOVIMIENTOS
     limpiarPilaMovimientos();
     
-    // 4. Reiniciar datos del jugador en playersData
     if (state.playersData[state.myId]) {
         state.playersData[state.myId] = {
             name: state.myName || 'Jugador',
@@ -1449,7 +1354,6 @@ export function reiniciarTodo() {
         };
     }
     
-    // 5. Resetear variables de estado
     state.myTotalScore = 0;
     state.cartasRepartidas = false;
     state.progresoCarta = {};
@@ -1462,27 +1366,22 @@ export function reiniciarTodo() {
     state.cartaEspecialActual = null;
     state.modoEspecial = null;
     
-    // Resetear estado de fin del juego
     state.juegoTerminado = false;
     state.coloresMeta = [];
     state.resultadosFinales = {};
     
-    // 6. Resetear tickets
     COLORES.forEach(color => {
         state.tickets[color] = null;
     });
     state.bonusTicket = null;
     state.bonusReclamado = false;
     
-    // 7. Resetear puntos especiales
     if (state.playersData[state.myId]) {
         state.playersData[state.myId].puntosEspeciales = [];
     }
     
-    // 8. Cerrar modal de podio si está abierto
     cerrarPodio();
     
-    // 9. Renderizar todo
     renderBoard();
     renderCartasVisibles();
     renderCartasJugador();
@@ -1492,7 +1391,6 @@ export function reiniciarTodo() {
     renderLeaderboard();
     actualizarBotonEspecial();
     
-    // 10. Broadcast si está en sala
     if (state.currentRoom) {
         broadcastMazo();
         broadcastTablero();
@@ -1500,21 +1398,19 @@ export function reiniciarTodo() {
         broadcastScore('reiniciar');
     }
     
-    mostrarMensaje('🔄 Juego reiniciado completamente', 'info');
+    mostrarMensaje('Juego reiniciado completamente', 'info');
 }
 
 // ============================================
-// REINICIAR Y LIMPIAR (MANTENER POR COMPATIBILIDAD)
+// REINICIAR Y LIMPIAR
 // ============================================
 
 export function reiniciarTablero() {
-    // Ahora llama a reiniciarTodo para reiniciar completamente
     reiniciarTodo();
 }
 
 export function limpiarMano() {
     state.cartasJugador = Array(5).fill(null);
-    // LIMPIAR PILA DE MOVIMIENTOS AL LIMPIAR LA MANO
     limpiarPilaMovimientos();
     renderCartasJugador();
     if (state.currentRoom) {

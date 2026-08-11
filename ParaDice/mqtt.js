@@ -1,16 +1,16 @@
 // ============================================
-// COMUNICACIÓN MQTT
+// COMUNICACION MQTT
 // ============================================
 
 import { state, COLORES } from './config-state.js';
-import { showLoading, hideLoading, mostrarMensaje, getPlayerName } from './js/utils.js';
+import { showLoading, hideLoading, mostrarMensaje } from './js/utils.js';
 import { generarMazos, renderBoard, updateVisuals, renderCartasVisibles, renderCartasJugador } from './js/mazos-tablero.js';
 import { calculateScores, actualizarBotonEspecial, finalizarJuego } from './js/juego.js';
 import { renderLeaderboard } from './js/leaderboard.js';
 import { renderStatusPanel } from './js/panel.js';
 
 // ============================================
-// FUNCIONES DE RENDER - IMPORTADAS DINÁMICAMENTE
+// FUNCIONES DE RENDER - IMPORTADAS DINAMICAMENTE
 // ============================================
 
 let renderStatusPanelFn = null;
@@ -20,27 +20,25 @@ export function setRenderStatusPanel(fn) {
 }
 
 // ============================================
-// FUNCIÓN PARA RESTAURAR ESTADO LOCAL DESDE PLAYERSDATA
+// FUNCION PARA RESTAURAR ESTADO LOCAL DESDE PLAYERSDATA
 // ============================================
 
 export function forzarRestauracionLocal() {
     const myData = state.playersData[state.myId];
     if (!myData) {
-        mostrarMensaje('⚠️ No hay datos del jugador', 'warning');
+        mostrarMensaje('No hay datos del jugador', 'warning');
         return false;
     }
     
-    // Verificar si hay datos válidos para restaurar
     const tieneCartas = myData.cartasJugador && myData.cartasJugador.some(c => c !== null);
     const tieneTerminadas = myData.cartasTerminadas && myData.cartasTerminadas.length > 0;
     const tieneProgreso = myData.progresoCartas && Object.keys(myData.progresoCartas).length > 0;
     
     if (!tieneCartas && !tieneTerminadas && !tieneProgreso) {
-        mostrarMensaje('ℹ️ No hay datos que restaurar', 'info');
+        mostrarMensaje('No hay datos que restaurar', 'info');
         return false;
     }
     
-    // Restaurar cartas del jugador
     if (myData.cartasJugador) {
         state.cartasJugador = myData.cartasJugador.map(c => c ? { ...c } : null);
     }
@@ -81,7 +79,6 @@ export function forzarRestauracionLocal() {
         state.playersData[state.myId].puntosEspeciales = [...(myData.puntosEspeciales || [])];
     }
     
-    // Actualizar UI
     renderCartasVisibles();
     renderCartasJugador();
     renderBoard();
@@ -98,8 +95,14 @@ export function forzarRestauracionLocal() {
 // CONECTAR A SALA
 // ============================================
 
-export function connectToRoom(code) {
-    showLoading('Conectando con la sala...');
+export function connectToRoom(code, isReconnect) {
+    if (isReconnect === undefined) isReconnect = false;
+    
+    showLoading(isReconnect ? 'Reconectando a la sala...' : 'Conectando con la sala...');
+    
+    if (!isReconnect) {
+        state.myId = Math.random().toString(36).substr(2, 9);
+    }
     
     state.mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
@@ -108,11 +111,29 @@ export function connectToRoom(code) {
         const topic = `paradice_xyz/room/${code}`;
         state.mqttClient.subscribe(topic);
         
-        // Primero intentar restaurar desde playersData (si existe)
+        if (!state.playersData[state.myId]) {
+            state.playersData[state.myId] = {
+                name: state.myName || 'Jugador',
+                score: 0,
+                cartasJugador: Array(5).fill(null),
+                cartasTerminadas: [],
+                habilidadesUsadas: {},
+                mazoColores: [],
+                mazoEspecialDisponible: [],
+                cartasVisibles: Array(4).fill(null),
+                cartasRepartidas: false,
+                tablero: state.tableroGlobal,
+                fichas: state.fichas,
+                progresoCartas: {},
+                cartasEspecialesUsadas: 0,
+                puntosEspeciales: [],
+                coloresMeta: []
+            };
+        }
+        
         const restaurado = forzarRestauracionLocal();
         
         if (!restaurado) {
-            // Si no hay datos, generar estado fresco
             generarMazos();
             state.cartasJugador = Array(5).fill(null);
             state.cartasTerminadas = [];
@@ -124,7 +145,6 @@ export function connectToRoom(code) {
             state.resultadosFinales = {};
             state.juegoTerminado = false;
             
-            // Resetear puntosEspeciales
             if (state.playersData[state.myId]) {
                 state.playersData[state.myId].puntosEspeciales = [];
             }
@@ -136,7 +156,6 @@ export function connectToRoom(code) {
         renderStatusPanel();
         actualizarBotonEspecial();
         
-        // Asegurar que playersData tenga los datos actuales
         state.playersData[state.myId] = {
             name: state.myName,
             score: state.myTotalScore,
@@ -157,29 +176,26 @@ export function connectToRoom(code) {
         
         joinSuccess(code);
         
-        // Si se restauraron datos, enviar broadcast para sincronizar
         if (restaurado) {
             setTimeout(() => {
                 broadcastScore('sync');
                 broadcastTablero();
                 broadcastMazo();
                 broadcastTickets();
-                mostrarMensaje('🔄 Datos restaurados y sincronizados', 'success');
+                mostrarMensaje('Datos restaurados y sincronizados', 'success');
             }, 500);
         } else {
             broadcastScore('join');
         }
+        
+        window.saveSession();
     });
 
     state.mqttClient.on('message', (topic, message) => {
         try {
             const data = JSON.parse(message.toString());
             
-            // ============================================
-            // MENSAJE DE OTRO JUGADOR - ACTUALIZAR playersData
-            // ============================================
             if (data.id !== state.myId) {
-                // Actualizar datos del otro jugador
                 state.playersData[data.id] = {
                     name: data.name || 'Jugador',
                     score: data.score || 0,
@@ -198,7 +214,6 @@ export function connectToRoom(code) {
                     coloresMeta: data.coloresMeta || []
                 };
                 
-                // Si el otro jugador tiene coloresMeta, actualizar los nuestros
                 if (data.coloresMeta && data.coloresMeta.length > 0) {
                     state.coloresMeta = data.coloresMeta;
                 }
@@ -206,7 +221,6 @@ export function connectToRoom(code) {
                 renderLeaderboard();
                 renderStatusPanel();
                 
-                // Si es un mensaje de tipo 'sync', también actualizar tablero
                 if (data.action === 'sync' && data.tablero) {
                     state.tableroGlobal = data.tablero;
                     state.fichas = data.fichas || state.fichas;
@@ -218,11 +232,6 @@ export function connectToRoom(code) {
                 }
             }
             
-            // ============================================
-            // PROCESAR ACCIONES ESPECÍFICAS
-            // ============================================
-            
-            // TICKETS
             if (data.action === 'tickets') {
                 state.tickets = data.tickets || {};
                 state.bonusTicket = data.bonusTicket || null;
@@ -232,7 +241,6 @@ export function connectToRoom(code) {
                 return;
             }
 
-            // MAZO
             if (data.action === 'mazo') {
                 if (data.id === state.myId) return;
                 
@@ -243,7 +251,6 @@ export function connectToRoom(code) {
                 return;
             }
 
-            // TABLERO
             if (data.action === 'tablero') {
                 if (data.id === state.myId) return;
                 
@@ -262,7 +269,6 @@ export function connectToRoom(code) {
                 return;
             }
 
-            // JUEGO TERMINADO
             if (data.action === 'juego_terminado') {
                 state.juegoTerminado = true;
                 state.coloresMeta = data.coloresMeta || [];
@@ -283,7 +289,6 @@ export function connectToRoom(code) {
                 return;
             }
 
-            // JOIN - Cuando un jugador se une, pedir su estado completo
             if (data.action === 'join' && data.id !== state.myId) {
                 setTimeout(() => {
                     broadcastTablero();
@@ -294,7 +299,6 @@ export function connectToRoom(code) {
                 return;
             }
             
-            // REPARTIR
             if (data.action === 'repartir' && data.id !== state.myId) {
                 state.cartasVisibles = data.cartasVisibles || state.cartasVisibles;
                 state.mazoColores = data.mazoColores || state.mazoColores;
@@ -308,7 +312,6 @@ export function connectToRoom(code) {
                 return;
             }
             
-            // SYNC - Sincronización completa de un jugador
             if (data.action === 'sync' && data.id !== state.myId) {
                 renderCartasVisibles();
                 renderCartasJugador();
@@ -333,7 +336,7 @@ export function connectToRoom(code) {
 }
 
 // ============================================
-// MOSTRAR PODIO REMOTO (TOP 3)
+// MOSTRAR PODIO REMOTO
 // ============================================
 
 function mostrarPodioRemoto() {
@@ -350,21 +353,21 @@ function mostrarPodioRemoto() {
     
     jugadores.sort((a, b) => b.score - a.score);
     const top3 = jugadores.slice(0, 3);
-    const medallas = ['🥇', '🥈', '🥉'];
+    const medallas = ['1.', '2.', '3.'];
     
     let html = `
         <div style="text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 3rem;">🏆</div>
+            <div style="font-size: 3rem;">T</div>
             <h2 style="color: #ffd700; margin-bottom: 4px;">JUEGO TERMINADO</h2>
         </div>
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
     `;
     
     top3.forEach((jugador, index) => {
-        const esLocal = jugador.esLocal ? ' (Tú)' : '';
+        const esLocal = jugador.esLocal ? ' (Tu)' : '';
         html += `
             <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-                <span style="font-size: 1.8rem; min-width: 45px; text-align: center;">${medallas[index] || `${index+1}.`}</span>
+                <span style="font-size: 1.8rem; min-width: 45px; text-align: center;">${medallas[index]}</span>
                 <span style="flex: 1; font-weight: bold; color: #fff; font-size: 1.1rem;">${jugador.nombre}${esLocal}</span>
                 <span style="font-weight: bold; color: #ffd700; font-size: 1.2rem; min-width: 60px; text-align: right;">${jugador.score} pts</span>
             </div>
@@ -379,7 +382,7 @@ function mostrarPodioRemoto() {
             html += `
                 <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 6px; border: 1px dashed rgba(255,255,255,0.1); margin-top: 4px;">
                     <span style="font-size: 1rem; min-width: 45px; text-align: center; color: #888;">#${posLocal}</span>
-                    <span style="flex: 1; color: #888; font-size: 0.9rem;">${local.nombre} (Tú)</span>
+                    <span style="flex: 1; color: #888; font-size: 0.9rem;">${local.nombre} (Tu)</span>
                     <span style="color: #666; font-size: 1rem; min-width: 60px; text-align: right;">${local.score} pts</span>
                 </div>
             `;
@@ -518,7 +521,6 @@ export function broadcastJuegoTerminado() {
 function joinSuccess(code) {
     hideLoading();
     document.getElementById('lobbyModal').style.display = 'none';
-    document.getElementById('joinModal').style.display = 'none';
     
     const info = document.getElementById('roomInfoDisplay');
     if (info) {
@@ -533,59 +535,38 @@ function joinSuccess(code) {
 }
 
 // ============================================
-// FUNCIONES DE LOBBY
+// ENTRAR A SALA (DESDE LOBBY)
 // ============================================
 
-export function showJoinModal() {
-    document.getElementById('lobbyModal').style.display = 'none';
-    document.getElementById('joinModal').style.display = 'flex';
+export function entrarSala() {
+    var nombre = localStorage.getItem('paradice_nombre_prefill');
+    var sala = localStorage.getItem('paradice_sala_prefill');
     
-    const roomInput = document.getElementById('roomCodeInput');
-    if (roomInput) {
-        roomInput.value = '';
-        roomInput.placeholder = 'ABCD';
-        roomInput.readOnly = false;
-        roomInput.style.opacity = '1';
-        roomInput.style.color = 'white';
-        roomInput.focus();
-    }
-}
-
-export function backToLobby() {
-    document.getElementById('joinModal').style.display = 'none';
-    document.getElementById('lobbyModal').style.display = 'flex';
-    
-    const roomInput = document.getElementById('roomCodeInput');
-    if (roomInput) {
-        roomInput.value = '';
-        roomInput.placeholder = 'ABCD';
-        roomInput.readOnly = false;
-        roomInput.style.opacity = '1';
-        roomInput.style.color = 'white';
-    }
-}
-
-export function createRoom() {
-    state.myName = getPlayerName();
-    const code = Math.random().toString(36).substring(2, 6).toUpperCase();
-    connectToRoom(code);
-}
-
-export function joinRoom() {
-    state.myName = getPlayerName();
-    const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-    
-    if (code.length !== 4) {
-        mostrarMensaje('El código debe tener 4 letras/números.', 'error');
+    if (!nombre) {
+        alert('No se ha configurado un nombre. Usa ?nombre=XXX en la URL.');
         return;
     }
     
-    document.getElementById('roomCodeInput').value = '';
-    connectToRoom(code);
+    if (!sala || sala.length !== 4) {
+        alert('No se ha configurado una sala valida. Usa ?sala=XXXX en la URL.');
+        return;
+    }
+    
+    // LIMPIAR playersData para eliminar el "Jugador" fantasma
+    state.playersData = {};
+    
+    state.myName = nombre;
+    state.myId = Math.random().toString(36).substr(2, 9);
+    
+    localStorage.removeItem('paradice_nombre_prefill');
+    localStorage.removeItem('paradice_sala_prefill');
+    
+    connectToRoom(sala.toUpperCase(), false);
 }
 
 // ============================================
 // EXPONER FUNCIONES GLOBALES
 // ============================================
 
+window.entrarSala = entrarSala;
 window.forzarRestauracionLocal = forzarRestauracionLocal;

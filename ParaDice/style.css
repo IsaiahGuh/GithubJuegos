@@ -54,30 +54,63 @@ body {
 .modal-box h2 { color: #fff; margin-bottom: 5px; font-size: 1.8rem; }
 .modal-box p { color: var(--text-muted); margin-bottom: 25px; }
 
-.input-group { margin-bottom: 15px; text-align: left; }
-.input-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
-.input-group input {
-    width: 100%; padding: 12px; border-radius: 8px;
-    background: var(--bg-box); border: 1px solid var(--border-color);
-    color: white; font-size: 1.1rem; font-weight: bold; text-align: center;
-}
-
 .modal-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
 .modal-buttons .row-btns { display: flex; gap: 10px; }
 
 .modal-btn {
     padding: 14px 15px; border: none; border-radius: 8px;
     font-weight: bold; flex: 1; font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
 }
 .modal-btn:active { transform: scale(0.97); }
 
 .btn-primary { background: var(--color-celeste); color: #121212; }
-.btn-secondary { background: var(--color-lima); color: #121212; }
 .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
 
 #joinModal { display: none; }
 #loadingModal { display: none; z-index: 3000; }
 
+/* SESSION BANNER */
+.session-banner {
+    background: #2a2a2a;
+    border: 1px solid var(--color-celeste);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.session-banner-text {
+    color: var(--text-main);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+.url-data-display {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--color-celeste);
+}
+
+/* RECONNECT BUTTON */
+#reconnectBtn {
+    transition: opacity 0.3s, cursor 0.3s;
+}
+
+#reconnectBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#reconnectBtn:not(:disabled) {
+    opacity: 1;
+    cursor: pointer;
+}
+
+/* HEADER */
 header { text-align: center; margin-bottom: 15px; width: 100%; }
 h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; }
 .room-info { display: inline-block; background: var(--bg-box); padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; color: var(--color-lima); font-weight: bold; margin-top: 5px; border: 1px solid var(--border-color); }
@@ -219,7 +252,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     font-size: 0.5rem;
 }
 
-/* CONTROLES - BOTONES UNIFORMES */
+/* CONTROLES */
 .controles-juego {
     display: flex;
     gap: 8px;
@@ -377,6 +410,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     width: 100%;
     border: 1px solid var(--border-color);
     transition: background 0.2s;
+    cursor: pointer;
 }
 
 .status-panel:hover {
