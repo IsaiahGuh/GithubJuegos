@@ -1,5 +1,5 @@
 // ============================================
-// MAIN - PUNTO DE ENTRADA (CON MODO AUTOMATICO)
+// MAIN - PUNTO DE ENTRADA
 // ============================================
 
 import { state, initState } from './config-state.js';
@@ -21,7 +21,7 @@ import {
     cerrarPodio
 } from './juego.js';
 import { 
-    playSolo, showJoinModal, backToLobby, 
+    showJoinModal, backToLobby, 
     createRoom, joinRoom,
     setRenderStatusPanel,
     forzarRestauracionLocal
@@ -42,11 +42,6 @@ import {
     getTodosLosMovimientos,
     contarMovimientos
 } from './deshacer.js';
-
-// ===== DETECTAR MODO AUTOMATICO =====
-const urlParams = new URLSearchParams(window.location.search);
-const isAutoMode = urlParams.get('auto') === '1';
-const AUTO_ROOM_CODE = 'GRIL';
 
 // ============================================
 // INICIALIZACIÓN
@@ -77,7 +72,6 @@ function init() {
     window.limpiarMano = limpiarMano;
     window.createRoom = createRoom;
     window.joinRoom = joinRoom;
-    window.playSolo = playSolo;
     window.showJoinModal = showJoinModal;
     window.backToLobby = backToLobby;
     window.cerrarZoom = cerrarZoom;
@@ -97,8 +91,6 @@ function init() {
     window.cerrarPodio = cerrarPodio;
     window.refrescarSincronizacion = refrescarSincronizacion;
     window.forzarRestauracionLocal = forzarRestauracionLocal;
-    window.isAutoMode = isAutoMode;
-    window.AUTO_ROOM_CODE = AUTO_ROOM_CODE;
     
     // Funciones de completas
     window.abrirCompletas = abrirCompletas;
@@ -134,7 +126,6 @@ function init() {
     console.log('🔄 Sistema de deshacer: haz clic en la última casilla marcada para desmarcarla');
     console.log('📊 Para debug: window._debugDeshacer');
     console.log('🔄 Para restaurar estado: window.forzarRestauracionLocal()');
-    console.log('🤖 Modo automatico:', isAutoMode ? 'ACTIVADO (sala ' + AUTO_ROOM_CODE + ')' : 'DESACTIVADO');
 }
 
 // ============================================
@@ -202,7 +193,6 @@ export {
     limpiarMano,
     createRoom,
     joinRoom,
-    playSolo,
     showJoinModal,
     backToLobby,
     cerrarZoom,
@@ -241,8 +231,5 @@ export {
     peekMovimiento,
     getUltimoMovimiento,
     getTodosLosMovimientos,
-    contarMovimientos,
-    // Modo automatico
-    isAutoMode,
-    AUTO_ROOM_CODE
+    contarMovimientos
 };

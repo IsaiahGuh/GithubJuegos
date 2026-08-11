@@ -26,9 +26,8 @@
             <div class="modal-buttons">
                 <div class="row-btns">
                     <button class="modal-btn btn-primary" onclick="window.createRoom()">Crear Sala</button>
-                    <button class="modal-btn btn-secondary" onclick="window.showJoinModal()">Unirse</button>
+                    <button class="modal-btn btn-secondary" onclick="window.showJoinModal()">Unirse a Sala</button>
                 </div>
-                <button class="modal-btn btn-outline" onclick="window.playSolo()" style="margin-top: 10px;">Jugar Solo (Local)</button>
             </div>
         </div>
     </div>
@@ -39,9 +38,9 @@
     <div id="joinModal" class="modal-overlay">
         <div class="modal-box">
             <h2>Unirse a Sala</h2>
-            <p>Pide el codigo al creador de la sala</p>
+            <p>Pide el código al creador de la sala</p>
             <div class="input-group">
-                <label>Codigo de la Sala (4 letras/numeros):</label>
+                <label>Código de la Sala (4 letras/números):</label>
                 <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform: uppercase;">
             </div>
             <div class="modal-buttons row-btns">

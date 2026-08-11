@@ -1,5 +1,5 @@
 // ============================================
-// COMUNICACIÓN MQTT (CON MODO AUTOMATICO)
+// COMUNICACIÓN MQTT
 // ============================================
 
 import { state, COLORES } from './config-state.js';
@@ -8,11 +8,6 @@ import { generarMazos, renderBoard, updateVisuals, renderCartasVisibles, renderC
 import { calculateScores, actualizarBotonEspecial, finalizarJuego } from './juego.js';
 import { renderLeaderboard } from './leaderboard.js';
 import { renderStatusPanel } from './panel.js';
-
-// ===== DETECTAR MODO AUTOMATICO =====
-const urlParams = new URLSearchParams(window.location.search);
-const isAutoMode = urlParams.get('auto') === '1';
-const AUTO_ROOM_CODE = 'GRIL';
 
 // ============================================
 // FUNCIONES DE RENDER - IMPORTADAS DINÁMICAMENTE
@@ -538,47 +533,8 @@ function joinSuccess(code) {
 }
 
 // ============================================
-// FUNCIONES DE LOBBY - MODIFICADAS CON MODO AUTOMATICO
+// FUNCIONES DE LOBBY
 // ============================================
-
-export function playSolo() {
-    state.myName = getPlayerName();
-    document.getElementById('lobbyModal').style.display = 'none';
-    state.progresoCarta = {};
-    state.myTotalScore = 0;
-    state.cartasJugador = Array(5).fill(null);
-    state.cartasTerminadas = [];
-    state.habilidadesUsadas = {};
-    state.cartasEspecialesUsadas = 0;
-    state.juegoTerminado = false;
-    state.coloresMeta = [];
-    state.resultadosFinales = {};
-    
-    state.playersData[state.myId] = {
-        name: state.myName,
-        score: 0,
-        cartasJugador: state.cartasJugador,
-        cartasTerminadas: state.cartasTerminadas,
-        habilidadesUsadas: state.habilidadesUsadas,
-        mazoColores: [],
-        mazoEspecialDisponible: [],
-        cartasVisibles: [],
-        cartasRepartidas: false,
-        tablero: state.tableroGlobal,
-        fichas: state.fichas,
-        progresoCartas: {},
-        cartasEspecialesUsadas: 0,
-        puntosEspeciales: []
-    };
-    generarMazos();
-    renderBoard();
-    updateVisuals();
-    calculateScores();
-    renderStatusPanel();
-    actualizarBotonEspecial();
-    document.getElementById('leaderboardPanel').style.display = 'flex';
-    renderLeaderboard();
-}
 
 export function showJoinModal() {
     document.getElementById('lobbyModal').style.display = 'none';
@@ -593,24 +549,12 @@ export function showJoinModal() {
         roomInput.style.color = 'white';
         roomInput.focus();
     }
-    
-    // Si estamos en modo automatico, precargar el codigo
-    if (isAutoMode) {
-        const roomInput = document.getElementById('roomCodeInput');
-        if (roomInput) {
-            roomInput.value = AUTO_ROOM_CODE;
-            roomInput.readOnly = true;
-            roomInput.style.opacity = '0.7';
-            roomInput.style.color = '#4CAF50';
-        }
-    }
 }
 
 export function backToLobby() {
     document.getElementById('joinModal').style.display = 'none';
     document.getElementById('lobbyModal').style.display = 'flex';
     
-    // Limpiar el campo al volver
     const roomInput = document.getElementById('roomCodeInput');
     if (roomInput) {
         roomInput.value = '';
@@ -629,21 +573,14 @@ export function createRoom() {
 
 export function joinRoom() {
     state.myName = getPlayerName();
-    let code;
+    const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
     
-    if (isAutoMode) {
-        code = AUTO_ROOM_CODE;
-    } else {
-        code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-        if (code.length !== 4) {
-            mostrarMensaje('El codigo debe tener 4 letras/numeros.', 'error');
-            return;
-        }
+    if (code.length !== 4) {
+        mostrarMensaje('El código debe tener 4 letras/números.', 'error');
+        return;
     }
     
-    // Limpiar después de usar
     document.getElementById('roomCodeInput').value = '';
-    
     connectToRoom(code);
 }
 
@@ -652,5 +589,3 @@ export function joinRoom() {
 // ============================================
 
 window.forzarRestauracionLocal = forzarRestauracionLocal;
-window.isAutoMode = isAutoMode;
-window.AUTO_ROOM_CODE = AUTO_ROOM_CODE;
