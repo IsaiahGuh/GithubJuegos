@@ -13,37 +13,28 @@
 </head>
 <body>
 
-    <!-- LOBBY PRINCIPAL - NO SE CIERRA AL HACER CLICK FUERA -->
+    <!-- LOBBY PRINCIPAL -->
     <div id="lobbyModal" class="modal-overlay no-close-on-outside">
         <div class="modal-box">
             <h2>SagradaS</h2>
-            <p>Selecciona una cartilla para jugar</p>
-            <div class="input-group">
-                <label>Tu Nombre:</label>
-                <input type="text" id="playerName" placeholder="Ej. Leo" maxlength="10">
+            <p>Multijugador</p>
+
+            <div id="sessionBanner" class="session-banner" style="display: none;">
+                <p id="sessionBannerText" class="session-banner-text"></p>
             </div>
+
+            <div id="urlDataDisplay" class="url-data-display" style="display: none;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span id="urlPlayerName">---</span>
+                    <span id="urlRoomCode">---</span>
+                </div>
+            </div>
+
             <div class="modal-buttons">
                 <div class="row-btns">
-                    <button class="modal-btn btn-primary" id="createRoomBtn">Crear Sala</button>
-                    <button class="modal-btn btn-secondary" id="joinRoomBtn">Unirse</button>
+                    <button class="modal-btn btn-primary" onclick="entrarSala()" style="flex: 1;">Entrar</button>
+                    <button id="reconnectBtn" class="modal-btn btn-outline" onclick="reconnectToSession()" disabled style="flex: 1;">Reconectar</button>
                 </div>
-                <!-- ELIMINADO: botón Jugar Solo (Local) -->
-            </div>
-        </div>
-    </div>
-
-    <!-- UNIRSE A SALA - NO SE CIERRA AL HACER CLICK FUERA -->
-    <div id="joinModal" class="modal-overlay no-close-on-outside">
-        <div class="modal-box">
-            <h2>Unirse a Sala</h2>
-            <p>Pide el codigo al creador de la sala</p>
-            <div class="input-group">
-                <label>Codigo de la Sala (4 letras/numeros):</label>
-                <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform: uppercase;">
-            </div>
-            <div class="modal-buttons row-btns">
-                <button class="modal-btn btn-outline" id="backToLobbyBtn">Volver</button>
-                <button class="modal-btn btn-secondary" id="enterRoomBtn">Entrar</button>
             </div>
         </div>
     </div>
@@ -52,6 +43,20 @@
     <div id="loadingModal" class="modal-overlay no-close-on-outside">
         <div class="modal-box" style="background: transparent; border: none; box-shadow: none;">
             <h2 id="loadingText">Conectando...</h2>
+        </div>
+    </div>
+
+    <!-- RECLAMO DE NOMBRE (RECONEXION DESDE OTRO DISPOSITIVO) -->
+    <div id="claimModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Jugador existente</h3>
+            <p id="claimText">Ya hay un jugador con este nombre en la sala.</p>
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-outline" onclick="declineClaim()">No, soy otro jugador</button>
+                    <button class="modal-btn btn-primary" onclick="acceptClaim()">Si, soy yo</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -64,7 +69,7 @@
         </div>
     </div>
 
-    <!-- REINICIAR - SÍ SE CIERRA AL HACER CLICK FUERA -->
+    <!-- REINICIAR -->
     <div id="confirmModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-buttons">
@@ -72,7 +77,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- UI DEL JUEGO -->
     <header>
@@ -82,11 +86,9 @@
         </div>
     </header>
 
-    <!-- INFORMACIÓN DEL JUEGO: OBJETIVOS Y HERRAMIENTAS -->
+    <!-- INFORMACION DEL JUEGO: OBJETIVOS Y HERRAMIENTAS -->
     <div id="gameInfo" style="display: none; width: 100%; max-width: 600px; margin-bottom: 10px;">
-        <!-- Objetivos Públicos -->
         <div id="publicObjectives" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px;"></div>
-        <!-- Herramientas -->
         <div id="toolsDisplay" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;"></div>
     </div>
 
@@ -96,14 +98,12 @@
         </div>
 
         <div class="side-panel">
-            <!-- Botonera - Ahora con Terminar entre Vitrinas y Reiniciar -->
             <div class="buttonera">
                 <button class="modal-btn btn-primary" id="startGameBtn">Vitrinas</button>
                 <button class="modal-btn btn-success" id="finishGameBtn" style="background: #2e7d32; color: white; border: none;">Terminar</button>
                 <button class="modal-btn btn-danger" id="resetBtn">Reiniciar</button>
             </div>
 
-            <!-- Tabla de posiciones con mini tableros -->
             <div class="leaderboard" id="leaderboardPanel">
                 <h3>Leaderboard</h3>
                 <div id="playersList"></div>
@@ -111,22 +111,22 @@
         </div>
     </div>
 
-        <!-- Scripts -->
-        <script src="js/cartillas.js"></script>
-        <script src="js/utils.js"></script>
-        <script src="js/deshacer.js"></script>
-        <script src="js/objetivos.js"></script>
-        <script src="js/herramientas.js"></script>
-        <script src="js/juego.js"></script>
-        <script src="js/puntaje.js"></script>
-        <script src="js/ui.js"></script>
-        <script src="js/leaderboard.js"></script>
-        <script src="js/zoom.js"></script> 
-        <script src="js/marcador.js"></script>
-        <script src="js/modales.js"></script>
-        <script src="js/extra.js"></script>
-        <script src="mqtt.js"></script>
-        <script src="js/lobby.js"></script>
-        <script src="main.js"></script>
+    <!-- Scripts -->
+    <script src="js/cartillas.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/deshacer.js"></script>
+    <script src="js/objetivos.js"></script>
+    <script src="js/herramientas.js"></script>
+    <script src="js/juego.js"></script>
+    <script src="js/puntaje.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script src="js/zoom.js"></script> 
+    <script src="js/marcador.js"></script>
+    <script src="js/modales.js"></script>
+    <script src="js/extra.js"></script>
+    <script src="mqtt.js"></script>
+    <script src="sesion.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>

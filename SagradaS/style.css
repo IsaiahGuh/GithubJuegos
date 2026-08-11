@@ -58,6 +58,30 @@ body { background-color: var(--bg-main); color: var(--text-main); display: flex;
 .modal-box h2 { color: #fff; margin-bottom: 5px; font-size: 1.8rem; }
 .modal-box p { color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem; }
 
+/* ===== SESSION BANNER ===== */
+.session-banner {
+    background: #2a2a2a;
+    border: 1px solid var(--color-blue);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+.session-banner-text {
+    color: var(--text-main);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+/* ===== URL DATA DISPLAY ===== */
+.url-data-display {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--color-blue);
+}
+
 .input-group { margin-bottom: 15px; text-align: left; }
 .input-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
 .input-group input {
@@ -83,10 +107,10 @@ body { background-color: var(--bg-main); color: var(--text-main); display: flex;
 .btn-danger { background: #d32f2f; color: white; }
 
 #confirmModal { display: none; }
-#joinModal { display: none; }
 #loadingModal { display: none; z-index: 3000; }
 #cardSelectorModal { display: none; z-index: 2500; }
 #marcadorModal { display: none; z-index: 2600; }
+#claimModal { display: none; }
 
 /* ===== HEADER ===== */
 header { text-align: center; margin-bottom: 15px; width: 100%; }
@@ -174,7 +198,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     border-radius: 6px;
 }
 
-/* ===== CELDAS CON SOLO NÚMERO (sin color de fondo) ===== */
+/* ===== CELDAS CON SOLO NUMERO (sin color de fondo) ===== */
 .box.has-number-only {
     background-color: var(--bg-cell-number) !important;
     border-color: var(--border-color);
@@ -489,7 +513,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .objective-badge .objective-desc { font-size: 0.65rem; color: var(--text-muted); }
 .objective-badge .objective-points { font-size: 0.8rem; font-weight: bold; color: var(--color-yellow); }
 
-/* ===== HERRAMIENTAS - SIN EMOJI DE RAYO ===== */
+/* ===== HERRAMIENTAS ===== */
 .tool-badge {
     padding: 8px 12px;
     min-width: 80px;
@@ -563,7 +587,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .private-pattern-cell.active { background: var(--color-yellow); border-color: var(--color-yellow); }
 .private-pattern-cell.inactive { background: var(--bg-cell); border-color: var(--border-color); }
 
-/* ===== FAVORES - SOLO PUNTOS ===== */
+/* ===== FAVORES ===== */
 #favoresDisplay {
     margin-top: 12px;
     padding: 8px 12px;
@@ -625,6 +649,11 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     #favoresDisplay { padding: 6px 10px; gap: 4px; min-height: 30px; }
     #favoresDisplay .favores-punto { font-size: 1.3rem; }
     #favoresDisplay .favores-puntos { gap: 4px; }
+    .session-banner { padding: 10px; }
+    .session-banner-text { font-size: 0.8rem; }
+    .url-data-display { padding: 8px; }
+    .modal-box { padding: 24px; }
+    .modal-box h2 { font-size: 1.5rem; }
 }
 
 /* ===== RESPONSIVE MOVIL ===== */
@@ -662,6 +691,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     #favoresDisplay { padding: 4px 8px; gap: 3px; min-height: 26px; margin-top: 6px; border-radius: 8px; }
     #favoresDisplay .favores-punto { font-size: 1.1rem; }
     #favoresDisplay .favores-puntos { gap: 3px; }
+    .session-banner { padding: 8px; margin-bottom: 14px; }
+    .session-banner-text { font-size: 0.75rem; }
+    .url-data-display { padding: 6px; margin-bottom: 12px; }
+    .url-data-display div { font-size: 0.75rem; }
+    .modal-box p { margin-bottom: 18px; font-size: 0.85rem; }
+    .modal-btn { padding: 12px; font-size: 0.9rem; }
 }
 
 /* ===== RESPONSIVE LANDSCAPE ===== */
@@ -706,6 +741,13 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     #favoresDisplay .favores-puntos { gap: 3px; }
     .tool-badge .tool-cost { font-size: 0.5rem; padding: 1px 4px; }
     .tool-badge .tool-cost .cost-dot { font-size: 0.6rem; }
+    .session-banner { padding: 6px; margin-bottom: 10px; }
+    .session-banner-text { font-size: 0.7rem; }
+    .url-data-display { padding: 5px; margin-bottom: 10px; }
+    .url-data-display div { font-size: 0.7rem; }
+    .modal-box { padding: 16px; }
+    .modal-box h2 { font-size: 1.3rem; }
+    .modal-box p { font-size: 0.8rem; margin-bottom: 15px; }
 }
 
 /* ===== RESPONSIVE LANDSCAPE MUY PEQUEÑO ===== */
@@ -742,4 +784,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     #favoresDisplay { padding: 2px 6px; gap: 2px; margin-top: 3px; border-radius: 4px; min-height: 18px; }
     #favoresDisplay .favores-punto { font-size: 0.8rem; }
     #favoresDisplay .favores-puntos { gap: 2px; }
+    .session-banner { padding: 4px; margin-bottom: 8px; }
+    .session-banner-text { font-size: 0.6rem; }
+    .url-data-display { padding: 4px; margin-bottom: 8px; }
+    .url-data-display div { font-size: 0.6rem; }
+    .modal-box { padding: 12px; }
+    .modal-box h2 { font-size: 1.1rem; }
+    .modal-box p { font-size: 0.7rem; margin-bottom: 12px; }
+    .modal-btn { padding: 8px; font-size: 0.7rem; }
 }

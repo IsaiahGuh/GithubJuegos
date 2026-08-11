@@ -414,11 +414,20 @@ function continuarReparto(isCreator, playerIds, playerCards, playerPrivateObject
     cartillasState.cardsDealt = true;
     
     const myCards = playerCards[window.myId] || [];
-    cartillasState.availableCards = myCards.map(id => getCardById(id)).filter(c => c !== null);
+    cartillasState.availableCards = myCards.map(function(id) {
+        return getCardById(id);
+    }).filter(function(c) { return c !== null; });
+    
+    console.log('Cartillas repartidas para ' + window.myName + ':', myCards);
+    console.log('Cartillas disponibles:', cartillasState.availableCards);
+    
     window.gameState.privateObjectiveId = playerPrivateObjectives[window.myId] || null;
     
-    if (cartillasState.availableCards.length > 0) {
-        showInitialCardSelector(cartillasState.availableCards);
+    if (cartillasState.availableCards.length > 0 && !cartillasState.initialCardSelectionDone) {
+        showTemporaryMessage('Cartillas repartidas, selecciona la tuya');
+        if (typeof showInitialCardSelector === 'function') {
+            showInitialCardSelector(cartillasState.availableCards);
+        }
     }
     
     if (isCreator) {

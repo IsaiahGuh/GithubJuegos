@@ -1,6 +1,5 @@
 // ===== MQTT.JS =====
-// Sistema multijugador - CREADOR SE ASIGNA AL PRIMER JUGADOR
-// CON SINCRONIZACION DE JUGADORES EXISTENTES
+// Sistema multijugador - CON ENTRADA Y RECONEXION
 
 let mqttClient = null;
 let currentRoom = null;
@@ -13,9 +12,11 @@ let isRoomCreator = false;
 // CONECTAR A SALA
 // ============================================================
 
-function connectToRoom(code) {
-    showLoading("Conectando con la sala...");
+function connectToRoom(code, isReconnect) {
+    if (isReconnect === undefined) isReconnect = false;
     
+    showLoading(isReconnect ? 'Reconectando a la sala...' : 'Conectando con la sala...');
+
     mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
     mqttClient.on('connect', () => {
@@ -25,20 +26,29 @@ function connectToRoom(code) {
         
         playersData[myId] = { 
             name: myName, 
-            score: window.gameState.myTotalScore || 0, 
-            moves: [...window.gameState.moveHistory],
-            cardId: window.gameState.currentCardId || 1,
-            availableCards: window.cartillasState && window.cartillasState.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
+            score: window.gameState?.myTotalScore || 0, 
+            moves: [...(window.gameState?.moveHistory || [])],
+            cardId: window.gameState?.currentCardId || 1,
+            availableCards: window.cartillasState?.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
             isCreator: isRoomCreator
         };
         
         joinSuccess(code);
         
-        setTimeout(() => {
-            broadcastPresence();
-            solicitarJugadoresExistentes();
-            verificarYAsignarCreador();
-        }, 500);
+        if (typeof saveSession === 'function') {
+            saveSession();
+        }
+        
+        if (!isReconnect) {
+            setTimeout(() => {
+                verificarYAsignarCreador();
+            }, 500);
+        } else {
+            setTimeout(() => {
+                broadcastPresence();
+                solicitarJugadoresExistentes();
+            }, 500);
+        }
     });
 
     mqttClient.on('message', (topic, message) => {
@@ -106,10 +116,10 @@ function connectToRoom(code) {
                         action: 'player_list_response',
                         id: myId,
                         name: myName,
-                        score: window.gameState.myTotalScore || 0,
-                        moves: window.gameState.moveHistory || [],
-                        cardId: window.gameState.currentCardId || 1,
-                        availableCards: window.cartillasState && window.cartillasState.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
+                        score: window.gameState?.myTotalScore || 0,
+                        moves: window.gameState?.moveHistory || [],
+                        cardId: window.gameState?.currentCardId || 1,
+                        availableCards: window.cartillasState?.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
                         isCreator: isRoomCreator,
                         publicObjectives: isRoomCreator ? window.gameState.publicObjectives : [],
                         tools: isRoomCreator ? window.gameState.tools : [],
@@ -211,6 +221,10 @@ function connectToRoom(code) {
             // 6. CARDS_DEALT - Reparto de cartillas (con colores incluidos)
             // ============================================================
             if (data.action === 'cards_dealt' && data.allPlayerCards) {
+                console.log('Recibiendo cartillas del creador');
+                console.log('Mis datos:', { myId: window.myId, myName: window.myName });
+                console.log('Cartillas recibidas:', Object.keys(data.allPlayerCards));
+                
                 window.cartillasState.allPlayerCards = data.allPlayerCards;
                 window.cartillasState.allPlayerPrivateObjectives = data.allPlayerPrivateObjectives || {};
                 window.cartillasState.cardsDealt = true;
@@ -242,20 +256,30 @@ function connectToRoom(code) {
                     renderLeaderboard();
                 }
                 
-                if (data.id !== myId) {
-                    const myCards = data.allPlayerCards[myId] || [];
-                    window.cartillasState.availableCards = myCards.map(id => getCardById(id)).filter(c => c !== null);
-                    
-                    if (data.allPlayerPrivateObjectives) {
-                        window.gameState.privateObjectiveId = data.allPlayerPrivateObjectives[myId] || null;
-                    }
-                    
-                    if (window.cartillasState.availableCards.length > 0 && !window.cartillasState.initialCardSelectionDone) {
-                        showTemporaryMessage('Cartillas repartidas, selecciona la tuya');
-                        if (typeof showInitialCardSelector === 'function') {
+                const myCards = data.allPlayerCards[window.myId] || [];
+                window.cartillasState.availableCards = myCards.map(function(id) {
+                    return getCardById(id);
+                }).filter(function(c) { return c !== null; });
+                
+                console.log('Mis cartillas:', myCards);
+                console.log('Cartillas disponibles:', window.cartillasState.availableCards);
+                
+                if (data.allPlayerPrivateObjectives) {
+                    window.gameState.privateObjectiveId = data.allPlayerPrivateObjectives[window.myId] || null;
+                    console.log('Mi objetivo privado:', window.gameState.privateObjectiveId);
+                }
+                
+                if (window.cartillasState.availableCards.length > 0 && !window.cartillasState.initialCardSelectionDone) {
+                    showTemporaryMessage('Cartillas repartidas, selecciona la tuya');
+                    if (typeof showInitialCardSelector === 'function') {
+                        setTimeout(function() {
                             showInitialCardSelector(window.cartillasState.availableCards);
-                        }
+                        }, 300);
                     }
+                } else {
+                    console.warn('No hay cartillas disponibles o ya fueron seleccionadas');
+                    console.log('availableCards:', window.cartillasState.availableCards);
+                    console.log('initialCardSelectionDone:', window.cartillasState.initialCardSelectionDone);
                 }
                 
                 if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
@@ -620,10 +644,10 @@ function broadcastPresence() {
             action: 'presence',
             id: myId,
             name: myName,
-            score: window.gameState.myTotalScore || 0,
-            moves: window.gameState.moveHistory || [],
-            cardId: window.gameState.currentCardId || 1,
-            availableCards: window.cartillasState && window.cartillasState.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
+            score: window.gameState?.myTotalScore || 0,
+            moves: window.gameState?.moveHistory || [],
+            cardId: window.gameState?.currentCardId || 1,
+            availableCards: window.cartillasState?.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
             isCreator: isRoomCreator,
             publicObjectives: isRoomCreator ? window.gameState.publicObjectives : [],
             tools: isRoomCreator ? window.gameState.tools : [],
@@ -679,7 +703,7 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
             currentScore = window.gameState.myTotalScore;
         }
         
-        const currentMoves = window.gameState.moveHistory ? [...window.gameState.moveHistory] : [];
+        const currentMoves = window.gameState?.moveHistory ? [...window.gameState.moveHistory] : [];
         
         let cardState = null;
         if (typeof window.getCardStateForSync === 'function') {
@@ -692,11 +716,11 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
             name: myName,
             score: currentScore,
             moves: currentMoves,
-            cardId: window.gameState.currentCardId || 1,
-            availableCards: window.cartillasState && window.cartillasState.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
-            privateObjectiveId: window.gameState.privateObjectiveId || null,
-            publicObjectives: window.gameState.publicObjectives || [],
-            tools: window.gameState.tools || [],
+            cardId: window.gameState?.currentCardId || 1,
+            availableCards: window.cartillasState?.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
+            privateObjectiveId: window.gameState?.privateObjectiveId || null,
+            publicObjectives: window.gameState?.publicObjectives || [],
+            tools: window.gameState?.tools || [],
             isCreator: isRoomCreator,
             cardState: cardState,
             publicDetalle: publicDetalle,
@@ -743,37 +767,27 @@ function broadcastScore(action = 'sync', extraPayload = {}) {
 // FUNCIONES DE SALA
 // ============================================================
 
-function createRoom() {
-    myName = getPlayerName();
-    const code = generateRoomCode();
-    myId = generateId();
-    isRoomCreator = true;
-    window.myId = myId;
-    window.myName = myName;
-    window.currentRoom = code;
-    window.playersData = playersData;
+function joinSuccess(code) {
+    hideLoading();
+    document.getElementById('lobbyModal').style.display = 'none';
     
-    generarObjetivosYHerramientas();
-    
-    connectToRoom(code);
-}
-
-function joinRoom() {
-    myName = getPlayerName();
-    myId = generateId();
-    isRoomCreator = false;
-    window.myId = myId;
-    window.myName = myName;
-    
-    const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-    if (!isValidRoomCode(code)) {
-        alert("El codigo debe tener 4 letras/numeros.");
-        return;
+    const info = document.getElementById('roomInfoDisplay');
+    if (info) {
+        info.style.display = 'inline-block';
+        info.textContent = 'SALA: ' + code;
     }
     
-    window.currentRoom = code;
-    window.playersData = playersData;
-    connectToRoom(code);
+    const leaderboard = document.getElementById('leaderboardPanel');
+    if (leaderboard) leaderboard.style.display = 'flex';
+    
+    if (typeof renderLeaderboard === 'function') renderLeaderboard();
+    if (typeof renderBoard === 'function') renderBoard();
+    
+    if (isRoomCreator) {
+        showTemporaryMessage('Eres el creador - Presiona "Vitrinas" para repartir cartillas');
+    } else {
+        showTemporaryMessage('Presiona "Vitrinas" para comenzar');
+    }
 }
 
 function disconnectFromRoom() {
@@ -784,26 +798,6 @@ function disconnectFromRoom() {
     currentRoom = null;
     playersData = {};
     isRoomCreator = false;
-}
-
-function joinSuccess(code) {
-    hideLoading();
-    document.getElementById('lobbyModal').style.display = 'none';
-    document.getElementById('joinModal').style.display = 'none';
-    
-    const info = document.getElementById('roomInfoDisplay');
-    info.style.display = 'inline-block';
-    info.textContent = 'SALA: ' + code;
-    
-    document.getElementById('leaderboardPanel').style.display = 'flex';
-    renderLeaderboard();
-    renderBoard();
-    
-    if (isRoomCreator) {
-        showTemporaryMessage('Eres el creador - Presiona "Vitrinas" para repartir cartillas');
-    } else {
-        showTemporaryMessage('Presiona "Vitrinas" para comenzar');
-    }
 }
 
 // ============================================================
@@ -835,8 +829,6 @@ window.broadcastScore = broadcastScore;
 window.broadcastPresence = broadcastPresence;
 window.broadcastCreatorStatus = broadcastCreatorStatus;
 window.generarObjetivosYHerramientas = generarObjetivosYHerramientas;
-window.createRoom = createRoom;
-window.joinRoom = joinRoom;
 window.disconnectFromRoom = disconnectFromRoom;
 window.joinSuccess = joinSuccess;
 window.encontrarCreador = encontrarCreador;
@@ -845,4 +837,4 @@ window.solicitarObjetivosAlCreador = solicitarObjetivosAlCreador;
 window.solicitarJugadoresExistentes = solicitarJugadoresExistentes;
 window.diagnosticarPuntaje = diagnosticarPuntaje;
 
-console.log('mqtt.js cargado - Con soporte para reset completo y sincronizacion de objetivos');
+console.log('mqtt.js cargado - Con soporte para entrada y reconexion');
