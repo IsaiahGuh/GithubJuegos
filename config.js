@@ -7,14 +7,14 @@ const Config = {
         return [
             {
                 id: 'CleverDados',
-                nombre: 'CleverDados',
+                nombre: 'Clever',
                 ruta: './CleverDados/index.html',
                 color: '#D44D5C',
                 topics: ['mqtt', 'dados']
             },
             {
                 id: 'QuixxDados',
-                nombre: 'QuixxDados',
+                nombre: 'Quixx',
                 ruta: './QuixxDados/index.html',
                 color: '#808BC3',
                 topics: ['mqtt', 'dados']
@@ -28,28 +28,28 @@ const Config = {
             },
             {
                 id: 'ParaDice',
-                nombre: 'ParaDice',
+                nombre: 'Paradice',
                 ruta: './ParaDice/index.html',
                 color: '#f5deb2',
                 topics: ['mqtt', 'dados', 'cartas']
             },
             {
                 id: 'SagradaS',
-                nombre: 'SagradaS',
+                nombre: 'Sagrada',
                 ruta: './SagradaS/index.html',
                 color: '#f5deb2',
                 topics: ['mqtt', 'dados']
             },
             {
                 id: 'MasterCartas',
-                nombre: 'MasterCartas',
+                nombre: 'Master',
                 ruta: './MasterCartas/index.html',
                 color: '#4CAF50',
                 topics: ['local', 'cartas']
             },
             {
                 id: 'FigurasDados',
-                nombre: 'FigurasDados',
+                nombre: 'Figuras',
                 ruta: './FigurasDados/index.html',
                 color: '#FF9800',
                 topics: ['local', 'dados']
