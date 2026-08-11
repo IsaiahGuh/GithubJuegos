@@ -89,6 +89,7 @@ function iniciarJuego() {
 function renderizarMisCorredores() {
     var container = document.getElementById('my-cards-container');
     container.innerHTML = '';
+    
     if (misSelecciones.length === 0) {
         var empty = document.createElement('div');
         empty.className = 'empty-message';
@@ -96,6 +97,7 @@ function renderizarMisCorredores() {
         container.appendChild(empty);
         return;
     }
+    
     for (var i = 0; i < misSelecciones.length; i++) {
         var cartaId = misSelecciones[i];
         var carta = null;
@@ -106,10 +108,13 @@ function renderizarMisCorredores() {
             }
         }
         if (!carta) continue;
+        
         var esActiva = (cartaActivaId === cartaId);
         var esGanadora = carta.esGanadora || false;
+        
         var wrapper = document.createElement('div');
         wrapper.className = 'my-card-wrapper' + (esActiva ? ' activa' : '') + (esGanadora ? ' ganadora' : '');
+        
         var imgContainer = document.createElement('div');
         imgContainer.className = 'my-card-img';
         var img = document.createElement('img');
@@ -127,9 +132,16 @@ function renderizarMisCorredores() {
             imgContainer.appendChild(badge);
         }
         wrapper.appendChild(imgContainer);
+        
         var btnUsar = document.createElement('button');
         btnUsar.className = 'btn-sm btn-usar';
         btnUsar.textContent = 'Usar';
+        
+        // Bloquear el botón si hay una carta activa y no es esta
+        if (cartaActivaId !== null && cartaActivaId !== cartaId) {
+            btnUsar.disabled = true;
+        }
+        
         btnUsar.addEventListener('click', function(cId) {
             return function() {
                 if (cartaActivaId === cId) {
@@ -140,6 +152,7 @@ function renderizarMisCorredores() {
                 renderizarMisCorredores();
             };
         }(cartaId));
+        
         wrapper.appendChild(btnUsar);
         container.appendChild(wrapper);
     }

@@ -1,17 +1,26 @@
 function renderizarCartas() {
     var grid = document.getElementById('card-grid');
     grid.innerHTML = '';
+    var boardContainer = document.querySelector('.board-container');
+    
     if (!cartas || cartas.length === 0) {
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Presiona "Corredores" para comenzar la partida</div>';
+        if (boardContainer) boardContainer.style.display = 'block';
         return;
     }
+    
     var disponibles = cartas.filter(function(c) {
         return !c.seleccionadoPor;
     });
+    
     if (disponibles.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas han sido seleccionadas</div>';
+        // Ocultar el contenedor de selección cuando no haya cartas disponibles
+        if (boardContainer) boardContainer.style.display = 'none';
         return;
+    } else {
+        if (boardContainer) boardContainer.style.display = 'block';
     }
+    
     for (var i = 0; i < disponibles.length; i++) {
         var carta = disponibles[i];
         var cardDiv = document.createElement('div');
