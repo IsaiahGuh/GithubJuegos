@@ -38,6 +38,14 @@ const Config = {
                         color: '#f5deb2',
                         topics: ['multijugador', 'cartas', 'desafios'],
                         badge: 'Online'
+                    },
+                    {
+                        id: 'ParaDice',
+                        nombre: 'ParaDice',
+                        ruta: './ParaDice/index.html',
+                        color: '#f5deb2',
+                        topics: ['multijugador', 'cartas', 'desafios'],
+                        badge: 'Online'
                     }
                 ];
             }
