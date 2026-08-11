@@ -73,7 +73,10 @@
             }
         });
         
-        elements.qrButton.addEventListener('click', UI.openQRModal);
+        elements.qrButton.addEventListener('click', function() {
+            UI.openQRModal();
+        });
+        
         elements.qrModal.addEventListener('click', function(event) {
             if (event.target === elements.qrModal) {
                 UI.closeQRModal();
@@ -130,32 +133,37 @@
         const nombre = PlayerData.getNombre() || 'Jugador';
         const codigo = PlayerData.getCodigoSala() || Config.getDefaultRoomCode();
         
-        // Para CleverDados
         if (gameId === 'CleverDados') {
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
         
-        // Para QuixxDados
         if (gameId === 'QuixxDados') {
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
 
-        // Para Cassettes
         if (gameId === 'JuegoCassettes') {
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
 
-        // Para ParaDice
         if (gameId === 'ParaDice') {
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
 
-        // Para SagradaS
         if (gameId === 'SagradaS') {
+            const separator = url.includes('?') ? '&' : '?';
+            url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
+        }
+
+        if (gameId === 'MasterCartas') {
+            const separator = url.includes('?') ? '&' : '?';
+            url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
+        }
+
+        if (gameId === 'FigurasDados') {
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }

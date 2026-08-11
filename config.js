@@ -4,18 +4,17 @@ const Config = {
     STORAGE_KEY: 'githubjuegos_lobby_data',
     
     getJuegos() {
-        // Juegos por defecto
         return [
             {
                 id: 'CleverDados',
-                nombre: 'Clever',
+                nombre: 'CleverDados',
                 ruta: './CleverDados/index.html',
                 color: '#D44D5C',
                 topics: ['mqtt', 'dados']
             },
             {
                 id: 'QuixxDados',
-                nombre: 'Quixx',
+                nombre: 'QuixxDados',
                 ruta: './QuixxDados/index.html',
                 color: '#808BC3',
                 topics: ['mqtt', 'dados']
@@ -29,28 +28,28 @@ const Config = {
             },
             {
                 id: 'ParaDice',
-                nombre: 'Paradice',
+                nombre: 'ParaDice',
                 ruta: './ParaDice/index.html',
                 color: '#f5deb2',
                 topics: ['mqtt', 'dados', 'cartas']
             },
             {
                 id: 'SagradaS',
-                nombre: 'Sagrada',
+                nombre: 'SagradaS',
                 ruta: './SagradaS/index.html',
                 color: '#f5deb2',
                 topics: ['mqtt', 'dados']
             },
             {
                 id: 'MasterCartas',
-                nombre: 'Master',
+                nombre: 'MasterCartas',
                 ruta: './MasterCartas/index.html',
                 color: '#4CAF50',
                 topics: ['local', 'cartas']
             },
             {
                 id: 'FigurasDados',
-                nombre: 'Figuras',
+                nombre: 'FigurasDados',
                 ruta: './FigurasDados/index.html',
                 color: '#FF9800',
                 topics: ['local', 'dados']
@@ -112,7 +111,7 @@ const PlayerData = {
     
     getNombre() { return this.data.nombre; },
     getCodigoSala() { return this.data.codigoSala; },
-    hasData() { return this.data.nombre.length > 0 && this.data.codigoSala.length >= 4; }
+    hasData() { return this.data.nombre.length > 0 && this.data.codigoSala.length === 4; }
 };
 
 // Validacion
@@ -123,7 +122,7 @@ const Validator = {
     
     isValidRoomCode(code) {
         const clean = code.trim().toUpperCase();
-        return clean.length >= 4 && /^[A-Z0-9]+$/.test(clean);
+        return clean.length === 4 && /^[A-Z0-9]+$/.test(clean);
     },
     
     getCleanRoomCode(code) {
