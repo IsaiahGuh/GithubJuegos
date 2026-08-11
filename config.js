@@ -4,73 +4,52 @@ const Config = {
     STORAGE_KEY: 'githubjuegos_lobby_data',
     
     getJuegos() {
-        try {
-            // Verificar si APP_CONFIG existe y tiene JUEGOS
-            if (typeof window.APP_CONFIG !== 'undefined' && 
-                window.APP_CONFIG && 
-                window.APP_CONFIG.JUEGOS) {
-                console.log('Config: Cargando juegos desde APP_CONFIG');
-                return window.APP_CONFIG.JUEGOS;
-            } else {
-                console.warn('Config: APP_CONFIG.JUEGOS no encontrado');
-                // Juegos por defecto si no hay configuracion
-                return [
-                    {
-                        id: 'CleverDados',
-                        nombre: 'CleverDados',
-                        ruta: './CleverDados/index.html',
-                        color: '#D44D5C',
-                        topics: ['multijugador', 'dados', 'estrategia'],
-                        badge: 'Online'
-                    },
-                    {
-                        id: 'QuixxDados',
-                        nombre: 'QuixxDados',
-                        ruta: './QuixxDados/index.html',
-                        color: '#808BC3',
-                        topics: ['multijugador', 'dados', 'estrategia'],
-                        badge: 'Online'
-                    },
-                    {
-                        id: 'JuegoCassettes',
-                        nombre: 'Cassettes',
-                        ruta: './JuegoCassettes/index.html',
-                        color: '#f5deb2',
-                        topics: ['multijugador', 'cartas', 'desafios'],
-                        badge: 'Online'
-                    },
-                    {
-                        id: 'ParaDice',
-                        nombre: 'ParaDice',
-                        ruta: './ParaDice/index.html',
-                        color: '#f5deb2',
-                        topics: ['multijugador', 'cartas', 'desafios'],
-                        badge: 'Online'
-                    },
-                    {
-                        id: 'SagradaS',
-                        nombre: 'SagradaS',
-                        ruta: './SagradaS/index.html',
-                        color: '#f5deb2',
-                        topics: ['multijugador', 'cartas', 'desafios'],
-                        badge: 'Online'
-                    }
-                ];
+        // Juegos por defecto
+        return [
+            {
+                id: 'CleverDados',
+                nombre: 'CleverDados',
+                ruta: './CleverDados/index.html',
+                color: '#D44D5C',
+                topics: ['multijugador', 'dados', 'estrategia'],
+                badge: 'Online'
+            },
+            {
+                id: 'QuixxDados',
+                nombre: 'QuixxDados',
+                ruta: './QuixxDados/index.html',
+                color: '#808BC3',
+                topics: ['multijugador', 'dados', 'estrategia'],
+                badge: 'Online'
+            },
+            {
+                id: 'JuegoCassettes',
+                nombre: 'Cassettes',
+                ruta: './JuegoCassettes/index.html',
+                color: '#f5deb2',
+                topics: ['multijugador', 'cartas', 'desafios'],
+                badge: 'Online'
+            },
+            {
+                id: 'ParaDice',
+                nombre: 'ParaDice',
+                ruta: './ParaDice/index.html',
+                color: '#f5deb2',
+                topics: ['multijugador', 'cartas', 'desafios'],
+                badge: 'Online'
+            },
+            {
+                id: 'SagradaS',
+                nombre: 'SagradaS',
+                ruta: './SagradaS/index.html',
+                color: '#f5deb2',
+                topics: ['multijugador', 'cartas', 'desafios'],
+                badge: 'Online'
             }
-        } catch (e) {
-            console.error('Error cargando juegos:', e);
-            return [];
-        }
+        ];
     },
     
     getDefaultRoomCode() {
-        try {
-            if (typeof window.APP_CONFIG !== 'undefined' && 
-                window.APP_CONFIG && 
-                window.APP_CONFIG.DEFAULT_ROOM_CODE) {
-                return window.APP_CONFIG.DEFAULT_ROOM_CODE;
-            }
-        } catch (e) {}
         return this.DEFAULT_ROOM_CODE;
     }
 };
