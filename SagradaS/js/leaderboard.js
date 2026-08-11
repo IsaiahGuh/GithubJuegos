@@ -31,11 +31,11 @@ function renderLeaderboard() {
     
     const playersArr = Object.keys(window.playersData).map(id => {
         const p = window.playersData[id];
-        const card = getCardById(p.cardId || 1);
-        const moves = p.moves || [];
         
-        // Para el jugador local, calcular todo normalmente
+        // Para el jugador local, calcular todo usando el estado actual del juego
         if (id === window.myId) {
+            const card = getCurrentCard();  // usa la carta actual
+            const moves = window.gameState.moveHistory || []; // historial actual
             const puntaje = calcularPuntuacionCompleta(card, moves, privateObjId, publicObjIds, id, isFinished);
             return {
                 id: id,
@@ -54,7 +54,9 @@ function renderLeaderboard() {
             };
         }
         
-        // Para otros jugadores
+        // Para otros jugadores, usar los datos sincronizados
+        const card = getCardById(p.cardId || 1);
+        const moves = p.moves || [];
         const publicDetalle = p.publicDetalle || [];
         const privateScore = p.privateScore || 0;
         const colorExtra = p.colorExtra || 0;
@@ -144,7 +146,6 @@ function renderLeaderboard() {
         let privateTag = '';
         const privPts = p.privateScore || 0;
         
-        // Siempre mostrar el puntaje privado de forma normal
         if (p.isMe) {
             privateTag = `<span class="tag-private">Privado: ${privPts}pts</span>`;
         } else {
@@ -162,7 +163,6 @@ function renderLeaderboard() {
             const textColor = p.color === 'yellow' ? '#222' : '#fff';
             colorTag = `<span class="tag-color" style="background: ${bgColor}; color: ${textColor}; border-color: ${bgColor};">Color: ${p.colorExtra || 0}pts</span>`;
         } else {
-            // ✅ SI LA PARTIDA ESTÁ FINALIZADA, REVELAR EL COLOR
             if (p.isFinished && p.color) {
                 const bgColor = p.colorHex || '#666';
                 const textColor = p.color === 'yellow' ? '#222' : '#fff';
@@ -174,7 +174,6 @@ function renderLeaderboard() {
         
         // ===== FAVORES =====
         let favoresTag = '';
-        // ✅ SOLO MOSTRAR FAVORES SI LA PARTIDA ESTÁ FINALIZADA
         if (p.isFinished) {
             if (p.isMe) {
                 favoresTag = `<span class="tag-favores">Favores: ${p.favoresPuntos || 0}pts</span>`;
@@ -183,11 +182,9 @@ function renderLeaderboard() {
                 favoresTag = `<span class="tag-favores">Favores: ${favPts}pts</span>`;
             }
         }
-        // Si NO está finalizada, NO mostrar nada (ni siquiera candado)
-
+        
         // ===== CASILLAS VACÍAS =====
         let casillasTag = '';
-        // ✅ SOLO MOSTRAR CASILLAS SI LA PARTIDA ESTÁ FINALIZADA
         if (p.isFinished) {
             if (p.isMe) {
                 const vacias = p.casillasVaciasPuntos || 0;

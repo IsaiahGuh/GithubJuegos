@@ -39,15 +39,16 @@ function connectToRoom(code, isReconnect) {
             saveSession();
         }
         
+        // ---- SIEMPRE solicitar jugadores existentes, tanto en conexión como reconexión ----
+        setTimeout(() => {
+            solicitarJugadoresExistentes();
+        }, 500);
+        
+        // Si no es reconexión, también asignar creador (por si somos el primero)
         if (!isReconnect) {
             setTimeout(() => {
                 verificarYAsignarCreador();
-            }, 500);
-        } else {
-            setTimeout(() => {
-                broadcastPresence();
-                solicitarJugadoresExistentes();
-            }, 500);
+            }, 800);
         }
     });
 
@@ -102,8 +103,8 @@ function connectToRoom(code, isReconnect) {
             // 2. SYNC_PLAYERS - Solicitud de jugadores existentes
             // ============================================================
             if (data.action === 'sync_players') {
-                console.log(data.name + ' se unio, enviando mi presencia...');
-                
+                console.log(data.name + ' se unio, enviando lista completa de jugadores...');
+
                 if (data.id && data.name) {
                     if (!playersData[data.id]) {
                         playersData[data.id] = {};
@@ -117,74 +118,126 @@ function connectToRoom(code, isReconnect) {
                     playersData[data.id].cardState = data.cardState || null;
                     renderLeaderboard();
                 }
-                
-                if (isRoomCreator) {
-                    broadcastCreatorStatus();
-                } else {
-                    broadcastPresence();
-                }
-                
-                if (data.id !== myId) {
-                    const topic = `sagradas_app/room/${currentRoom}`;
-                    const payload = {
-                        action: 'player_list_response',
-                        id: myId,
-                        name: myName,
-                        score: window.gameState?.myTotalScore || 0,
-                        moves: window.gameState?.moveHistory || [],
-                        cardId: window.gameState?.currentCardId || 1,
-                        availableCards: window.cartillasState?.availableCards ? window.cartillasState.availableCards.map(c => c.id) : [],
-                        isCreator: isRoomCreator,
-                        publicObjectives: isRoomCreator ? window.gameState.publicObjectives : [],
-                        tools: isRoomCreator ? window.gameState.tools : [],
-                        targetId: data.id,
-                        cardState: typeof window.getCardStateForSync === 'function' ? window.getCardStateForSync() : null
-                    };
-                    mqttClient.publish(topic, JSON.stringify(payload));
-                    console.log('Enviando mis datos al nuevo jugador: ' + data.name);
-                }
+
+                const allPlayers = Object.keys(playersData).map(id => ({
+                    id: id,
+                    name: playersData[id].name || 'Jugador',
+                    score: playersData[id].score || 0,
+                    moves: playersData[id].moves || [],
+                    cardId: playersData[id].cardId || 1,
+                    availableCards: playersData[id].availableCards || [],
+                    isCreator: playersData[id].isCreator || false,
+                    cardState: playersData[id].cardState || null,
+                    privateObjectiveId: playersData[id].privateObjectiveId || null,
+                    publicDetalle: playersData[id].publicDetalle || [],
+                    privateScore: playersData[id].privateScore || 0,
+                    colorExtra: playersData[id].colorExtra || 0,
+                    favoresPuntos: playersData[id].favoresPuntos || 0,
+                    casillasVaciasPuntos: playersData[id].casillasVaciasPuntos || 0,
+                    colorAsignado: playersData[id].colorAsignado || coloresState.asignaciones[id] || null,
+                }));
+
+                const topic = `sagradas_app/room/${currentRoom}`;
+                const payload = {
+                    action: 'player_list_response',
+                    id: myId,
+                    name: myName,
+                    allPlayers: allPlayers,
+                    targetId: data.id,
+                    publicObjectives: isRoomCreator ? window.gameState.publicObjectives : [],
+                    tools: isRoomCreator ? window.gameState.tools : [],
+                    isCreator: isRoomCreator,
+                    coloresAsignados: coloresState.asignaciones,
+                    coloresUsados: coloresState.coloresUsados,
+                };
+                mqttClient.publish(topic, JSON.stringify(payload));
+                console.log('Enviando lista de ' + allPlayers.length + ' jugadores a ' + data.name);
                 return;
             }
             
             // ============================================================
-            // 3. PLAYER_LIST_RESPONSE - Respuesta con datos de jugador
+            // 3. PLAYER_LIST_RESPONSE - Respuesta con lista de jugadores
             // ============================================================
             if (data.action === 'player_list_response') {
                 if (data.targetId === myId) {
-                    console.log('Recibiendo datos de: ' + data.name);
-                    
-                    playersData[data.id] = { 
-                        name: data.name || 'Jugador',
-                        score: data.score || 0,
-                        moves: data.moves || [],
-                        cardId: data.cardId || 1,
-                        availableCards: data.availableCards || [],
-                        isCreator: data.isCreator || false,
-                        cardState: data.cardState || null
-                    };
-                    
-                    if (data.cardState) {
-                        if (!window._playerCardStates) {
-                            window._playerCardStates = {};
-                        }
-                        window._playerCardStates[data.id] = data.cardState;
-                    }
-                    
-                    if (data.isCreator && data.publicObjectives && data.publicObjectives.length > 0) {
-                        if (window.gameState.publicObjectives.length === 0) {
-                            window.gameState.publicObjectives = [...data.publicObjectives];
-                            window.gameState.tools = [...data.tools] || [];
-                            herramientasState.herramientas_seleccionadas = [...data.tools] || [];
-                            herramientasState.herramientas_disponibles = [...data.tools] || [];
-                            console.log('Objetivos recibidos del creador al sincronizar:', window.gameState.publicObjectives);
-                            if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
-                                renderGameInfo();
+                    console.log('Recibiendo lista de jugadores de ' + data.name);
+
+                    if (data.allPlayers && Array.isArray(data.allPlayers)) {
+                        data.allPlayers.forEach(p => {
+                            playersData[p.id] = {
+                                name: p.name || 'Jugador',
+                                score: p.score || 0,
+                                moves: p.moves || [],
+                                cardId: p.cardId || 1,
+                                availableCards: p.availableCards || [],
+                                isCreator: p.isCreator || false,
+                                cardState: p.cardState || null,
+                                privateObjectiveId: p.privateObjectiveId || null,
+                                publicDetalle: p.publicDetalle || [],
+                                privateScore: p.privateScore || 0,
+                                colorExtra: p.colorExtra || 0,
+                                favoresPuntos: p.favoresPuntos || 0,
+                                casillasVaciasPuntos: p.casillasVaciasPuntos || 0,
+                                colorAsignado: p.colorAsignado || null,
+                            };
+                            if (p.cardState) {
+                                if (!window._playerCardStates) {
+                                    window._playerCardStates = {};
+                                }
+                                window._playerCardStates[p.id] = p.cardState;
                             }
-                            showTemporaryMessage('Objetivos y herramientas sincronizados');
+                        });
+
+                        if (data.coloresAsignados) {
+                            coloresState.asignaciones = { ...coloresState.asignaciones, ...data.coloresAsignados };
+                            coloresState.coloresUsados = data.coloresUsados || [];
+                            coloresState.coloresAsignados = true;
+                            if (window.myId && coloresState.asignaciones[window.myId]) {
+                                coloresState.miColor = coloresState.asignaciones[window.myId];
+                                if (typeof renderFavoresConColor === 'function') renderFavoresConColor();
+                            }
                         }
+
+                        if (data.isCreator && data.publicObjectives && data.publicObjectives.length > 0) {
+                            if (window.gameState.publicObjectives.length === 0) {
+                                window.gameState.publicObjectives = [...data.publicObjectives];
+                                window.gameState.tools = [...data.tools] || [];
+                                herramientasState.herramientas_seleccionadas = [...data.tools] || [];
+                                herramientasState.herramientas_disponibles = [...data.tools] || [];
+                                if (window.cartillasState && window.cartillasState.initialCardSelectionDone) {
+                                    renderGameInfo();
+                                }
+                                showTemporaryMessage('Objetivos y herramientas sincronizados');
+                            }
+                        }
+
+                        renderLeaderboard();
+                    } else {
+                        // Fallback: si no hay lista, procesar un solo jugador
+                        playersData[data.id] = {
+                            name: data.name || 'Jugador',
+                            score: data.score || 0,
+                            moves: data.moves || [],
+                            cardId: data.cardId || 1,
+                            availableCards: data.availableCards || [],
+                            isCreator: data.isCreator || false,
+                            cardState: data.cardState || null,
+                            privateObjectiveId: data.privateObjectiveId || null,
+                            publicDetalle: data.publicDetalle || [],
+                            privateScore: data.privateScore || 0,
+                            colorExtra: data.colorExtra || 0,
+                            favoresPuntos: data.favoresPuntos || 0,
+                            casillasVaciasPuntos: data.casillasVaciasPuntos || 0,
+                            colorAsignado: data.colorAsignado || null,
+                        };
+                        if (data.cardState) {
+                            if (!window._playerCardStates) {
+                                window._playerCardStates = {};
+                            }
+                            window._playerCardStates[data.id] = data.cardState;
+                        }
+                        renderLeaderboard();
                     }
-                    
-                    renderLeaderboard();
                 }
                 return;
             }
@@ -582,9 +635,6 @@ function verificarYAsignarCreador() {
             }
         } else if (sortedIds.length > 0 && sortedIds[0] !== myId) {
             console.log('Esperando que el primer jugador se declare creador...');
-            setTimeout(() => {
-                solicitarJugadoresExistentes();
-            }, 1000);
         }
         return;
     }
@@ -593,10 +643,6 @@ function verificarYAsignarCreador() {
         if (window.gameState.publicObjectives.length === 0) {
             console.log('Solicitando objetivos al creador...');
             solicitarObjetivosAlCreador(creatorId);
-            
-            setTimeout(() => {
-                solicitarJugadoresExistentes();
-            }, 500);
         }
     }
 }
