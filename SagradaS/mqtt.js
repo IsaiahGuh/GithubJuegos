@@ -61,7 +61,7 @@ function connectToRoom(code, isReconnect) {
             // ============================================================
             if (data.action === 'presence') {
                 playersData[data.id] = { 
-                    name: data.name, 
+                    name: data.name || 'Jugador',
                     score: data.score || 0,
                     moves: data.moves || [],
                     cardId: data.cardId || 1,
@@ -104,6 +104,20 @@ function connectToRoom(code, isReconnect) {
             if (data.action === 'sync_players') {
                 console.log(data.name + ' se unio, enviando mi presencia...');
                 
+                if (data.id && data.name) {
+                    if (!playersData[data.id]) {
+                        playersData[data.id] = {};
+                    }
+                    playersData[data.id].name = data.name;
+                    playersData[data.id].isCreator = data.isCreator || false;
+                    playersData[data.id].score = data.score || 0;
+                    playersData[data.id].moves = data.moves || [];
+                    playersData[data.id].cardId = data.cardId || 1;
+                    playersData[data.id].availableCards = data.availableCards || [];
+                    playersData[data.id].cardState = data.cardState || null;
+                    renderLeaderboard();
+                }
+                
                 if (isRoomCreator) {
                     broadcastCreatorStatus();
                 } else {
@@ -140,7 +154,7 @@ function connectToRoom(code, isReconnect) {
                     console.log('Recibiendo datos de: ' + data.name);
                     
                     playersData[data.id] = { 
-                        name: data.name, 
+                        name: data.name || 'Jugador',
                         score: data.score || 0,
                         moves: data.moves || [],
                         cardId: data.cardId || 1,
@@ -192,6 +206,7 @@ function connectToRoom(code, isReconnect) {
                 }
                 playersData[data.id] = { 
                     ...playersData[data.id],
+                    name: data.name || playersData[data.id]?.name || 'Jugador',
                     isCreator: true
                 };
                 renderLeaderboard();
@@ -207,6 +222,7 @@ function connectToRoom(code, isReconnect) {
                     const payload = {
                         action: 'creator_confirmed',
                         id: myId,
+                        name: myName,
                         isCreator: true,
                         publicObjectives: window.gameState.publicObjectives || [],
                         tools: window.gameState.tools || []
@@ -303,7 +319,7 @@ function connectToRoom(code, isReconnect) {
                 const previousState = window.playersData[data.id] || {};
                 
                 window.playersData[data.id] = { 
-                    name: data.name || previousState.name || 'Anonimo',
+                    name: data.name || previousState.name || 'Jugador',
                     score: data.score !== undefined ? data.score : previousState.score || 0,
                     moves: data.moves || previousState.moves || [],
                     cardId: data.cardId || previousState.cardId || 1,
@@ -387,7 +403,7 @@ function connectToRoom(code, isReconnect) {
                 }
                 
                 playersData[data.id] = { 
-                    name: data.name, 
+                    name: data.name || playersData[data.id]?.name || 'Jugador',
                     score: data.score || 0,
                     moves: data.moves || [],
                     cardId: data.cardId || 1,
@@ -412,7 +428,7 @@ function connectToRoom(code, isReconnect) {
             // ============================================================
             if (data.action === 'join') {
                 playersData[data.id] = { 
-                    name: data.name, 
+                    name: data.name || 'Jugador',
                     score: data.score || 0,
                     moves: data.moves || [],
                     cardId: data.cardId || 1,
@@ -473,7 +489,7 @@ function connectToRoom(code, isReconnect) {
                     
                     window.playersData[data.id] = {
                         ...window.playersData[data.id],
-                        name: data.name || window.playersData[data.id]?.name || 'Anonimo',
+                        name: data.name || window.playersData[data.id]?.name || 'Jugador',
                         score: data.score || window.playersData[data.id]?.score || 0,
                         moves: data.moves || window.playersData[data.id]?.moves || [],
                         cardId: data.cardId || window.playersData[data.id]?.cardId || 1,
@@ -663,6 +679,7 @@ function broadcastCreatorStatus() {
         const payload = {
             action: 'creator_confirmed',
             id: myId,
+            name: myName,
             isCreator: true,
             publicObjectives: window.gameState.publicObjectives || [],
             tools: window.gameState.tools || []

@@ -140,17 +140,18 @@ function renderLeaderboard() {
             }
         }
         
-        // ===== PRIVADO =====
+        // ===== PRIVADO - SIEMPRE VISIBLE SIN CANDADO =====
         let privateTag = '';
+        const privPts = p.privateScore || 0;
+        
+        // Siempre mostrar el puntaje privado de forma normal
         if (p.isMe) {
-            privateTag = `<span class="tag-private">Privado: ${p.privateScore || 0}pts</span>`;
+            privateTag = `<span class="tag-private">Privado: ${privPts}pts</span>`;
         } else {
-            const privPts = p.privateScore || 0;
-            // ✅ SI LA PARTIDA ESTÁ FINALIZADA, REVELAR EL PRIVADO
             if (p.isFinished) {
                 privateTag = `<span class="tag-private" style="background: rgba(76, 175, 80, 0.15); border-color: rgba(76, 175, 80, 0.3);">Privado: ${privPts}pts</span>`;
             } else {
-                privateTag = `<span class="tag-private" style="opacity:0.6;">Privado: 🔒 ${privPts > 0 ? `(${privPts}pts)` : ''}</span>`;
+                privateTag = `<span class="tag-private">Privado: ${privPts}pts</span>`;
             }
         }
         

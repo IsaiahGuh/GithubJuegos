@@ -245,14 +245,10 @@ function usarHerramientaUI(toolId) {
     if (resultado.success) {
         showTemporaryMessage('"' + tool.nombre + '" usada (' + resultado.costo + ' favor' + (resultado.costo > 1 ? 'es' : '') + ')');
         
+        // ✅ SOLO sincronizar herramientas_usadas_global, NO los favores del jugador
         if (window.broadcastScore) {
             const syncData = {
                 herramientas_usadas_global: herramientasState.herramientas_usadas_global,
-                favores: {
-                    total: herramientasState.favores.total,
-                    gastados: herramientasState.favores.gastados,
-                    disponibles: herramientasState.favores.disponibles
-                },
                 herramientaId: toolId,
                 jugadorId: window.myId || 'local'
             };
@@ -273,15 +269,12 @@ function usarHerramientaUI(toolId) {
 function sincronizarHerramientasDesdeMQTT(data) {
     if (!data) return;
     
+    // ✅ Solo actualizar herramientas_usadas_global
     if (data.herramientas_usadas_global) {
         herramientasState.herramientas_usadas_global = data.herramientas_usadas_global;
     }
     
-    if (data.favores) {
-        herramientasState.favores.total = data.favores.total || herramientasState.favores.total;
-        herramientasState.favores.gastados = data.favores.gastados || herramientasState.favores.gastados;
-        herramientasState.favores.disponibles = data.favores.disponibles || herramientasState.favores.disponibles;
-    }
+    // ✅ NO actualizar favores del jugador local
     
     if (data.herramientaId && data.jugadorId && data.jugadorId !== window.myId) {
         const tool = getHerramientaById(data.herramientaId);
