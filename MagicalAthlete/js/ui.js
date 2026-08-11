@@ -14,7 +14,6 @@ function renderizarCartas() {
     });
     
     if (disponibles.length === 0) {
-        // Ocultar el contenedor de selección cuando no haya cartas disponibles
         if (boardContainer) boardContainer.style.display = 'none';
         return;
     } else {

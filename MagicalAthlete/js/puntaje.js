@@ -17,7 +17,7 @@ function inicializarPuntos() {
 
 function asignarPuntoGlobal(tipo) {
     if (!myId || !myName) {
-        alert('No estás conectado a una sala.');
+        alert('No estas conectado a una sala.');
         return;
     }
 
@@ -97,10 +97,29 @@ function reiniciarRonda() {
 }
 
 function actualizarBotonesGlobales() {
-    document.getElementById('btnPuntaje3').disabled = estadoRonda.usado3;
-    document.getElementById('btnPuntaje2').disabled = !estadoRonda.usado3 || estadoRonda.usado2;
-    document.getElementById('btnPuntajeMenos').disabled = false;
-    document.getElementById('btnPuntajeMas').disabled = false;
+    var btn3 = document.getElementById('btnPuntaje3');
+    var btn2 = document.getElementById('btnPuntaje2');
+    var btnMenos = document.getElementById('btnPuntajeMenos');
+    var btnMas = document.getElementById('btnPuntajeMas');
+
+    if (estadoRonda.usado3) {
+        btn3.disabled = true;
+
+        if (estadoRonda.jugadorGanador === myId) {
+            btn2.disabled = true;
+            btnMenos.disabled = true;
+            btnMas.disabled = true;
+        } else {
+            btn2.disabled = estadoRonda.usado2;
+            btnMenos.disabled = true;
+            btnMas.disabled = true;
+        }
+    } else {
+        btn3.disabled = false;
+        btn2.disabled = true;
+        btnMenos.disabled = false;
+        btnMas.disabled = false;
+    }
 }
 
 window.asignarPuntoGlobal = asignarPuntoGlobal;

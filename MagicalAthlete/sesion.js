@@ -1,6 +1,8 @@
+// ===== PERSISTENCIA DE SESION (RECONEXION) =====
 var SESSION_KEY = 'magical_athlete_session_v1';
 var REGISTRY_KEY = 'magical_athlete_players_v1';
 
+// ===== DETECCION DE PARAMETROS URL =====
 (function detectarYGuardarParamsURL() {
     var urlParams = new URLSearchParams(window.location.search);
     var nombre = urlParams.get('nombre');
@@ -63,6 +65,20 @@ function loadSession() {
             cartaActivaId = data.cartaActivaId || null;
             if (data.playersData) {
                 playersData = data.playersData;
+                // Limpiar duplicados: mantener solo una entrada por nombre
+                var seenNames = {};
+                var toRemove = [];
+                for (var id in playersData) {
+                    var name = playersData[id].name;
+                    if (seenNames[name] !== undefined) {
+                        toRemove.push(id);
+                    } else {
+                        seenNames[name] = id;
+                    }
+                }
+                for (var i = 0; i < toRemove.length; i++) {
+                    delete playersData[toRemove[i]];
+                }
             }
             return data;
         }
@@ -76,6 +92,24 @@ function clearSession() {
     try {
         localStorage.removeItem(SESSION_KEY);
     } catch (e) {}
+}
+
+function clearRoomData(room) {
+    try {
+        var registry = loadRegistry();
+        var keysToRemove = [];
+        for (var key in registry) {
+            if (key.startsWith(room + '::')) {
+                keysToRemove.push(key);
+            }
+        }
+        for (var i = 0; i < keysToRemove.length; i++) {
+            delete registry[keysToRemove[i]];
+        }
+        localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry));
+    } catch (e) {
+        console.error('No se pudo limpiar los datos de la sala', e);
+    }
 }
 
 function registryKey(room, name) {
@@ -135,6 +169,10 @@ function reconnectToSession() {
 }
 
 function dismissSession() {
+    var session = loadSession();
+    if (session && session.roomCode) {
+        clearRoomData(session.roomCode);
+    }
     clearSession();
     var banner = document.getElementById('sessionBanner');
     if (banner) banner.style.display = 'none';

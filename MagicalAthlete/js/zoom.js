@@ -27,7 +27,7 @@ function abrirZoom(carta, mostrarBoton) {
                 if (typeof window.seleccionarCarta === 'function') {
                     window.seleccionarCarta(cartaEnZoom.id);
                 } else {
-                    alert('Error: función de selección no disponible.');
+                    alert('Error: funcion de seleccion no disponible.');
                 }
             }
             cerrarZoom();

@@ -1,3 +1,4 @@
+// ===== CONFIGURACION =====
 var cartas = [];
 var misSelecciones = [];
 var MAX_SELECCIONES = 2;
@@ -89,15 +90,13 @@ function iniciarJuego() {
 function renderizarMisCorredores() {
     var container = document.getElementById('my-cards-container');
     container.innerHTML = '';
-    
     if (misSelecciones.length === 0) {
         var empty = document.createElement('div');
         empty.className = 'empty-message';
-        empty.textContent = 'Aún no has seleccionado corredores';
+        empty.textContent = 'Aun no has seleccionado corredores';
         container.appendChild(empty);
         return;
     }
-    
     for (var i = 0; i < misSelecciones.length; i++) {
         var cartaId = misSelecciones[i];
         var carta = null;
@@ -108,13 +107,10 @@ function renderizarMisCorredores() {
             }
         }
         if (!carta) continue;
-        
         var esActiva = (cartaActivaId === cartaId);
         var esGanadora = carta.esGanadora || false;
-        
         var wrapper = document.createElement('div');
         wrapper.className = 'my-card-wrapper' + (esActiva ? ' activa' : '') + (esGanadora ? ' ganadora' : '');
-        
         var imgContainer = document.createElement('div');
         imgContainer.className = 'my-card-img';
         var img = document.createElement('img');
@@ -128,20 +124,16 @@ function renderizarMisCorredores() {
         if (esGanadora) {
             var badge = document.createElement('div');
             badge.className = 'ganadora-badge';
-            badge.textContent = '★ GANADORA';
+            badge.textContent = 'GANADORA';
             imgContainer.appendChild(badge);
         }
         wrapper.appendChild(imgContainer);
-        
         var btnUsar = document.createElement('button');
         btnUsar.className = 'btn-sm btn-usar';
         btnUsar.textContent = 'Usar';
-        
-        // Bloquear el botón si hay una carta activa y no es esta
         if (cartaActivaId !== null && cartaActivaId !== cartaId) {
             btnUsar.disabled = true;
         }
-        
         btnUsar.addEventListener('click', function(cId) {
             return function() {
                 if (cartaActivaId === cId) {
@@ -152,7 +144,6 @@ function renderizarMisCorredores() {
                 renderizarMisCorredores();
             };
         }(cartaId));
-        
         wrapper.appendChild(btnUsar);
         container.appendChild(wrapper);
     }
@@ -175,5 +166,38 @@ function actualizarUI() {
     }
 }
 
-// Exponer para ui.js
+function resetGlobalGame() {
+    if (!currentRoom) {
+        resetLocalGame();
+        return;
+    }
+    if (!confirm('Reiniciar la partida para TODOS los jugadores? Se perderan las selecciones y puntajes.')) {
+        return;
+    }
+    broadcastReset();
+    resetLocalGame();
+}
+
+function resetLocalGame() {
+    cartas = [];
+    misSelecciones = [];
+    puntosPorJugador = {};
+    estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+    cartaActivaId = null;
+    gameStarted = false;
+    gameInitiator = null;
+    for (var id in playersData) {
+        playersData[id].selecciones = [];
+        playersData[id].cartasGanadoras = [];
+        puntosPorJugador[id] = 0;
+    }
+    renderizarCartas();
+    renderizarMisCorredores();
+    actualizarUI();
+    renderLeaderboard();
+    saveSession();
+}
+
 window.actualizarUI = actualizarUI;
+window.resetGlobalGame = resetGlobalGame;
+window.resetLocalGame = resetLocalGame;

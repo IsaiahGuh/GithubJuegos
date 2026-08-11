@@ -363,7 +363,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     background: #4a7a9e;
 }
 
-/* Botones globales de puntuación */
+/* Botones globales de puntuacion */
 .puntaje-botones {
     display: flex;
     gap: 10px;

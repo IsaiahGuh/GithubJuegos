@@ -12,6 +12,18 @@ var gameInitiator = null;
 function connectToRoom(code, isReconnect) {
     if (isReconnect === undefined) isReconnect = false;
     
+    // Limpiar datos de sala anterior si no es reconexion
+    if (!isReconnect) {
+        playersData = {};
+        puntosPorJugador = {};
+        estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+        cartas = [];
+        misSelecciones = [];
+        cartaActivaId = null;
+        gameStarted = false;
+        gameInitiator = null;
+    }
+    
     showLoading(isReconnect ? 'Reconectando a la sala...' : 'Conectando con la sala...');
     claimResolved = isReconnect;
     pendingClaim = null;
@@ -29,6 +41,9 @@ function connectToRoom(code, isReconnect) {
                 selecciones: misSelecciones || [],
                 cartasGanadoras: []
             };
+        } else {
+            playersData[myId].name = myName;
+            playersData[myId].selecciones = misSelecciones || [];
         }
         
         joinSuccess(code);
@@ -46,9 +61,8 @@ function connectToRoom(code, isReconnect) {
             var data = JSON.parse(message.toString());
             if (data.id === myId) return;
 
-            // Reclamo
             if (data.action === 'claim_offer') {
-                if (data.targetId === myId && !claimResolved && (data.selecciones || []).length > 0) {
+                if (data.targetId === myId && !claimResolved && misSelecciones.length === 0 && (data.selecciones || []).length > 0) {
                     claimResolved = true;
                     pendingClaim = { 
                         oldId: data.offeredId, 
@@ -61,7 +75,7 @@ function connectToRoom(code, isReconnect) {
                 return;
             }
 
-            if (!claimResolved && data.name === myName && (data.selecciones || []).length > 0) {
+            if (!claimResolved && data.name === myName && misSelecciones.length === 0 && (data.selecciones || []).length > 0) {
                 claimResolved = true;
                 pendingClaim = { 
                     oldId: data.id, 
@@ -73,8 +87,7 @@ function connectToRoom(code, isReconnect) {
                 return;
             }
 
-            // Actualizar datos del jugador
-            if (data.id && data.name && data.action !== 'request_state' && data.action !== 'remove') {
+            if (data.id && data.name && data.action !== 'request_state' && data.action !== 'remove' && data.action !== 'sync') {
                 if (!playersData[data.id]) {
                     playersData[data.id] = { name: data.name, selecciones: [], cartasGanadoras: [] };
                 }
@@ -88,7 +101,26 @@ function connectToRoom(code, isReconnect) {
                 renderLeaderboard();
             }
 
-            // Acciones
+            if (data.action === 'reset_all') {
+                // Limpiar duplicados locales antes de reiniciar
+                var seenNames = {};
+                var toRemove = [];
+                for (var id in playersData) {
+                    var name = playersData[id].name;
+                    if (seenNames[name] !== undefined) {
+                        toRemove.push(id);
+                    } else {
+                        seenNames[name] = id;
+                    }
+                }
+                for (var i = 0; i < toRemove.length; i++) {
+                    delete playersData[toRemove[i]];
+                    delete puntosPorJugador[toRemove[i]];
+                }
+                resetLocalGame();
+                return;
+            }
+
             if (data.action === 'start') {
                 gameStarted = true;
                 gameInitiator = data.id;
@@ -99,7 +131,6 @@ function connectToRoom(code, isReconnect) {
                     estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
                     cartaActivaId = null;
                 }
-                // Inicializar puntos para todos los jugadores
                 for (var pid in playersData) {
                     if (!puntosPorJugador[pid]) {
                         puntosPorJugador[pid] = 0;
@@ -135,7 +166,6 @@ function connectToRoom(code, isReconnect) {
                                 break;
                             }
                         }
-                        // Actualizar cartasGanadoras del jugador
                         if (playersData[jugadorId]) {
                             if (!playersData[jugadorId].cartasGanadoras) {
                                 playersData[jugadorId].cartasGanadoras = [];
@@ -233,7 +263,14 @@ function connectToRoom(code, isReconnect) {
                 broadcastState('sync');
             }
 
-            if (data.action === 'join') {
+            if (data.action === 'join' || data.action === 'sync') {
+                playersData[data.id] = {
+                    name: data.name,
+                    selecciones: data.selecciones || [],
+                    cartasGanadoras: data.cartasGanadoras || []
+                };
+                renderLeaderboard();
+
                 var cachedMatch = null;
                 for (var id in playersData) {
                     if (id !== data.id && playersData[id].name === data.name && (playersData[id].selecciones || []).length > 0) {
@@ -241,10 +278,11 @@ function connectToRoom(code, isReconnect) {
                         break;
                     }
                 }
-                if (cachedMatch) {
+                if (cachedMatch && (!data.selecciones || data.selecciones.length === 0)) {
                     broadcastClaimOffer(data.id, cachedMatch);
                 }
             }
+
         } catch(e) { 
             console.error('Mensaje invalido', e); 
         }
@@ -358,6 +396,18 @@ function broadcastRemove(idToRemove) {
     }
 }
 
+function broadcastReset() {
+    if (mqttClient && currentRoom) {
+        var topic = 'magical_athlete/room/' + currentRoom;
+        var payload = JSON.stringify({
+            action: 'reset_all',
+            id: myId,
+            name: myName
+        });
+        mqttClient.publish(topic, payload);
+    }
+}
+
 function broadcastClaimOffer(targetId, offeredId) {
     if (mqttClient && currentRoom) {
         var cached = playersData[offeredId];
@@ -381,7 +431,7 @@ function showClaimModal(claim) {
     if (text) {
         text.textContent = 'Ya hay un jugador "' + claim.name + '" en la sala con ' + 
                           (claim.selecciones ? claim.selecciones.length : 0) + 
-                          ' cartas seleccionadas. ¿Eres tu (te desconectaste antes)?';
+                          ' cartas seleccionadas. Eres tu (te desconectaste antes)?';
     }
     if (modal) modal.style.display = 'flex';
 }
@@ -394,9 +444,17 @@ function acceptClaim() {
 
     delete playersData[staleTempId];
     delete puntosPorJugador[staleTempId];
+
     myId = pendingClaim.oldId;
     misSelecciones = pendingClaim.selecciones.slice();
-    
+
+    if (pendingClaim.cartasGanadoras) {
+        if (!playersData[myId]) {
+            playersData[myId] = { name: myName, selecciones: [], cartasGanadoras: [] };
+        }
+        playersData[myId].cartasGanadoras = pendingClaim.cartasGanadoras.slice();
+    }
+
     if (cartas.length > 0) {
         for (var i = 0; i < cartas.length; i++) {
             if (cartas[i].seleccionadoPorId === myId) {
@@ -407,7 +465,7 @@ function acceptClaim() {
         renderizarCartas();
         renderizarMisCorredores();
     }
-    
+
     document.getElementById('claimModal').style.display = 'none';
     pendingClaim = null;
     actualizarUI();

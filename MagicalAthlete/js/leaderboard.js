@@ -14,7 +14,8 @@ function renderLeaderboard() {
         playersArr.push({
             id: id,
             name: data.name,
-            puntos: puntos
+            puntos: puntos,
+            selecciones: data.selecciones || []
         });
     }
     playersArr.sort(function(a, b) {
@@ -29,7 +30,26 @@ function renderLeaderboard() {
             '<span>' + player.name + (isMe ? ' (Tu)' : '') + '</span>' +
             '<span>Puntos: ' + player.puntos + '</span>' +
         '</div>';
-        card.innerHTML = headerHtml;
+        var seleccionesHtml = '<div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">';
+        if (player.selecciones.length === 0) {
+            seleccionesHtml += '<span style="font-size:0.7rem; color:var(--text-muted);">Sin selecciones</span>';
+        } else {
+            for (var s = 0; s < player.selecciones.length; s++) {
+                var cId = player.selecciones[s];
+                var carta = null;
+                for (var j = 0; j < cartas.length; j++) {
+                    if (cartas[j].id === cId) {
+                        carta = cartas[j];
+                        break;
+                    }
+                }
+                if (carta) {
+                    seleccionesHtml += '<span style="font-size:0.7rem; background:#2a2a4a; padding:2px 6px; border-radius:4px;">#' + carta.numero + '</span>';
+                }
+            }
+        }
+        seleccionesHtml += '</div>';
+        card.innerHTML = headerHtml + seleccionesHtml;
         list.appendChild(card);
     }
 }

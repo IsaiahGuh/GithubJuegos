@@ -83,9 +83,12 @@
 
         <div class="side-panel">
             <div class="game-controls">
-                <button id="startGameBtn" class="modal-btn btn-primary" onclick="iniciarJuego()">Corredores</button>
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button id="startGameBtn" class="modal-btn btn-primary" onclick="iniciarJuego()" style="flex: 1;">Corredores</button>
+                    <button id="resetGameBtn" class="modal-btn btn-danger" onclick="resetGlobalGame()" style="flex: 1;">Reiniciar</button>
+                </div>
                 
-                <!-- Área MIS CORREDORES -->
+                <!-- Area MIS CORREDORES -->
                 <div class="my-cards-section">
                     <h4>Mis Corredores</h4>
                     <div id="my-cards-container" class="my-cards-container">
@@ -95,7 +98,7 @@
                     <!-- Puntaje del jugador -->
                     <div id="misPuntosDisplay" style="text-align:center; font-size:1.2rem; font-weight:bold; margin:8px 0;">Puntos: 0</div>
                     
-                    <!-- Botones globales de puntuación (siempre visibles) -->
+                    <!-- Botones globales de puntuacion (siempre visibles) -->
                     <div id="puntaje-botones" class="puntaje-botones" style="margin-top: 10px;">
                         <button class="btn-puntaje btn-3" id="btnPuntaje3" onclick="asignarPuntoGlobal('+3')">+3</button>
                         <button class="btn-puntaje btn-2" id="btnPuntaje2" onclick="asignarPuntoGlobal('+2')">+2</button>

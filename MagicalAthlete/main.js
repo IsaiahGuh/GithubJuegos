@@ -49,14 +49,50 @@ function entrarSala() {
         alert('No se ha configurado una sala valida. Usa ?sala=XXXX en la URL.');
         return;
     }
-    myName = nombre;
-    myId = Math.random().toString(36).substr(2, 9);
-    misSelecciones = [];
+    sala = sala.toUpperCase();
+    
+    // Limpiar datos de sala anterior
+    playersData = {};
     puntosPorJugador = {};
     estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+    cartas = [];
+    misSelecciones = [];
+    cartaActivaId = null;
+    gameStarted = false;
+    gameInitiator = null;
+    
+    var session = loadSession();
+    if (session && session.roomCode === sala && session.myName === nombre) {
+        myId = session.myId;
+        myName = session.myName;
+        misSelecciones = session.misSelecciones || [];
+        cartas = session.cartas || [];
+        gameStarted = session.gameStarted || false;
+        puntosPorJugador = session.puntosPorJugador || {};
+        estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+        cartaActivaId = session.cartaActivaId || null;
+        if (session.playersData) {
+            playersData = session.playersData;
+        }
+        localStorage.removeItem('magical_athlete_nombre_prefill');
+        localStorage.removeItem('magical_athlete_sala_prefill');
+        renderizarCartas();
+        renderizarMisCorredores();
+        actualizarUI();
+        renderLeaderboard();
+        connectToRoom(sala, true);
+        return;
+    }
+    
+    myName = nombre;
+    myId = Math.random().toString(36).substr(2, 9);
     localStorage.removeItem('magical_athlete_nombre_prefill');
     localStorage.removeItem('magical_athlete_sala_prefill');
-    connectToRoom(sala.toUpperCase());
+    renderizarCartas();
+    renderizarMisCorredores();
+    actualizarUI();
+    renderLeaderboard();
+    connectToRoom(sala, false);
 }
 
 function joinSuccess(code) {
@@ -75,3 +111,4 @@ window.dismissSession = dismissSession;
 window.acceptClaim = acceptClaim;
 window.declineClaim = declineClaim;
 window.iniciarJuego = iniciarJuego;
+window.resetGlobalGame = resetGlobalGame;
