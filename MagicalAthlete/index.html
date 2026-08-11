@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MagicalAthlete</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="favicon.ico">
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+
+    <!-- LOBBY PRINCIPAL -->
+    <div id="lobbyModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>MagicalAthlete</h2>
+            <p>Multijugador</p>
+
+            <div id="sessionBanner" class="session-banner" style="display: none;">
+                <p id="sessionBannerText" class="session-banner-text"></p>
+            </div>
+
+            <div id="urlDataDisplay" class="url-data-display" style="display: none; background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--color-blue);">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span id="urlPlayerName">---</span>
+                    <span id="urlRoomCode">---</span>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-primary" onclick="entrarSala()" style="flex: 1;">Entrar</button>
+                    <button id="reconnectBtn" class="modal-btn btn-outline" onclick="reconnectToSession()" disabled style="flex: 1;">Reconectar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARGANDO -->
+    <div id="loadingModal" class="modal-overlay">
+        <div class="modal-box" style="background: transparent; border: none; box-shadow: none;">
+            <h2 id="loadingText">Conectando...</h2>
+        </div>
+    </div>
+
+    <!-- RECLAMO DE NOMBRE (RECONEXION DESDE OTRO DISPOSITIVO) -->
+    <div id="claimModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Jugador existente</h3>
+            <p id="claimText">Ya hay un jugador con este nombre en la sala.</p>
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-outline" onclick="declineClaim()">No, soy otro jugador</button>
+                    <button class="modal-btn btn-primary" onclick="acceptClaim()">Si, soy yo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI DEL JUEGO -->
+    <header>
+        <h1>MagicalAthlete</h1>
+        <div id="roomInfoDisplay" class="room-info" style="display: none;"></div>
+    </header>
+
+    <div class="app-container">
+        <div class="board-container">
+            <div id="card-grid" class="card-grid"></div>
+        </div>
+
+        <div class="side-panel">
+            <div class="game-controls">
+                <button id="startGameBtn" class="modal-btn btn-primary" onclick="iniciarJuego()">Corredores</button>
+                <div class="total-score">
+                    Cartas seleccionadas: <span id="selected-count">0</span>/2
+                </div>
+            </div>
+
+            <!-- Tabla de posiciones con cartas seleccionadas -->
+            <div class="leaderboard" id="leaderboardPanel">
+                <h3>Jugadores y sus cartas</h3>
+                <div id="playersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/juego.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script src="sesion.js"></script>
+    <script src="mqtt.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

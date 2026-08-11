@@ -53,6 +53,13 @@ const Config = {
                 ruta: './FigurasDados/index.html',
                 color: '#FF9800',
                 topics: ['local', 'dados']
+            },
+            {
+                id: 'MagicalAthlete',
+                nombre: 'Magical',
+                ruta: './MagicalAthlete/index.html',
+                color: '#FF9800',
+                topics: ['local', 'dados']
             }
         ];
     },
