@@ -96,8 +96,9 @@ export function forzarRestauracionLocal() {
     const tieneCartas = myData.cartasJugador && myData.cartasJugador.some(c => c !== null);
     const tieneTerminadas = myData.cartasTerminadas && myData.cartasTerminadas.length > 0;
     const tieneProgreso = myData.progresoCartas && Object.keys(myData.progresoCartas).length > 0;
+    const tieneReparto = myData.cartasRepartidas === true;
     
-    if (!tieneCartas && !tieneTerminadas && !tieneProgreso) {
+    if (!tieneCartas && !tieneTerminadas && !tieneProgreso && !tieneReparto) {
         mostrarMensaje('No hay datos que restaurar', 'info');
         return false;
     }
@@ -136,6 +137,25 @@ export function forzarRestauracionLocal() {
     
     if (myData.fichas) {
         state.fichas = { ...myData.fichas };
+    }
+    
+    // Estas cuatro faltaban por completo: sin cartasRepartidas restaurado,
+    // el botón "Casetas" seguía habilitado tras reconectar y al pulsarlo
+    // borraba la mano y repartía cartas nuevas encima de las restauradas.
+    if (myData.cartasVisibles) {
+        state.cartasVisibles = myData.cartasVisibles.map(c => c ? { ...c } : null);
+    }
+    
+    if (myData.mazoColores) {
+        state.mazoColores = myData.mazoColores.map(c => ({ ...c }));
+    }
+    
+    if (myData.mazoEspecialDisponible) {
+        state.mazoEspecialDisponible = myData.mazoEspecialDisponible.map(c => ({ ...c }));
+    }
+    
+    if (myData.cartasRepartidas !== undefined) {
+        state.cartasRepartidas = myData.cartasRepartidas;
     }
     
     if (myData.puntosEspeciales) {

@@ -168,25 +168,14 @@ export function initState() {
     state.coloresMeta = [];
     state.resultadosFinales = {};
     
-    // Inicializar puntosEspeciales para el jugador actual
-    if (!state.playersData[state.myId]) {
-        state.playersData[state.myId] = {
-            name: state.myName,
-            score: 0,
-            cartasJugador: state.cartasJugador,
-            cartasTerminadas: state.cartasTerminadas,
-            habilidadesUsadas: state.habilidadesUsadas,
-            mazoColores: state.mazoColores,
-            mazoEspecialDisponible: state.mazoEspecialDisponible,
-            cartasVisibles: state.cartasVisibles,
-            cartasRepartidas: false,
-            tablero: state.tableroGlobal,
-            fichas: state.fichas,
-            progresoCartas: state.progresoCarta,
-            cartasEspecialesUsadas: 0,
-            puntosEspeciales: [] // Array para almacenar los puntos de cartas especiales usadas
-        };
-    } else {
+    // NOTA: aquí NO creamos una entrada en state.playersData para
+    // state.myId. Esta función corre en cada carga de página, antes de
+    // que el jugador haya entrado o se haya reconectado a una sala, así
+    // que crearla acá solo generaba una entrada fantasma con el nombre
+    // por defecto "Jugador" (visible sobre todo al reconectar, ya que
+    // reconnectToSession() no limpia playersData). connectToRoom() ya
+    // crea la entrada real, con el nombre correcto, cuando hace falta.
+    if (state.playersData[state.myId]) {
         state.playersData[state.myId].puntosEspeciales = [];
     }
 }
