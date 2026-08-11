@@ -2,7 +2,7 @@
 // ZOOM
 // ============================================
 
-import { state, HABILIDADES } from './config-state.js';
+import { state, HABILIDADES } from '../config-state.js';
 import { getColorName } from './utils.js';
 import { completarCarta, agregarCartaAJugador, getPuntajeCarta, usarHabilidad, isHabilidadUsada } from './juego.js';
 import { pushMovimiento, eliminarMovimientosDeCarta, limpiarPilaMovimientos, intentarDeshacer, desmarcarCasilla, esUltimoMovimiento, hayMovimientos, peekMovimiento } from './deshacer.js';

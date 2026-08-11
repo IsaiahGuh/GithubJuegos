@@ -3,11 +3,11 @@
 // ============================================
 
 import { state, COLORES } from './config-state.js';
-import { showLoading, hideLoading, mostrarMensaje, getPlayerName } from './utils.js';
-import { generarMazos, renderBoard, updateVisuals, renderCartasVisibles, renderCartasJugador } from './mazos-tablero.js';
-import { calculateScores, actualizarBotonEspecial, finalizarJuego } from './juego.js';
-import { renderLeaderboard } from './leaderboard.js';
-import { renderStatusPanel } from './panel.js';
+import { showLoading, hideLoading, mostrarMensaje, getPlayerName } from './js/utils.js';
+import { generarMazos, renderBoard, updateVisuals, renderCartasVisibles, renderCartasJugador } from './js/mazos-tablero.js';
+import { calculateScores, actualizarBotonEspecial, finalizarJuego } from './js/juego.js';
+import { renderLeaderboard } from './js/leaderboard.js';
+import { renderStatusPanel } from './js/panel.js';
 
 // ============================================
 // FUNCIONES DE RENDER - IMPORTADAS DINÁMICAMENTE

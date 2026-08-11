@@ -2,7 +2,7 @@
 // PANEL DE ESTADO - RENDERIZADO
 // ============================================
 
-import { state, COLORES, TICKETS, PUNTAJES } from './config-state.js';
+import { state, COLORES, TICKETS, PUNTAJES } from '../config-state.js';
 
 // ============================================
 // FUNCIÓN PRINCIPAL PARA RENDERIZAR EL PANEL

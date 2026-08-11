@@ -2,7 +2,7 @@
 // UTILIDADES
 // ============================================
 
-import { COLORES_HEX, state } from './config-state.js';
+import { COLORES_HEX, state } from '../config-state.js';
 
 // ----- MENSAJES -----
 export function mostrarMensaje(texto, tipo = 'info') {

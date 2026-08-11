@@ -2,11 +2,11 @@
 // LÓGICA DEL JUEGO
 // ============================================
 
-import { COLORES, state, PUNTAJES, TICKETS, HABILIDADES, initState } from './config-state.js';
+import { COLORES, state, PUNTAJES, TICKETS, HABILIDADES, initState } from '../config-state.js';
 import { mostrarMensaje } from './utils.js';
 import { renderCartasVisibles, renderCartasJugador, updateVisuals, renderBoard, generarMazos } from './mazos-tablero.js';
 import { cerrarZoom, actualizarZoomJugador } from './zoom.js';
-import { broadcastScore, broadcastTablero, broadcastMazo, broadcastTickets, broadcastJuegoTerminado } from './mqtt.js';
+import { broadcastScore, broadcastTablero, broadcastMazo, broadcastTickets, broadcastJuegoTerminado } from '../mqtt.js';
 import { renderLeaderboard } from './leaderboard.js';
 import { renderStatusPanel } from './panel.js';
 import { pushMovimiento, eliminarMovimientosDeCarta, limpiarPilaMovimientos, intentarDeshacer, desmarcarCasilla } from './deshacer.js';

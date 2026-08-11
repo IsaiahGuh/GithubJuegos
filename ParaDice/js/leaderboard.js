@@ -2,10 +2,10 @@
 // LEADERBOARD - LISTA DE JUGADORES
 // ============================================
 
-import { COLORES, state, TICKETS, PUNTAJES } from './config-state.js';
+import { COLORES, state, TICKETS, PUNTAJES } from '../config-state.js';
 import { abrirZoomLeaderboard } from './zoom.js';
 import { getCartasCompletadasPorColor } from './juego.js';
-import { broadcastScore, broadcastTablero, broadcastTickets, broadcastMazo, forzarRestauracionLocal } from './mqtt.js';
+import { broadcastScore, broadcastTablero, broadcastTickets, broadcastMazo, forzarRestauracionLocal } from '../mqtt.js';
 import { calculateScores } from './juego.js';
 import { renderBoard, updateVisuals, renderCartasVisibles, renderCartasJugador } from './mazos-tablero.js';
 import { renderStatusPanel } from './panel.js';

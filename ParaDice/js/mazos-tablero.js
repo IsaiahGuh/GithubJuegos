@@ -2,7 +2,7 @@
 // MAZOS Y TABLERO
 // ============================================
 
-import { COLORES, state, CARTAS_ESPECIALES } from './config-state.js';
+import { COLORES, state, CARTAS_ESPECIALES } from '../config-state.js';
 import { mezclarArray, mostrarMensaje } from './utils.js';
 import { abrirZoomJugador, abrirZoomVisible } from './zoom.js';
 import { getHabilidadCarta, isHabilidadUsada, usarHabilidad } from './juego.js';

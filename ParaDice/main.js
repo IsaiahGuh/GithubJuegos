@@ -3,8 +3,8 @@
 // ============================================
 
 import { state, initState } from './config-state.js';
-import { generarMazos, renderBoard, updateVisuals, usarHabilidadPorColor } from './mazos-tablero.js';
-import { cerrarZoom, usarHabilidadDesdeZoom } from './zoom.js';
+import { generarMazos, renderBoard, updateVisuals, usarHabilidadPorColor } from './js/mazos-tablero.js';
+import { cerrarZoom, usarHabilidadDesdeZoom } from './js/zoom.js';
 import { 
     repartirCartas, 
     reiniciarTablero, 
@@ -19,16 +19,16 @@ import {
     cerrarEspecial,
     actualizarBotonEspecial,
     cerrarPodio
-} from './juego.js';
+} from './js/juego.js';
 import { 
     showJoinModal, backToLobby, 
     createRoom, joinRoom,
     setRenderStatusPanel,
     forzarRestauracionLocal
 } from './mqtt.js';
-import { toggleLeaderboard, abrirZoomLeaderboardDesdeCard, renderLeaderboard, refrescarSincronizacion } from './leaderboard.js';
-import { renderStatusPanel } from './panel.js';
-import { abrirCompletas, cerrarCompletas, verHistorial, cerrarHistorial, activarHabilidadDesdeCompletas, abrirZoomTerminadaDesdeCompletas, abrirCompletasDeJugador, verHistorialDeJugador } from './completas.js';
+import { toggleLeaderboard, abrirZoomLeaderboardDesdeCard, renderLeaderboard, refrescarSincronizacion } from './js/leaderboard.js';
+import { renderStatusPanel } from './js/panel.js';
+import { abrirCompletas, cerrarCompletas, verHistorial, cerrarHistorial, activarHabilidadDesdeCompletas, abrirZoomTerminadaDesdeCompletas, abrirCompletasDeJugador, verHistorialDeJugador } from './js/completas.js';
 import { 
     pushMovimiento, 
     eliminarMovimientosDeCarta, 
@@ -41,7 +41,7 @@ import {
     getUltimoMovimiento,
     getTodosLosMovimientos,
     contarMovimientos
-} from './deshacer.js';
+} from './js/deshacer.js';
 
 // ============================================
 // INICIALIZACIÓN

@@ -2,7 +2,7 @@
 // DESHACER - SISTEMA DE PILA LIFO
 // ============================================
 
-import { state } from './config-state.js';
+import { state } from '../config-state.js';
 import { mostrarMensaje } from './utils.js';
 
 // ============================================

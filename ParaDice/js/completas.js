@@ -2,7 +2,7 @@
 // COMPLETAS - MODAL DE CARTAS COMPLETADAS
 // ============================================
 
-import { COLORES, state, PUNTAJES, HABILIDADES } from './config-state.js';
+import { COLORES, state, PUNTAJES, HABILIDADES } from '../config-state.js';
 import { getCartasCompletadasPorColor } from './juego.js';
 import { abrirZoomTerminada } from './zoom.js';
 import { usarHabilidad } from './juego.js';
