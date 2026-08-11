@@ -43,6 +43,7 @@ function connectToRoom(code, isReconnect) {
             var data = JSON.parse(message.toString());
             if (data.id === myId) return;
 
+            // Reclamo
             if (data.action === 'claim_offer') {
                 if (data.targetId === myId && !claimResolved && (data.selecciones || []).length > 0) {
                     claimResolved = true;
@@ -67,6 +68,7 @@ function connectToRoom(code, isReconnect) {
                 return;
             }
 
+            // Actualizar datos del jugador (solo si tiene nombre)
             if (data.id && data.name && data.action !== 'request_state' && data.action !== 'remove') {
                 playersData[data.id] = { 
                     name: data.name, 
@@ -75,20 +77,13 @@ function connectToRoom(code, isReconnect) {
                 renderLeaderboard();
             }
 
+            // Acciones
             if (data.action === 'start') {
                 gameStarted = true;
                 gameInitiator = data.id;
                 cartas = data.cartas || [];
-                // Reiniciar selecciones de todos los jugadores (incluido el local)
-                var ids = Object.keys(playersData);
-                for (var i = 0; i < ids.length; i++) {
-                    playersData[ids[i]].selecciones = [];
-                }
-                // Si soy yo, también reinicio mis selecciones
-                if (data.id === myId) {
-                    misSelecciones = [];
-                }
                 renderizarCartas();
+                renderizarMisCorredores();
                 actualizarUI();
                 saveSession();
             }
@@ -97,7 +92,9 @@ function connectToRoom(code, isReconnect) {
                 var cartaId = data.cartaId;
                 var jugadorNombre = data.name;
                 var jugadorId = data.id;
+                var selecciones = data.selecciones || [];
                 
+                // Actualizar la carta
                 for (var i = 0; i < cartas.length; i++) {
                     if (cartas[i].id === cartaId) {
                         cartas[i].seleccionadoPor = jugadorNombre;
@@ -106,11 +103,18 @@ function connectToRoom(code, isReconnect) {
                     }
                 }
                 
+                // Actualizar datos del jugador
                 if (playersData[jugadorId]) {
-                    playersData[jugadorId].selecciones = data.selecciones || [];
+                    playersData[jugadorId].selecciones = selecciones;
+                }
+                
+                // Si soy yo, actualizo mis selecciones locales
+                if (jugadorId === myId) {
+                    misSelecciones = selecciones.slice();
                 }
                 
                 renderizarCartas();
+                renderizarMisCorredores();
                 renderLeaderboard();
                 actualizarUI();
                 saveSession();
@@ -142,6 +146,7 @@ function connectToRoom(code, isReconnect) {
             }
 
             if (data.action === 'join') {
+                // Verificar reclamo
                 var cachedMatch = null;
                 for (var id in playersData) {
                     if (id !== data.id && playersData[id].name === data.name && (playersData[id].selecciones || []).length > 0) {
@@ -270,6 +275,7 @@ function acceptClaim() {
     myId = pendingClaim.oldId;
     misSelecciones = pendingClaim.selecciones.slice();
     
+    // Actualizar cartas
     if (cartas.length > 0) {
         for (var i = 0; i < cartas.length; i++) {
             if (cartas[i].seleccionadoPorId === myId) {
@@ -278,6 +284,7 @@ function acceptClaim() {
             }
         }
         renderizarCartas();
+        renderizarMisCorredores();
     }
     
     document.getElementById('claimModal').style.display = 'none';

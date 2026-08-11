@@ -6,11 +6,12 @@ var TOTAL_IMAGENES = 36;
 
 function iniciarJuego() {
     var numJugadores = Object.keys(playersData).length;
-    if (numJugadores < 2) {
-        alert('Se necesitan al menos 2 jugadores para iniciar la partida.');
+    if (numJugadores === 0) {
+        alert('No hay jugadores en la sala. Espera a que alguien se una.');
         return;
     }
     
+    // Generar cartas: el doble de jugadores
     var numCartas = numJugadores * 2;
     var cartasGeneradas = [];
     
@@ -19,6 +20,7 @@ function iniciarJuego() {
         indicesDisponibles.push(i);
     }
     
+    // Barajar
     for (var i = indicesDisponibles.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
         var temp = indicesDisponibles[i];
@@ -38,27 +40,21 @@ function iniciarJuego() {
         });
     }
     
-    cartas = cartasGeneradas;
+    // Resetear selecciones locales
     misSelecciones = [];
+    cartas = cartasGeneradas;
     
+    // Publicar inicio
     broadcastStart(cartas);
     
     renderizarCartas();
+    renderizarMisCorredores();
     actualizarUI();
     saveSession();
 }
 
 function seleccionarCarta(cartaId) {
-    if (!gameStarted) {
-        alert('El juego aun no ha comenzado. Presiona "Corredores" para iniciar.');
-        return;
-    }
-    
-    if (misSelecciones.length >= MAX_SELECCIONES) {
-        alert('Ya seleccionaste tus 2 cartas maximas.');
-        return;
-    }
-    
+    // Buscar la carta
     var carta = null;
     for (var i = 0; i < cartas.length; i++) {
         if (cartas[i].id === cartaId) {
@@ -72,61 +68,90 @@ function seleccionarCarta(cartaId) {
         return;
     }
     
+    // Verificar si ya fue seleccionada
     if (carta.seleccionadoPor) {
         alert('Esta carta ya fue seleccionada por ' + carta.seleccionadoPor);
         return;
     }
     
-    if (misSelecciones.indexOf(cartaId) !== -1) {
-        alert('Ya seleccionaste esta carta.');
+    // Verificar límite de selecciones
+    if (misSelecciones.length >= MAX_SELECCIONES) {
+        alert('Ya seleccionaste tus 2 cartas maximas.');
         return;
     }
     
+    // Marcar como seleccionada por mí
     carta.seleccionadoPor = myName;
     carta.seleccionadoPorId = myId;
     misSelecciones.push(cartaId);
     
+    // Actualizar datos del jugador local
     playersData[myId].selecciones = misSelecciones.slice();
     
+    // Publicar selección
     broadcastSelect(cartaId);
     
+    // Actualizar UI
     renderizarCartas();
+    renderizarMisCorredores();
     actualizarUI();
     renderLeaderboard();
     saveSession();
 }
 
-function actualizarEstadoLocal(data) {
-    if (data.cartas) {
-        cartas = data.cartas;
-        renderizarCartas();
+function renderizarMisCorredores() {
+    var container = document.getElementById('my-cards-container');
+    container.innerHTML = '';
+    
+    if (misSelecciones.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'empty-message';
+        empty.textContent = 'Aún no has seleccionado corredores';
+        container.appendChild(empty);
+        return;
     }
-    if (data.selecciones) {
-        misSelecciones = data.selecciones;
-    }
-    actualizarUI();
-    saveSession();
-}
-
-function obtenerJugadores() {
-    var jugadores = [];
-    var ids = Object.keys(playersData);
-    for (var i = 0; i < ids.length; i++) {
-        var id = ids[i];
-        jugadores.push({
-            id: id,
-            name: playersData[id].name,
-            selecciones: playersData[id].selecciones || []
-        });
-    }
-    return jugadores;
-}
-
-function obtenerCartaSeleccionadaPor(selecciones, cartaId) {
-    for (var i = 0; i < selecciones.length; i++) {
-        if (selecciones[i] === cartaId) {
-            return true;
+    
+    for (var i = 0; i < misSelecciones.length; i++) {
+        var cartaId = misSelecciones[i];
+        var carta = null;
+        for (var j = 0; j < cartas.length; j++) {
+            if (cartas[j].id === cartaId) {
+                carta = cartas[j];
+                break;
+            }
+        }
+        if (carta) {
+            var mini = document.createElement('div');
+            mini.className = 'my-card-mini';
+            var img = document.createElement('img');
+            img.src = carta.imagen;
+            img.alt = 'Corredor ' + carta.numero;
+            mini.appendChild(img);
+            var num = document.createElement('div');
+            num.className = 'mini-number';
+            num.textContent = '#' + carta.numero;
+            mini.appendChild(num);
+            
+            // Evento click para abrir zoom sin botón
+            (function(c) {
+                mini.addEventListener('click', function() {
+                    abrirZoom(c, false);
+                });
+            })(carta);
+            
+            container.appendChild(mini);
         }
     }
-    return false;
+}
+
+// Función para actualizar la UI general
+function actualizarUI() {
+    var startBtn = document.getElementById('startGameBtn');
+    if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.textContent = 'Corredores';
+    }
+    
+    renderLeaderboard();
+    renderizarMisCorredores();
 }

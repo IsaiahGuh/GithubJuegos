@@ -8,67 +8,51 @@ function renderizarCartas() {
         return;
     }
     
-    for (var i = 0; i < cartas.length; i++) {
-        var carta = cartas[i];
+    // Filtrar cartas: solo mostrar las que NO están seleccionadas por nadie
+    var disponibles = cartas.filter(function(c) {
+        return !c.seleccionadoPor;
+    });
+    
+    if (disponibles.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas han sido seleccionadas</div>';
+        return;
+    }
+    
+    for (var i = 0; i < disponibles.length; i++) {
+        var carta = disponibles[i];
         var cardDiv = document.createElement('div');
         cardDiv.className = 'card';
         cardDiv.dataset.id = carta.id;
         
-        var estaSeleccionadaPorMi = false;
-        for (var j = 0; j < misSelecciones.length; j++) {
-            if (misSelecciones[j] === carta.id) {
-                estaSeleccionadaPorMi = true;
-                break;
-            }
-        }
-        
-        var estaSeleccionadaPorOtro = carta.seleccionadoPor && carta.seleccionadoPorId !== myId;
-        
-        if (estaSeleccionadaPorMi) {
-            cardDiv.classList.add('selected');
-        } else if (estaSeleccionadaPorOtro) {
-            cardDiv.classList.add('selected-by-other');
-        }
-        
+        // Imagen
         var img = document.createElement('img');
         img.src = carta.imagen;
         img.alt = 'Corredor ' + carta.numero;
         img.loading = 'lazy';
         cardDiv.appendChild(img);
         
+        // Número
         var numberSpan = document.createElement('div');
         numberSpan.className = 'card-number';
         numberSpan.textContent = '#' + carta.numero;
         cardDiv.appendChild(numberSpan);
         
+        // Overlay (siempre "Disponible" para cartas no seleccionadas)
         var overlay = document.createElement('div');
         overlay.className = 'card-overlay';
         var overlaySpan = document.createElement('span');
-        
-        if (estaSeleccionadaPorMi) {
-            overlaySpan.textContent = 'Seleccionada';
-        } else if (estaSeleccionadaPorOtro) {
-            overlaySpan.textContent = 'Seleccionada por ' + carta.seleccionadoPor;
-        } else {
-            overlaySpan.textContent = 'Disponible';
-        }
+        overlaySpan.textContent = 'Disponible';
         overlay.appendChild(overlaySpan);
         cardDiv.appendChild(overlay);
         
-        var checkMark = document.createElement('div');
-        checkMark.className = 'check-mark';
-        checkMark.textContent = 'OK';
-        cardDiv.appendChild(checkMark);
-        
-        if (!estaSeleccionadaPorMi && !estaSeleccionadaPorOtro && gameStarted) {
-            (function(cartaId) {
-                cardDiv.addEventListener('click', function() {
-                    seleccionarCarta(cartaId);
-                });
-            })(carta.id);
-        } else if (!gameStarted) {
-            cardDiv.style.cursor = 'default';
-        }
+        // Evento: abrir zoom al hacer clic
+        (function(c) {
+            cardDiv.addEventListener('click', function() {
+                if (!c.seleccionadoPor) {
+                    abrirZoom(c, true);
+                }
+            });
+        })(carta);
         
         grid.appendChild(cardDiv);
     }
@@ -76,20 +60,14 @@ function renderizarCartas() {
 
 // ===== ACTUALIZACION UI =====
 function actualizarUI() {
-    var countSpan = document.getElementById('selected-count');
-    if (countSpan) {
-        countSpan.textContent = misSelecciones.length;
-    }
-    
     var startBtn = document.getElementById('startGameBtn');
     if (startBtn) {
-        // Siempre habilitado, sin restricción de jugadores
         startBtn.disabled = false;
         startBtn.textContent = 'Corredores';
     }
     
-    // Actualizar leaderboard
     renderLeaderboard();
+    renderizarMisCorredores();
 }
 
 // ===== FUNCIONES DE CARGA =====

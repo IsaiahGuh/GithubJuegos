@@ -115,6 +115,7 @@ function reconnectToSession() {
     gameStarted = session.gameStarted || false;
     
     renderizarCartas();
+    renderizarMisCorredores();
     actualizarUI();
 
     connectToRoom(session.roomCode, true);

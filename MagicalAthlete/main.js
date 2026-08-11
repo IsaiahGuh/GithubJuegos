@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     renderizarCartas();
+    renderizarMisCorredores();
     actualizarUI();
 });
 
