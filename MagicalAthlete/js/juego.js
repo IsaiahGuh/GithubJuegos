@@ -302,8 +302,9 @@ window.descartarActivas = descartarActivas;
 function actualizarUI() {
     var startBtn = document.getElementById('startGameBtn');
     if (startBtn) {
-        startBtn.disabled = false;
-        startBtn.textContent = 'Corredores';
+        // El botón se deshabilita cuando el juego ya empezó
+        startBtn.disabled = gameStarted;
+        startBtn.textContent = gameStarted ? 'Juego en curso' : 'Corredores';
     }
     var puntosDisplay = document.getElementById('misPuntosDisplay');
     if (puntosDisplay && puntosPorJugador[myId] !== undefined) {

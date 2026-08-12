@@ -9,20 +9,17 @@ function renderizarCartas() {
         return;
     }
     
-    // Filtrar cartas disponibles: de la tanda actual, no seleccionadas por nadie y no descartadas
     var disponibles = cartas.filter(function(c) {
         return c.tanda === tandaActual && !c.seleccionadoPor && !c.descartada;
     });
     
     if (disponibles.length === 0) {
-        // Verificar si quedan cartas sin descartar en la tanda (pero ya seleccionadas)
         var haySinDescartar = cartas.some(function(c) {
             return c.tanda === tandaActual && !c.descartada;
         });
         if (haySinDescartar) {
             grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas de esta tanda ya fueron seleccionadas</div>';
         } else {
-            // Si no hay ninguna sin descartar, puede ser que la tanda ya se haya completado o estemos en la siguiente
             if (tandaActual < TOTAL_TANDAS - 1) {
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Esperando siguiente tanda...</div>';
             } else {
@@ -73,4 +70,84 @@ function showLoading(text) {
 
 function hideLoading() {
     document.getElementById('loadingModal').style.display = 'none';
+}
+
+// --- NUEVA FUNCION RENDERIZAR MIS CORREDORES CON ZOOM ---
+function renderizarMisCorredores() {
+    var container = document.getElementById('my-cards-container');
+    container.innerHTML = '';
+    if (misSelecciones.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'empty-message';
+        empty.textContent = 'Aun no has seleccionado corredores';
+        container.appendChild(empty);
+        return;
+    }
+    var misCartas = [];
+    for (var i = 0; i < misSelecciones.length; i++) {
+        var cId = misSelecciones[i];
+        var carta = null;
+        for (var j = 0; j < cartas.length; j++) {
+            if (cartas[j].id === cId) {
+                carta = cartas[j];
+                break;
+            }
+        }
+        if (carta && !carta.descartada) {
+            misCartas.push(carta);
+        }
+    }
+    if (misCartas.length === 0) {
+        var empty2 = document.createElement('div');
+        empty2.className = 'empty-message';
+        empty2.textContent = 'No tienes cartas disponibles';
+        container.appendChild(empty2);
+        return;
+    }
+    var activeId = playersData[myId] ? playersData[myId].activeCardId : null;
+    for (var k = 0; k < misCartas.length; k++) {
+        var carta = misCartas[k];
+        var esActiva = (activeId === carta.id);
+        var esGanadora = carta.esGanadora || false;
+        var wrapper = document.createElement('div');
+        wrapper.className = 'my-card-wrapper' + (esActiva ? ' activa' : '') + (esGanadora ? ' ganadora' : '');
+        var imgContainer = document.createElement('div');
+        imgContainer.className = 'my-card-img';
+        // CLICK PARA ZOOM SIN BOTON
+        imgContainer.addEventListener('click', function(c) {
+            return function(e) {
+                e.stopPropagation();
+                abrirZoom(c, false, true); // solo visualización, sin botón
+            };
+        }(carta));
+        var img = document.createElement('img');
+        img.src = carta.imagen;
+        img.alt = 'Corredor ' + carta.numero;
+        imgContainer.appendChild(img);
+        var num = document.createElement('div');
+        num.className = 'mini-number';
+        num.textContent = '#' + carta.numero;
+        imgContainer.appendChild(num);
+        if (esGanadora) {
+            var badge = document.createElement('div');
+            badge.className = 'ganadora-badge';
+            badge.textContent = 'GANADORA';
+            imgContainer.appendChild(badge);
+        }
+        wrapper.appendChild(imgContainer);
+        var btnUsar = document.createElement('button');
+        btnUsar.className = 'btn-sm btn-usar';
+        btnUsar.textContent = 'Usar';
+        if (carta.esGanadora || carta.descartada) {
+            btnUsar.disabled = true;
+        }
+        btnUsar.addEventListener('click', function(cId) {
+            return function(e) {
+                e.stopPropagation(); // evita que se abra zoom al hacer clic en el botón
+                setActiveCard(cId);
+            };
+        }(carta.id));
+        wrapper.appendChild(btnUsar);
+        container.appendChild(wrapper);
+    }
 }

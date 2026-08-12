@@ -1,14 +1,17 @@
 var cartaEnZoom = null;
 
-function abrirZoom(carta, mostrarBoton) {
+function abrirZoom(carta, mostrarBoton, soloVisualizacion) {
     if (mostrarBoton === undefined) mostrarBoton = true;
+    if (soloVisualizacion === undefined) soloVisualizacion = false;
     cartaEnZoom = carta;
     var modal = document.getElementById('zoomModal');
     var content = document.getElementById('zoomContent');
-    if (carta.seleccionadoPor && carta.seleccionadoPorId !== myId) {
+
+    if (!soloVisualizacion && carta.seleccionadoPor && carta.seleccionadoPorId !== myId) {
         alert('Esta carta ya fue seleccionada por ' + carta.seleccionadoPor);
         return;
     }
+
     content.innerHTML = '';
     var img = document.createElement('img');
     img.src = carta.imagen;
@@ -18,6 +21,7 @@ function abrirZoom(carta, mostrarBoton) {
     info.className = 'zoom-info';
     info.innerHTML = 'Corredor <span>#' + carta.numero + '</span>';
     content.appendChild(info);
+
     if (mostrarBoton && !carta.seleccionadoPor) {
         var btn = document.createElement('button');
         btn.className = 'btn-choose';

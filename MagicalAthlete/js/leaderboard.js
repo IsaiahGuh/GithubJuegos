@@ -15,7 +15,8 @@ function renderLeaderboard() {
             id: id,
             name: data.name,
             puntos: puntos,
-            selecciones: data.selecciones || []
+            selecciones: data.selecciones || [],
+            activeCardId: data.activeCardId || null
         });
     }
     playersArr.sort(function(a, b) {
@@ -26,6 +27,29 @@ function renderLeaderboard() {
         var isMe = player.id === myId;
         var card = document.createElement('div');
         card.className = 'player-card' + (isMe ? ' me' : '');
+
+        card.addEventListener('click', function(pid) {
+            return function() {
+                var activeId = playersData[pid] ? playersData[pid].activeCardId : null;
+                if (activeId) {
+                    var carta = null;
+                    for (var i = 0; i < cartas.length; i++) {
+                        if (cartas[i].id === activeId) {
+                            carta = cartas[i];
+                            break;
+                        }
+                    }
+                    if (carta) {
+                        abrirZoom(carta, false, true);
+                    } else {
+                        alert('La carta activa de este jugador ya no está disponible.');
+                    }
+                } else {
+                    alert('Este jugador no tiene una carta activa seleccionada.');
+                }
+            };
+        }(player.id));
+
         var headerHtml = '<div class="player-card-header">' +
             '<span>' + player.name + (isMe ? ' (Tu)' : '') + '</span>' +
             '<span>Puntos: ' + player.puntos + '</span>' +
