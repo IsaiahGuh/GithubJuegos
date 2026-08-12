@@ -52,7 +52,6 @@ function entrarSala() {
     }
     sala = sala.toUpperCase();
     
-    // Limpiar datos de sala anterior
     playersData = {};
     puntosPorJugador = {};
     estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };

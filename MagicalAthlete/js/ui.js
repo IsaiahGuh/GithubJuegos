@@ -1,4 +1,4 @@
-// ui.js (sin cambios respecto a la versión original, pero se incluye completo)
+// ui.js (sin cambios)
 function renderizarCartas() {
     var grid = document.getElementById('card-grid');
     grid.innerHTML = '';

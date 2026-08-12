@@ -31,7 +31,6 @@ function asignarPuntoGlobal(tipo) {
             alert('+3 ya fue usado esta ronda.');
             return;
         }
-        // Obtener la carta activa del jugador
         var activeId = playersData[myId] ? playersData[myId].activeCardId : null;
         if (!activeId) {
             alert('Selecciona una carta activa con el boton "Usar" primero.');
@@ -63,7 +62,6 @@ function asignarPuntoGlobal(tipo) {
         if (playersData[myId].cartasGanadoras.indexOf(activeId) === -1) {
             playersData[myId].cartasGanadoras.push(activeId);
         }
-        // Guardar en el jugador para que otros lo vean
         broadcastPuntajeGlobal('+3');
         broadcastEstadoRonda();
         actualizarUI();
@@ -77,14 +75,12 @@ function asignarPuntoGlobal(tipo) {
             alert('+2 ya fue usado esta ronda.');
             return;
         }
-        // Solo se permite si no eres el ganador de la ronda
         if (estadoRonda.jugadorGanador === myId) {
             alert('No puedes usar +2, ya usaste +3.');
             return;
         }
         puntosPorJugador[myId] += 2;
         estadoRonda.usado2 = true;
-        // Descartar todas las cartas activas excepto la ganadora
         if (typeof window.descartarActivas === 'function') {
             window.descartarActivas(estadoRonda.jugadorGanador);
         } else {
@@ -94,7 +90,6 @@ function asignarPuntoGlobal(tipo) {
         broadcastEstadoRonda();
         actualizarUI();
         saveSession();
-        // Reiniciar la ronda después de un breve retraso
         setTimeout(function() {
             reiniciarRonda();
         }, 500);
@@ -116,7 +111,6 @@ function reiniciarRonda() {
     estadoRonda.usado2 = false;
     estadoRonda.ganadorCartaId = null;
     estadoRonda.jugadorGanador = null;
-    // Limpiar activeCardId de todos (ya se hizo en descartarActivas, pero por si acaso)
     for (var id in playersData) {
         if (playersData[id]) {
             playersData[id].activeCardId = null;
@@ -136,22 +130,17 @@ function actualizarBotonesGlobales() {
     if (!btn3 || !btn2 || !btnMenos || !btnMas) return;
 
     if (estadoRonda.usado3) {
-        // +3 bloqueado para todos
         btn3.disabled = true;
-
         if (estadoRonda.jugadorGanador === myId) {
-            // El ganador de la ronda tiene todos los botones bloqueados
             btn2.disabled = true;
             btnMenos.disabled = true;
             btnMas.disabled = true;
         } else {
-            // Para los demás: +2 disponible si no usado, +1 y -1 disponibles
             btn2.disabled = estadoRonda.usado2;
             btnMenos.disabled = false;
             btnMas.disabled = false;
         }
     } else {
-        // Ronda sin +3: +3, -1, +1 habilitados; +2 bloqueado
         btn3.disabled = false;
         btn2.disabled = true;
         btnMenos.disabled = false;

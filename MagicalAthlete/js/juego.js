@@ -263,50 +263,30 @@ function cerrarIntercambio() {
 }
 window.cerrarIntercambio = cerrarIntercambio;
 
+// --- CARTA 17: muestra 3 cartas al azar que NO sean ganadoras ni 17/33 ---
 function intercambiarPor17(cartaActual) {
-    // Buscar cartas disponibles: no seleccionadas, no descartadas, no ganadoras, excluyendo la actual
-    var disponibles = cartas.filter(function(c) {
-        return !c.seleccionadoPor && !c.descartada && !c.esGanadora && c.id !== cartaActual.id;
+    // Filtrar cartas que no sean ganadoras y no sean 17 ni 33
+    var filtradas = cartas.filter(function(c) {
+        return !c.esGanadora && c.numero !== 17 && c.numero !== 33;
     });
-    if (disponibles.length === 0) {
-        alert('No hay cartas disponibles para intercambiar.');
+    if (filtradas.length === 0) {
+        alert('No hay cartas disponibles para copiar (sin ganadoras ni especiales).');
         return;
     }
-
-    // Seleccionar hasta 3 cartas (si hay mas, tomar 3 al azar)
-    var seleccionables;
-    if (disponibles.length <= 3) {
-        seleccionables = disponibles.slice();
-    } else {
-        // Mezclar y tomar 3
-        for (var i = disponibles.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
-            var temp = disponibles[i];
-            disponibles[i] = disponibles[j];
-            disponibles[j] = temp;
-        }
-        seleccionables = disponibles.slice(0, 3);
+    // Mezclar
+    for (var i = filtradas.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = filtradas[i];
+        filtradas[i] = filtradas[j];
+        filtradas[j] = temp;
     }
+    // Tomar hasta 3
+    var seleccionables = filtradas.slice(0, Math.min(3, filtradas.length));
 
-    mostrarModalSeleccion(seleccionables, 'Elige una carta para intercambiar (17)', function(cartaElegida) {
-        realizarIntercambio(cartaActual, cartaElegida);
-    });
-}
-
-function intercambiarPor33(cartaActual) {
-    var ganadoras = cartas.filter(function(c) {
-        return c.esGanadora;
-    });
-    if (ganadoras.length === 0) {
-        alert('No hay cartas ganadoras disponibles para intercambiar.');
-        return;
-    }
-
-    mostrarModalSeleccion(ganadoras, 'Elige una carta ganadora para copiar (33)', function(cartaElegida) {
-        // Copiar visualmente, pero NO marcar como ganadora
+    mostrarModalSeleccion(seleccionables, 'Elige una carta para copiar (17)', function(cartaElegida) {
+        // Copiar visualmente
         cartaActual.numero = cartaElegida.numero;
         cartaActual.imagen = cartaElegida.imagen;
-        // No modificar esGanadora (sigue false)
         // Activar la carta actual
         playersData[myId].activeCardId = cartaActual.id;
         broadcastSetActive(myId, cartaActual.id);
@@ -317,27 +297,26 @@ function intercambiarPor33(cartaActual) {
     });
 }
 
-function realizarIntercambio(cartaActual, cartaElegida) {
-    // Guardar datos de la elegida
-    var nuevoNumero = cartaElegida.numero;
-    var nuevaImagen = cartaElegida.imagen;
+// --- CARTA 33: muestra ganadoras que no sean 17 ni 33 ---
+function intercambiarPor33(cartaActual) {
+    var ganadoras = cartas.filter(function(c) {
+        return c.esGanadora && c.numero !== 17 && c.numero !== 33;
+    });
+    if (ganadoras.length === 0) {
+        alert('No hay cartas ganadoras disponibles (o son especiales).');
+        return;
+    }
 
-    // Marcar la carta elegida como descartada (ya no estara disponible)
-    cartaElegida.descartada = true;
-
-    // Modificar la carta actual
-    cartaActual.numero = nuevoNumero;
-    cartaActual.imagen = nuevaImagen;
-
-    // Activar la carta actual
-    playersData[myId].activeCardId = cartaActual.id;
-    broadcastSetActive(myId, cartaActual.id);
-
-    // Broadcast y actualizar UI
-    renderizarCartas();
-    renderizarMisCorredores();
-    actualizarUI();
-    saveSession();
+    mostrarModalSeleccion(ganadoras, 'Elige una carta ganadora para copiar (33)', function(cartaElegida) {
+        cartaActual.numero = cartaElegida.numero;
+        cartaActual.imagen = cartaElegida.imagen;
+        playersData[myId].activeCardId = cartaActual.id;
+        broadcastSetActive(myId, cartaActual.id);
+        renderizarCartas();
+        renderizarMisCorredores();
+        actualizarUI();
+        saveSession();
+    });
 }
 
 function setActiveCard(cartaId) {
@@ -389,7 +368,6 @@ function descartarActivas(ganadorId) {
             for (var i = 0; i < cartas.length; i++) {
                 if (cartas[i].id === activeId) {
                     if (id === ganadorId && cartas[i].esGanadora) {
-                        // Carta ganadora: la marcamos como descartada y la eliminamos de misSelecciones
                         cartas[i].descartada = true;
                         if (id === myId) {
                             var idx = misSelecciones.indexOf(activeId);
@@ -426,7 +404,6 @@ window.descartarActivas = descartarActivas;
 function actualizarUI() {
     var startBtn = document.getElementById('startGameBtn');
     if (startBtn) {
-        // El boton se deshabilita cuando el juego ya empezo
         startBtn.disabled = gameStarted;
         startBtn.textContent = gameStarted ? 'Juego en curso' : 'Corredores';
     }
@@ -440,7 +417,6 @@ function actualizarUI() {
         actualizarBotonesGlobales();
     }
     
-    // Verificar si todos los jugadores se han quedado sin cartas disponibles
     var juegoTerminado = true;
     if (gameStarted) {
         for (var id in playersData) {
@@ -465,16 +441,14 @@ function actualizarUI() {
             }
         }
     } else {
-        juegoTerminado = false; // si no ha empezado, no termina
+        juegoTerminado = false;
     }
     
     if (juegoTerminado && gameStarted) {
-        // Deshabilitar botones de puntuacion
         var btns = document.querySelectorAll('.btn-puntaje');
         for (var b = 0; b < btns.length; b++) {
             btns[b].disabled = true;
         }
-        // Mostrar mensaje
         var list = document.getElementById('playersList');
         if (list) {
             var msg = document.createElement('div');
@@ -483,14 +457,12 @@ function actualizarUI() {
             msg.style.fontWeight = 'bold';
             msg.style.padding = '10px';
             msg.textContent = 'Juego terminado: no quedan cartas disponibles.';
-            // Eliminar mensajes anteriores
             var oldMsg = list.querySelector('.game-ended-msg');
             if (oldMsg) oldMsg.remove();
             msg.className = 'game-ended-msg';
             list.prepend(msg);
         }
     } else {
-        // Eliminar mensaje si existe
         var list2 = document.getElementById('playersList');
         if (list2) {
             var oldMsg2 = list2.querySelector('.game-ended-msg');

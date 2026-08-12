@@ -220,9 +220,6 @@ function connectToRoom(code, isReconnect) {
                 } else {
                     playersData[jugadorId] = { name: data.name || jugadorId, selecciones: [], cartasGanadoras: [], activeCardId: activeCardId };
                 }
-                if (jugadorId === myId) {
-                    // ya se actualizó en setActiveCard
-                }
                 renderizarMisCorredores();
                 actualizarUI();
                 saveSession();
@@ -500,7 +497,6 @@ function broadcastClaimOffer(targetId, offeredId) {
     }
 }
 
-// Nueva función para broadcast de carta activa
 function broadcastSetActive(playerId, activeCardId) {
     if (mqttClient && currentRoom) {
         var topic = 'magical_athlete/room/' + currentRoom;
