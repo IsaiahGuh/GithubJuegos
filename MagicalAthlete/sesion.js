@@ -1,3 +1,4 @@
+// sesion.js (sin cambios)
 // ===== PERSISTENCIA DE SESION (RECONEXION) =====
 var SESSION_KEY = 'magical_athlete_session_v1';
 var REGISTRY_KEY = 'magical_athlete_players_v1';

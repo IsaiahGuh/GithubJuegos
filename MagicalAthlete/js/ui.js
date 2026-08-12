@@ -1,3 +1,4 @@
+// ui.js (sin cambios respecto a la versión original, pero se incluye completo)
 function renderizarCartas() {
     var grid = document.getElementById('card-grid');
     grid.innerHTML = '';
@@ -72,7 +73,6 @@ function hideLoading() {
     document.getElementById('loadingModal').style.display = 'none';
 }
 
-// --- NUEVA FUNCION RENDERIZAR MIS CORREDORES CON ZOOM ---
 function renderizarMisCorredores() {
     var container = document.getElementById('my-cards-container');
     container.innerHTML = '';
@@ -113,11 +113,10 @@ function renderizarMisCorredores() {
         wrapper.className = 'my-card-wrapper' + (esActiva ? ' activa' : '') + (esGanadora ? ' ganadora' : '');
         var imgContainer = document.createElement('div');
         imgContainer.className = 'my-card-img';
-        // CLICK PARA ZOOM SIN BOTON
         imgContainer.addEventListener('click', function(c) {
             return function(e) {
                 e.stopPropagation();
-                abrirZoom(c, false, true); // solo visualización, sin botón
+                abrirZoom(c, false, true);
             };
         }(carta));
         var img = document.createElement('img');
@@ -143,7 +142,7 @@ function renderizarMisCorredores() {
         }
         btnUsar.addEventListener('click', function(cId) {
             return function(e) {
-                e.stopPropagation(); // evita que se abra zoom al hacer clic en el botón
+                e.stopPropagation();
                 setActiveCard(cId);
             };
         }(carta.id));

@@ -1,3 +1,4 @@
+// main.js (sin cambios)
 document.addEventListener('DOMContentLoaded', function() {
     mostrarDatosURL();
     var session = loadSession();

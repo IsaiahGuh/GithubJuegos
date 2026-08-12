@@ -1,3 +1,4 @@
+// juego.js
 // ===== CONFIGURACION =====
 var cartas = [];
 var misSelecciones = [];
@@ -221,6 +222,124 @@ function renderizarMisCorredores() {
     }
 }
 
+// ========== FUNCIONES PARA INTERCAMBIO ==========
+function mostrarModalSeleccion(cartasDisponibles, titulo, callback) {
+    var modal = document.getElementById('intercambioModal');
+    var contenido = document.getElementById('intercambioContenido');
+    var tituloElem = document.getElementById('intercambioTitulo');
+    if (!modal) {
+        alert('Error: no se encontro el modal de intercambio.');
+        return;
+    }
+    tituloElem.textContent = titulo || 'Selecciona una carta';
+    contenido.innerHTML = '';
+
+    cartasDisponibles.forEach(function(carta) {
+        var div = document.createElement('div');
+        div.className = 'carta-opcion';
+        var img = document.createElement('img');
+        img.src = carta.imagen;
+        img.alt = '#' + carta.numero;
+        img.loading = 'lazy';
+        div.appendChild(img);
+        var span = document.createElement('span');
+        span.textContent = '#' + carta.numero;
+        div.appendChild(span);
+
+        div.addEventListener('click', function(e) {
+            e.stopPropagation();
+            cerrarIntercambio();
+            callback(carta);
+        });
+        contenido.appendChild(div);
+    });
+
+    modal.style.display = 'flex';
+}
+
+function cerrarIntercambio() {
+    var modal = document.getElementById('intercambioModal');
+    if (modal) modal.style.display = 'none';
+}
+window.cerrarIntercambio = cerrarIntercambio;
+
+function intercambiarPor17(cartaActual) {
+    // Buscar cartas disponibles: no seleccionadas, no descartadas, no ganadoras, excluyendo la actual
+    var disponibles = cartas.filter(function(c) {
+        return !c.seleccionadoPor && !c.descartada && !c.esGanadora && c.id !== cartaActual.id;
+    });
+    if (disponibles.length === 0) {
+        alert('No hay cartas disponibles para intercambiar.');
+        return;
+    }
+
+    // Seleccionar hasta 3 cartas (si hay mas, tomar 3 al azar)
+    var seleccionables;
+    if (disponibles.length <= 3) {
+        seleccionables = disponibles.slice();
+    } else {
+        // Mezclar y tomar 3
+        for (var i = disponibles.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = disponibles[i];
+            disponibles[i] = disponibles[j];
+            disponibles[j] = temp;
+        }
+        seleccionables = disponibles.slice(0, 3);
+    }
+
+    mostrarModalSeleccion(seleccionables, 'Elige una carta para intercambiar (17)', function(cartaElegida) {
+        realizarIntercambio(cartaActual, cartaElegida);
+    });
+}
+
+function intercambiarPor33(cartaActual) {
+    var ganadoras = cartas.filter(function(c) {
+        return c.esGanadora;
+    });
+    if (ganadoras.length === 0) {
+        alert('No hay cartas ganadoras disponibles para intercambiar.');
+        return;
+    }
+
+    mostrarModalSeleccion(ganadoras, 'Elige una carta ganadora para copiar (33)', function(cartaElegida) {
+        // Copiar visualmente, pero NO marcar como ganadora
+        cartaActual.numero = cartaElegida.numero;
+        cartaActual.imagen = cartaElegida.imagen;
+        // No modificar esGanadora (sigue false)
+        // Activar la carta actual
+        playersData[myId].activeCardId = cartaActual.id;
+        broadcastSetActive(myId, cartaActual.id);
+        renderizarCartas();
+        renderizarMisCorredores();
+        actualizarUI();
+        saveSession();
+    });
+}
+
+function realizarIntercambio(cartaActual, cartaElegida) {
+    // Guardar datos de la elegida
+    var nuevoNumero = cartaElegida.numero;
+    var nuevaImagen = cartaElegida.imagen;
+
+    // Marcar la carta elegida como descartada (ya no estara disponible)
+    cartaElegida.descartada = true;
+
+    // Modificar la carta actual
+    cartaActual.numero = nuevoNumero;
+    cartaActual.imagen = nuevaImagen;
+
+    // Activar la carta actual
+    playersData[myId].activeCardId = cartaActual.id;
+    broadcastSetActive(myId, cartaActual.id);
+
+    // Broadcast y actualizar UI
+    renderizarCartas();
+    renderizarMisCorredores();
+    actualizarUI();
+    saveSession();
+}
+
 function setActiveCard(cartaId) {
     if (!playersData[myId]) {
         playersData[myId] = { name: myName, selecciones: [], cartasGanadoras: [], activeCardId: null };
@@ -236,20 +355,25 @@ function setActiveCard(cartaId) {
         alert('Esta carta no esta disponible.');
         return;
     }
+
+    // ========== CARTAS ESPECIALES ==========
+    if (carta.numero === 17) {
+        intercambiarPor17(carta);
+        return;
+    }
+    if (carta.numero === 33) {
+        intercambiarPor33(carta);
+        return;
+    }
+    // =======================================
+
+    // Comportamiento normal: activar/desactivar
     if (playersData[myId].activeCardId === cartaId) {
         playersData[myId].activeCardId = null;
     } else {
         playersData[myId].activeCardId = cartaId;
     }
-    if (mqttClient && currentRoom) {
-        var topic = 'magical_athlete/room/' + currentRoom;
-        var payload = JSON.stringify({
-            action: 'set_active',
-            id: myId,
-            activeCardId: playersData[myId].activeCardId
-        });
-        mqttClient.publish(topic, payload);
-    }
+    broadcastSetActive(myId, playersData[myId].activeCardId);
     renderizarMisCorredores();
     actualizarUI();
     saveSession();
@@ -302,7 +426,7 @@ window.descartarActivas = descartarActivas;
 function actualizarUI() {
     var startBtn = document.getElementById('startGameBtn');
     if (startBtn) {
-        // El botón se deshabilita cuando el juego ya empezó
+        // El boton se deshabilita cuando el juego ya empezo
         startBtn.disabled = gameStarted;
         startBtn.textContent = gameStarted ? 'Juego en curso' : 'Corredores';
     }
@@ -345,7 +469,7 @@ function actualizarUI() {
     }
     
     if (juegoTerminado && gameStarted) {
-        // Deshabilitar botones de puntuación
+        // Deshabilitar botones de puntuacion
         var btns = document.querySelectorAll('.btn-puntaje');
         for (var b = 0; b < btns.length; b++) {
             btns[b].disabled = true;
@@ -474,7 +598,7 @@ function mostrarGanadores() {
             }
         }
         var duenoSpan = document.createElement('span');
-        duenoSpan.textContent = 'Dueño: ' + dueno;
+        duenoSpan.textContent = 'Dueno: ' + dueno;
         duenoSpan.style.color = 'var(--text-muted)';
         duenoSpan.style.fontSize = '0.8rem';
         info.appendChild(duenoSpan);

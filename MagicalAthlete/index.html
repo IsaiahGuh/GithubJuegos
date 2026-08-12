@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -77,6 +78,15 @@
                 <!-- Se llena dinámicamente -->
             </div>
             <button class="modal-btn btn-secondary" onclick="document.getElementById('ganadoresModal').style.display='none'" style="margin-top: 15px;">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE INTERCAMBIO (para cartas 17 y 33) -->
+    <div id="intercambioModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box zoom-box">
+            <h3 id="intercambioTitulo">Selecciona una carta</h3>
+            <div id="intercambioContenido" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 15px 0;"></div>
+            <button class="modal-btn btn-secondary" onclick="cerrarIntercambio()">Cancelar</button>
         </div>
     </div>
 

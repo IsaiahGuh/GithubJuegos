@@ -1,3 +1,4 @@
+// puntaje.js (sin cambios)
 // ===== LOGICA DE PUNTUACION GLOBAL =====
 var puntosPorJugador = {};
 var estadoRonda = {

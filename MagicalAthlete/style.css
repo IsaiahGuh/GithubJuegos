@@ -1,3 +1,4 @@
+/* style.css */
 :root {
     --color-primary: #6C5B7B;
     --color-secondary: #355C7D;
@@ -555,6 +556,33 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 .zoom-content .btn-choose:active {
     transform: scale(0.95);
+}
+
+/* --- MODAL DE INTERCAMBIO --- */
+#intercambioContenido .carta-opcion {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 5px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.1s;
+}
+#intercambioContenido .carta-opcion:hover {
+    border-color: var(--color-accent);
+    transform: scale(1.02);
+}
+#intercambioContenido .carta-opcion img {
+    width: 80px;
+    height: auto;
+    border-radius: 8px;
+}
+#intercambioContenido .carta-opcion span {
+    color: var(--text-main);
+    font-size: 0.8rem;
+    font-weight: bold;
 }
 
 /* --- RESPONSIVE --- */

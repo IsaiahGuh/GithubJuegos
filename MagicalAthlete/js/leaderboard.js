@@ -1,3 +1,4 @@
+// leaderboard.js (sin cambios)
 function renderLeaderboard() {
     var list = document.getElementById('playersList');
     list.innerHTML = '';
@@ -42,7 +43,7 @@ function renderLeaderboard() {
                     if (carta) {
                         abrirZoom(carta, false, true);
                     } else {
-                        alert('La carta activa de este jugador ya no está disponible.');
+                        alert('La carta activa de este jugador ya no esta disponible.');
                     }
                 } else {
                     alert('Este jugador no tiene una carta activa seleccionada.');

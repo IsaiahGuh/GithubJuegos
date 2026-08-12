@@ -1,3 +1,4 @@
+// mqtt.js (se añade broadcastSetActive)
 // ===== SISTEMA MULTIJUGADOR MQTT =====
 var mqttClient = null;
 var myId = Math.random().toString(36).substr(2, 9);
@@ -219,7 +220,6 @@ function connectToRoom(code, isReconnect) {
                 } else {
                     playersData[jugadorId] = { name: data.name || jugadorId, selecciones: [], cartasGanadoras: [], activeCardId: activeCardId };
                 }
-                // Si es el jugador actual, actualizar también mi variable local (aunque ya se hizo)
                 if (jugadorId === myId) {
                     // ya se actualizó en setActiveCard
                 }
@@ -499,6 +499,20 @@ function broadcastClaimOffer(targetId, offeredId) {
         mqttClient.publish(topic, payload);
     }
 }
+
+// Nueva función para broadcast de carta activa
+function broadcastSetActive(playerId, activeCardId) {
+    if (mqttClient && currentRoom) {
+        var topic = 'magical_athlete/room/' + currentRoom;
+        var payload = JSON.stringify({
+            action: 'set_active',
+            id: playerId,
+            activeCardId: activeCardId
+        });
+        mqttClient.publish(topic, payload);
+    }
+}
+window.broadcastSetActive = broadcastSetActive;
 
 function showClaimModal(claim) {
     var modal = document.getElementById('claimModal');
