@@ -70,6 +70,16 @@
         </div>
     </div>
 
+    <!-- MODAL DE GANADORES -->
+    <div id="ganadoresModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box zoom-box">
+            <div id="ganadoresContent" class="zoom-content">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <button class="modal-btn btn-secondary" onclick="document.getElementById('ganadoresModal').style.display='none'" style="margin-top: 15px;">Cerrar</button>
+        </div>
+    </div>
+
     <!-- UI DEL JUEGO -->
     <header>
         <h1>MagicalAthlete</h1>
@@ -83,9 +93,13 @@
 
         <div class="side-panel">
             <div class="game-controls">
-                <div style="display: flex; gap: 10px; width: 100%;">
+                <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
                     <button id="startGameBtn" class="modal-btn btn-primary" onclick="iniciarJuego()" style="flex: 1;">Corredores</button>
-                    <button id="resetGameBtn" class="modal-btn btn-danger" onclick="resetGlobalGame()" style="flex: 1;">Reiniciar</button>
+                    <button id="ganadoresBtn" class="modal-btn btn-secondary" onclick="mostrarGanadores()" style="flex: 1;">Ganadores</button>
+                </div>
+                <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+                    <button id="resetRoundBtn" class="modal-btn btn-outline" onclick="resetRound()" style="flex: 1;">Reiniciar Ronda</button>
+                    <button id="resetGameBtn" class="modal-btn btn-danger" onclick="resetGlobalGame()" style="flex: 1;">Reiniciar Todo</button>
                 </div>
                 
                 <!-- Area MIS CORREDORES -->

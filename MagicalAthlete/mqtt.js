@@ -40,11 +40,15 @@ function connectToRoom(code, isReconnect) {
             playersData[myId] = { 
                 name: myName, 
                 selecciones: misSelecciones || [],
-                cartasGanadoras: []
+                cartasGanadoras: [],
+                activeCardId: null
             };
         } else {
             playersData[myId].name = myName;
             playersData[myId].selecciones = misSelecciones || [];
+            if (playersData[myId].activeCardId === undefined) {
+                playersData[myId].activeCardId = null;
+            }
         }
         
         joinSuccess(code);
@@ -88,9 +92,9 @@ function connectToRoom(code, isReconnect) {
                 return;
             }
 
-            if (data.id && data.name && data.action !== 'request_state' && data.action !== 'remove' && data.action !== 'sync') {
+            if (data.id && data.name && data.action !== 'request_state' && data.action !== 'remove' && data.action !== 'sync' && data.action !== 'set_active') {
                 if (!playersData[data.id]) {
-                    playersData[data.id] = { name: data.name, selecciones: [], cartasGanadoras: [] };
+                    playersData[data.id] = { name: data.name, selecciones: [], cartasGanadoras: [], activeCardId: null };
                 }
                 playersData[data.id].name = data.name;
                 if (data.selecciones) {
@@ -136,6 +140,9 @@ function connectToRoom(code, isReconnect) {
                 for (var pid in playersData) {
                     if (!puntosPorJugador[pid]) {
                         puntosPorJugador[pid] = 0;
+                    }
+                    if (playersData[pid] && playersData[pid].activeCardId === undefined) {
+                        playersData[pid].activeCardId = null;
                     }
                 }
                 renderizarCartas();
@@ -204,6 +211,23 @@ function connectToRoom(code, isReconnect) {
                 saveSession();
             }
 
+            if (data.action === 'set_active') {
+                var jugadorId = data.id;
+                var activeCardId = data.activeCardId;
+                if (playersData[jugadorId]) {
+                    playersData[jugadorId].activeCardId = activeCardId;
+                } else {
+                    playersData[jugadorId] = { name: data.name || jugadorId, selecciones: [], cartasGanadoras: [], activeCardId: activeCardId };
+                }
+                // Si es el jugador actual, actualizar también mi variable local (aunque ya se hizo)
+                if (jugadorId === myId) {
+                    // ya se actualizó en setActiveCard
+                }
+                renderizarMisCorredores();
+                actualizarUI();
+                saveSession();
+            }
+
             if (data.action === 'select') {
                 var cartaId = data.cartaId;
                 var jugadorNombre = data.name;
@@ -262,7 +286,13 @@ function connectToRoom(code, isReconnect) {
                 if (data.playersData) {
                     for (var pid in data.playersData) {
                         if (pid !== myId) {
-                            playersData[pid] = data.playersData[pid];
+                            if (!playersData[pid]) {
+                                playersData[pid] = { name: data.playersData[pid].name, selecciones: [], cartasGanadoras: [], activeCardId: null };
+                            }
+                            playersData[pid].name = data.playersData[pid].name;
+                            playersData[pid].selecciones = data.playersData[pid].selecciones || [];
+                            playersData[pid].cartasGanadoras = data.playersData[pid].cartasGanadoras || [];
+                            playersData[pid].activeCardId = data.playersData[pid].activeCardId || null;
                         }
                     }
                 }
@@ -285,11 +315,19 @@ function connectToRoom(code, isReconnect) {
             }
 
             if (data.action === 'join' || data.action === 'sync') {
-                playersData[data.id] = {
-                    name: data.name,
-                    selecciones: data.selecciones || [],
-                    cartasGanadoras: data.cartasGanadoras || []
-                };
+                if (!playersData[data.id]) {
+                    playersData[data.id] = {
+                        name: data.name,
+                        selecciones: data.selecciones || [],
+                        cartasGanadoras: data.cartasGanadoras || [],
+                        activeCardId: data.activeCardId || null
+                    };
+                } else {
+                    playersData[data.id].name = data.name;
+                    playersData[data.id].selecciones = data.selecciones || [];
+                    playersData[data.id].cartasGanadoras = data.cartasGanadoras || [];
+                    playersData[data.id].activeCardId = data.activeCardId || null;
+                }
                 renderLeaderboard();
 
                 var cachedMatch = null;
@@ -487,7 +525,7 @@ function acceptClaim() {
 
     if (pendingClaim.cartasGanadoras) {
         if (!playersData[myId]) {
-            playersData[myId] = { name: myName, selecciones: [], cartasGanadoras: [] };
+            playersData[myId] = { name: myName, selecciones: [], cartasGanadoras: [], activeCardId: null };
         }
         playersData[myId].cartasGanadoras = pendingClaim.cartasGanadoras.slice();
     }

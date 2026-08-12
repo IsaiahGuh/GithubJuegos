@@ -9,21 +9,31 @@ function renderizarCartas() {
         return;
     }
     
+    // Filtrar cartas disponibles: de la tanda actual, no seleccionadas por nadie y no descartadas
     var disponibles = cartas.filter(function(c) {
-        return c.tanda === tandaActual && !c.seleccionadoPor;
+        return c.tanda === tandaActual && !c.seleccionadoPor && !c.descartada;
     });
     
     if (disponibles.length === 0) {
-        if (tandaActual < TOTAL_TANDAS - 1) {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Esperando siguiente tanda...</div>';
+        // Verificar si quedan cartas sin descartar en la tanda (pero ya seleccionadas)
+        var haySinDescartar = cartas.some(function(c) {
+            return c.tanda === tandaActual && !c.descartada;
+        });
+        if (haySinDescartar) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas de esta tanda ya fueron seleccionadas</div>';
         } else {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas seleccionadas</div>';
+            // Si no hay ninguna sin descartar, puede ser que la tanda ya se haya completado o estemos en la siguiente
+            if (tandaActual < TOTAL_TANDAS - 1) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Esperando siguiente tanda...</div>';
+            } else {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas han sido seleccionadas o descartadas</div>';
+            }
         }
         if (boardContainer) boardContainer.style.display = 'block';
         return;
-    } else {
-        if (boardContainer) boardContainer.style.display = 'block';
     }
+    
+    if (boardContainer) boardContainer.style.display = 'block';
     
     for (var i = 0; i < disponibles.length; i++) {
         var carta = disponibles[i];
@@ -47,7 +57,7 @@ function renderizarCartas() {
         cardDiv.appendChild(overlay);
         (function(c) {
             cardDiv.addEventListener('click', function() {
-                if (!c.seleccionadoPor) {
+                if (!c.seleccionadoPor && !c.descartada) {
                     abrirZoom(c, true);
                 }
             });

@@ -112,3 +112,5 @@ window.acceptClaim = acceptClaim;
 window.declineClaim = declineClaim;
 window.iniciarJuego = iniciarJuego;
 window.resetGlobalGame = resetGlobalGame;
+window.mostrarGanadores = mostrarGanadores;
+window.resetRound = resetRound;

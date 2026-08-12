@@ -3,7 +3,7 @@ var cartas = [];
 var misSelecciones = [];
 var MAX_SELECCIONES = 2; // por tanda
 var TOTAL_IMAGENES = 36;
-var cartaActivaId = null;
+var cartaActivaId = null; // ya no se usa a nivel global, se usa por jugador
 var tandaActual = 0;
 var TOTAL_TANDAS = 2;
 var avanzando = false;
@@ -28,6 +28,14 @@ function seleccionarCarta(cartaId) {
         alert('Esta carta ya fue seleccionada por ' + carta.seleccionadoPor);
         return;
     }
+    if (carta.descartada) {
+        alert('Esta carta ya fue descartada.');
+        return;
+    }
+    if (carta.esGanadora) {
+        alert('Esta carta ya es ganadora.');
+        return;
+    }
     var seleccionadasEnTanda = misSelecciones.filter(function(id) {
         var c = null;
         for (var j = 0; j < cartas.length; j++) {
@@ -36,7 +44,7 @@ function seleccionarCarta(cartaId) {
                 break;
             }
         }
-        return c && c.tanda === tandaActual;
+        return c && c.tanda === tandaActual && !c.descartada && !c.esGanadora;
     });
     if (seleccionadasEnTanda.length >= MAX_SELECCIONES) {
         alert('Ya seleccionaste tus 2 cartas en esta tanda.');
@@ -46,7 +54,7 @@ function seleccionarCarta(cartaId) {
     carta.seleccionadoPorId = myId;
     misSelecciones.push(cartaId);
     if (!playersData[myId]) {
-        playersData[myId] = { name: myName, selecciones: [], cartasGanadoras: [] };
+        playersData[myId] = { name: myName, selecciones: [], cartasGanadoras: [], activeCardId: null };
     }
     playersData[myId].selecciones = misSelecciones.slice();
     broadcastSelect(cartaId);
@@ -90,6 +98,7 @@ function iniciarJuego() {
                 seleccionadoPor: null,
                 seleccionadoPorId: null,
                 esGanadora: false,
+                descartada: false,
                 tanda: t
             });
         }
@@ -103,6 +112,7 @@ function iniciarJuego() {
     for (var id in playersData) {
         playersData[id].selecciones = [];
         playersData[id].cartasGanadoras = [];
+        playersData[id].activeCardId = null;
         puntosPorJugador[id] = 0;
     }
     cartas = nuevasCartas;
@@ -117,7 +127,7 @@ window.iniciarJuego = iniciarJuego;
 function verificarYAvanzarTanda() {
     if (avanzando) return;
     var disponibles = cartas.filter(function(c) {
-        return c.tanda === tandaActual && !c.seleccionadoPor;
+        return c.tanda === tandaActual && !c.seleccionadoPor && !c.descartada && !c.esGanadora;
     });
     if (disponibles.length === 0 && tandaActual < TOTAL_TANDAS - 1) {
         avanzando = true;
@@ -149,17 +159,32 @@ function renderizarMisCorredores() {
         container.appendChild(empty);
         return;
     }
+    // Obtener cartas no descartadas de mis selecciones (incluyendo ganadoras)
+    var misCartas = [];
     for (var i = 0; i < misSelecciones.length; i++) {
-        var cartaId = misSelecciones[i];
+        var cId = misSelecciones[i];
         var carta = null;
         for (var j = 0; j < cartas.length; j++) {
-            if (cartas[j].id === cartaId) {
+            if (cartas[j].id === cId) {
                 carta = cartas[j];
                 break;
             }
         }
-        if (!carta) continue;
-        var esActiva = (cartaActivaId === cartaId);
+        if (carta && !carta.descartada) {
+            misCartas.push(carta);
+        }
+    }
+    if (misCartas.length === 0) {
+        var empty2 = document.createElement('div');
+        empty2.className = 'empty-message';
+        empty2.textContent = 'No tienes cartas disponibles';
+        container.appendChild(empty2);
+        return;
+    }
+    var activeId = playersData[myId] ? playersData[myId].activeCardId : null;
+    for (var k = 0; k < misCartas.length; k++) {
+        var carta = misCartas[k];
+        var esActiva = (activeId === carta.id);
         var esGanadora = carta.esGanadora || false;
         var wrapper = document.createElement('div');
         wrapper.className = 'my-card-wrapper' + (esActiva ? ' activa' : '') + (esGanadora ? ' ganadora' : '');
@@ -183,23 +208,96 @@ function renderizarMisCorredores() {
         var btnUsar = document.createElement('button');
         btnUsar.className = 'btn-sm btn-usar';
         btnUsar.textContent = 'Usar';
-        if (cartaActivaId !== null && cartaActivaId !== cartaId) {
+        if (carta.esGanadora || carta.descartada) {
             btnUsar.disabled = true;
         }
         btnUsar.addEventListener('click', function(cId) {
             return function() {
-                if (cartaActivaId === cId) {
-                    cartaActivaId = null;
-                } else {
-                    cartaActivaId = cId;
-                }
-                renderizarMisCorredores();
+                setActiveCard(cId);
             };
-        }(cartaId));
+        }(carta.id));
         wrapper.appendChild(btnUsar);
         container.appendChild(wrapper);
     }
 }
+
+function setActiveCard(cartaId) {
+    if (!playersData[myId]) {
+        playersData[myId] = { name: myName, selecciones: [], cartasGanadoras: [], activeCardId: null };
+    }
+    var carta = null;
+    for (var i = 0; i < cartas.length; i++) {
+        if (cartas[i].id === cartaId) {
+            carta = cartas[i];
+            break;
+        }
+    }
+    if (!carta || carta.descartada || carta.esGanadora) {
+        alert('Esta carta no esta disponible.');
+        return;
+    }
+    if (playersData[myId].activeCardId === cartaId) {
+        playersData[myId].activeCardId = null;
+    } else {
+        playersData[myId].activeCardId = cartaId;
+    }
+    if (mqttClient && currentRoom) {
+        var topic = 'magical_athlete/room/' + currentRoom;
+        var payload = JSON.stringify({
+            action: 'set_active',
+            id: myId,
+            activeCardId: playersData[myId].activeCardId
+        });
+        mqttClient.publish(topic, payload);
+    }
+    renderizarMisCorredores();
+    actualizarUI();
+    saveSession();
+}
+window.setActiveCard = setActiveCard;
+
+function descartarActivas(ganadorId) {
+    for (var id in playersData) {
+        var data = playersData[id];
+        if (!data) continue;
+        var activeId = data.activeCardId;
+        if (activeId) {
+            for (var i = 0; i < cartas.length; i++) {
+                if (cartas[i].id === activeId) {
+                    if (id === ganadorId && cartas[i].esGanadora) {
+                        // Carta ganadora: la marcamos como descartada y la eliminamos de misSelecciones
+                        cartas[i].descartada = true;
+                        if (id === myId) {
+                            var idx = misSelecciones.indexOf(activeId);
+                            if (idx !== -1) {
+                                misSelecciones.splice(idx, 1);
+                            }
+                        }
+                    } else {
+                        cartas[i].descartada = true;
+                        if (id === myId) {
+                            var idx = misSelecciones.indexOf(activeId);
+                            if (idx !== -1) {
+                                misSelecciones.splice(idx, 1);
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        data.activeCardId = null;
+        if (id === myId) {
+            data.selecciones = misSelecciones.slice();
+        }
+    }
+    broadcastState('sync');
+    renderizarCartas();
+    renderizarMisCorredores();
+    actualizarUI();
+    saveSession();
+}
+window.descartarActivas = descartarActivas;
 
 function actualizarUI() {
     var startBtn = document.getElementById('startGameBtn');
@@ -215,6 +313,26 @@ function actualizarUI() {
     renderizarMisCorredores();
     if (typeof actualizarBotonesGlobales === 'function') {
         actualizarBotonesGlobales();
+    }
+    var totalGanadoras = 0;
+    for (var i = 0; i < cartas.length; i++) {
+        if (cartas[i].esGanadora) totalGanadoras++;
+    }
+    if (totalGanadoras >= 4) {
+        var btns = document.querySelectorAll('.btn-puntaje');
+        for (var b = 0; b < btns.length; b++) {
+            btns[b].disabled = true;
+        }
+        var list = document.getElementById('playersList');
+        if (list) {
+            var msg = document.createElement('div');
+            msg.style.textAlign = 'center';
+            msg.style.color = '#F8B195';
+            msg.style.fontWeight = 'bold';
+            msg.style.padding = '10px';
+            msg.textContent = 'Juego terminado: 4 cartas ganadoras acumuladas.';
+            list.prepend(msg);
+        }
     }
 }
 window.actualizarUI = actualizarUI;
@@ -245,6 +363,7 @@ function resetLocalGame() {
     for (var id in playersData) {
         playersData[id].selecciones = [];
         playersData[id].cartasGanadoras = [];
+        playersData[id].activeCardId = null;
         puntosPorJugador[id] = 0;
     }
     renderizarCartas();
@@ -254,3 +373,90 @@ function resetLocalGame() {
     saveSession();
 }
 window.resetLocalGame = resetLocalGame;
+
+function mostrarGanadores() {
+    var ganadoras = cartas.filter(function(c) { return c.esGanadora; });
+    if (ganadoras.length === 0) {
+        alert('No hay cartas ganadoras aun.');
+        return;
+    }
+    var modal = document.getElementById('ganadoresModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'ganadoresModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = '<div class="modal-box zoom-box"><div id="ganadoresContent" class="zoom-content"></div><button class="modal-btn btn-secondary" onclick="document.getElementById(\'ganadoresModal\').style.display=\'none\'">Cerrar</button></div>';
+        document.body.appendChild(modal);
+    }
+    var content = document.getElementById('ganadoresContent');
+    if (!content) {
+        content = modal.querySelector('.zoom-content');
+    }
+    content.innerHTML = '';
+    var title = document.createElement('h3');
+    title.textContent = 'Cartas Ganadoras';
+    title.style.color = 'var(--text-main)';
+    title.style.marginBottom = '15px';
+    content.appendChild(title);
+
+    for (var i = 0; i < ganadoras.length; i++) {
+        var c = ganadoras[i];
+        var cardContainer = document.createElement('div');
+        cardContainer.style.display = 'flex';
+        cardContainer.style.alignItems = 'center';
+        cardContainer.style.gap = '10px';
+        cardContainer.style.marginBottom = '10px';
+        cardContainer.style.background = '#2a2a4a';
+        cardContainer.style.padding = '8px';
+        cardContainer.style.borderRadius = '8px';
+        cardContainer.style.width = '100%';
+        var img = document.createElement('img');
+        img.src = c.imagen;
+        img.alt = 'Corredor ' + c.numero;
+        img.style.width = '60px';
+        img.style.height = '80px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '4px';
+        cardContainer.appendChild(img);
+        var info = document.createElement('div');
+        info.style.display = 'flex';
+        info.style.flexDirection = 'column';
+        info.style.alignItems = 'flex-start';
+        var numSpan = document.createElement('span');
+        numSpan.textContent = '#' + c.numero;
+        numSpan.style.fontWeight = 'bold';
+        info.appendChild(numSpan);
+        var dueno = 'Desconocido';
+        for (var id in playersData) {
+            if (playersData[id].cartasGanadoras && playersData[id].cartasGanadoras.indexOf(c.id) !== -1) {
+                dueno = playersData[id].name;
+                break;
+            }
+        }
+        var duenoSpan = document.createElement('span');
+        duenoSpan.textContent = 'Dueño: ' + dueno;
+        duenoSpan.style.color = 'var(--text-muted)';
+        duenoSpan.style.fontSize = '0.8rem';
+        info.appendChild(duenoSpan);
+        cardContainer.appendChild(info);
+        content.appendChild(cardContainer);
+    }
+    modal.style.display = 'flex';
+}
+window.mostrarGanadores = mostrarGanadores;
+
+function resetRound() {
+    for (var id in playersData) {
+        if (playersData[id]) {
+            playersData[id].activeCardId = null;
+        }
+    }
+    estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+    cartaActivaId = null;
+    broadcastState('sync');
+    renderizarMisCorredores();
+    actualizarUI();
+    saveSession();
+}
+window.resetRound = resetRound;
