@@ -1,15 +1,21 @@
 /* style.css */
 :root {
-    --color-primary: #6C5B7B;
-    --color-secondary: #355C7D;
-    --color-accent: #F8B195;
-    --bg-main: #1a1a2e;
-    --bg-panel: #16213e;
-    --bg-box: #0f0f1f;
-    --bg-card: #2a2a4a;
-    --text-main: #ece5db;
-    --text-muted: #a8a09a;
-    --border-color: #3a3a5a;
+    /* Nuevos colores según especificación */
+    --color-primary: #7A4D8E;      /* Morado */
+    --color-secondary: #5A92C2;    /* Azul */
+    --color-accent: #F2CF1D;       /* Amarilla */
+    --color-danger: #DE3F2A;       /* Rojo */
+    --color-success: #118C3C;      /* Verde */
+    --color-rose: #DF4F8D;         /* Rosa */
+    
+    --bg-main: #0A0B08;            /* Negro */
+    --bg-panel: #0A0B08;           /* Negro */
+    --bg-box: #0A0B08;             /* Negro */
+    --bg-card: #1a1a2e;            /* Similar a negro con un toque */
+    --text-main: #FFFFFF;          /* Blanco */
+    --text-muted: #a8a09a;         /* Blanco atenuado */
+    --border-color: #333333;       /* Gris oscuro */
+    
     --card-width: 120px;
     --card-height: 170px;
 }
@@ -38,7 +44,7 @@ body {
     display: flex;
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
+    background: rgba(10, 11, 8, 0.95);
     z-index: 2000;
     justify-content: center;
     align-items: center;
@@ -47,7 +53,7 @@ body {
 }
 
 .modal-box {
-    background: #1a1a2e;
+    background: var(--bg-panel);
     padding: 30px;
     border-radius: 16px;
     text-align: center;
@@ -64,7 +70,7 @@ body {
 .input-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
 .input-group input {
     width: 100%; padding: 12px; border-radius: 8px;
-    background: #2a2a4a; border: 1px solid var(--border-color);
+    background: #1a1a2e; border: 1px solid var(--border-color);
     color: var(--text-main); font-size: 1.1rem; font-weight: bold; text-align: center;
 }
 .input-group input:focus { outline: none; border-color: var(--color-secondary); }
@@ -79,16 +85,16 @@ body {
 }
 .modal-btn:active { transform: scale(0.97); }
 
-.btn-primary { background: var(--color-secondary); color: #ece5db; }
-.btn-secondary { background: var(--color-accent); color: #1a1a2e; }
+.btn-primary { background: var(--color-secondary); color: #FFFFFF; }
+.btn-secondary { background: var(--color-accent); color: #0A0B08; }
 .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
-.btn-danger { background: #c7403f; color: #ece5db; }
+.btn-danger { background: var(--color-danger); color: #FFFFFF; }
 
 #claimModal { display: none; }
 #loadingModal { display: none; z-index: 3000; }
 
 .session-banner {
-    background: #2a2a4a;
+    background: #1a1a2e;
     border: 1px solid var(--color-secondary);
     border-radius: 10px;
     padding: 12px;
@@ -103,13 +109,20 @@ body {
 
 header { text-align: center; margin-bottom: 15px; width: 100%; }
 h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; color: var(--text-main); }
-.room-info { display: inline-block; background: #2a2a4a; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; color: var(--color-accent); font-weight: bold; margin-top: 5px; border: 1px solid var(--border-color); }
+.room-info { display: inline-block; background: #1a1a2e; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; color: var(--color-accent); font-weight: bold; margin-top: 5px; border: 1px solid var(--border-color); }
 
-.app-container { display: flex; flex-direction: column; width: 100%; max-width: 900px; gap: 12px; align-items: flex-start; }
+.app-container { 
+    display: flex; 
+    flex-direction: column; 
+    width: 100%; 
+    max-width: 1200px;  /* Aumentado de 900px a 1200px para más espacio */
+    gap: 12px; 
+    align-items: center;
+}
 
 /* --- CARTAS --- */
 .board-container { 
-    background: #1a1a2e; 
+    background: var(--bg-panel); 
     border-radius: 16px; 
     padding: 20px; 
     width: 100%; 
@@ -126,7 +139,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 .card {
     aspect-ratio: 3/4;
-    background: var(--bg-card);
+    background: #1a1a2e;
     border-radius: 12px;
     border: 2px solid var(--border-color);
     position: relative;
@@ -188,13 +201,13 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .card.selected {
-    border-color: #4CAF50;
+    border-color: var(--color-success);
     border-width: 3px;
     cursor: default;
 }
 
 .card.selected-by-other {
-    border-color: #FF6B6B;
+    border-color: var(--color-danger);
     border-width: 3px;
     cursor: not-allowed;
     opacity: 0.7;
@@ -206,7 +219,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 3rem;
-    color: #4CAF50;
+    color: var(--color-success);
     text-shadow: 0 0 10px rgba(0,0,0,0.8);
     display: none;
 }
@@ -218,27 +231,29 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 /* --- PANEL LATERAL --- */
 .side-panel { 
     width: 100%; 
-    max-width: 350px;
+    max-width: 100%;  /* Cambiado de 350px a 100% para ocupar todo el ancho */
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
+    align-items: stretch;  /* Cambiado de center a stretch */
 }
 
 .game-controls {
-    background: #1a1a2e;
-    padding: 15px;
+    background: var(--bg-panel);
+    padding: 20px;  /* Aumentado de 15px a 20px */
     border-radius: 16px;
     width: 100%;
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;  /* Aumentado de 10px a 12px */
+    align-items: stretch;  /* Cambiado de center a stretch */
 }
 
 .game-controls #startGameBtn {
     width: 100%;
-    padding: 15px;
-    font-size: 1.1rem;
+    padding: 18px;  /* Aumentado de 15px a 18px */
+    font-size: 1.2rem;  /* Aumentado de 1.1rem a 1.2rem */
     background: var(--color-primary);
     color: white;
 }
@@ -250,61 +265,67 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 .total-score {
     text-align: center;
-    font-size: 1.2rem;
+    font-size: 1.3rem;  /* Aumentado de 1.2rem a 1.3rem */
     font-weight: 700;
     color: var(--text-main);
-    padding: 8px;
+    padding: 12px;  /* Aumentado de 8px a 12px */
     border-radius: 10px;
     border: 1px solid var(--border-color);
-    background: #0f0f1f;
+    background: var(--bg-box);
+    width: 100%;
 }
 
 /* ---- MIS CORREDORES ---- */
 .my-cards-section {
-    background: #0f0f1f;
+    background: var(--bg-box);
     border-radius: 10px;
-    padding: 10px;
+    padding: 15px;  /* Aumentado de 10px a 15px */
     border: 1px solid var(--border-color);
+    width: 100%;
 }
 
 .my-cards-section h4 {
-    font-size: 0.9rem;
+    font-size: 1rem;  /* Aumentado de 0.9rem a 1rem */
     color: var(--text-muted);
-    margin-bottom: 8px;
+    margin-bottom: 10px;  /* Aumentado de 8px a 10px */
     text-align: center;
     letter-spacing: 1px;
 }
 
+/* --- Mis corredores en UNA SOLA FILA --- */
 .my-cards-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 10px;  /* Aumentado de 8px a 10px */
     justify-content: center;
-    min-height: 60px;
+    min-height: 70px;  /* Aumentado de 60px a 70px */
     align-items: center;
+    overflow-x: auto;
+    padding: 6px 0;  /* Aumentado de 4px a 6px */
 }
 
-.my-cards-container .empty-message {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-style: italic;
-}
-
-/* --- NUEVOS ESTILOS PARA CARTAS EN MIS CORREDORES --- */
 .my-card-wrapper {
-    background: #1a1a2e;
+    background: var(--bg-panel);
     border-radius: 10px;
-    padding: 8px;
+    padding: 8px;  /* Aumentado de 6px a 8px */
     border: 2px solid var(--border-color);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    width: 130px;
+    gap: 5px;  /* Aumentado de 4px a 5px */
+    width: 110px;  /* Aumentado de 100px a 110px */
+    flex-shrink: 0;
 }
+
+.my-cards-container .empty-message {
+    color: var(--text-muted);
+    font-size: 0.9rem;  /* Aumentado de 0.8rem a 0.9rem */
+    font-style: italic;
+}
+
 .my-card-wrapper.activa {
-    border-color: #4CAF50;
-    box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
+    border-color: var(--color-success);
+    box-shadow: 0 0 12px rgba(17, 140, 60, 0.5);
 }
 .my-card-wrapper.consumida {
     opacity: 0.5;
@@ -316,7 +337,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     aspect-ratio: 3/4;
     border-radius: 6px;
     overflow: hidden;
-    background: #0f0f1f;
+    background: var(--bg-box);
 }
 .my-card-img img {
     width: 100%;
@@ -331,29 +352,29 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     color: white;
     padding: 1px 4px;
     border-radius: 3px;
-    font-size: 0.6rem;
+    font-size: 0.55rem;  /* Aumentado de 0.5rem a 0.55rem */
     font-weight: bold;
 }
 .puntos-display {
-    font-size: 0.85rem;
+    font-size: 0.9rem;  /* Aumentado de 0.85rem a 0.9rem */
     font-weight: bold;
     color: var(--text-main);
-    background: #2a2a4a;
-    padding: 2px 8px;
+    background: #1a1a2e;
+    padding: 3px 10px;  /* Aumentado */
     border-radius: 12px;
     width: 100%;
     text-align: center;
 }
 .btn-usar {
-    padding: 4px 8px;
+    padding: 4px 8px;  /* Aumentado */
     border: none;
     border-radius: 4px;
-    font-size: 0.7rem;
+    font-size: 0.7rem;  /* Aumentado de 0.6rem a 0.7rem */
     font-weight: bold;
     cursor: pointer;
     transition: background 0.2s, opacity 0.2s;
     width: 100%;
-    background: #355C7D;
+    background: var(--color-secondary);
     color: white;
 }
 .btn-usar:disabled {
@@ -367,59 +388,61 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 /* Botones globales de puntuacion */
 .puntaje-botones {
     display: flex;
-    gap: 10px;
+    gap: 12px;  /* Aumentado de 10px a 12px */
     justify-content: center;
-    margin-top: 10px;
-    padding-top: 10px;
+    margin-top: 12px;  /* Aumentado de 10px a 12px */
+    padding-top: 12px;  /* Aumentado de 10px a 12px */
     border-top: 1px solid var(--border-color);
+    width: 100%;
 }
 .btn-puntaje {
-    padding: 8px 16px;
+    padding: 10px 20px;  /* Aumentado de 8px 16px a 10px 20px */
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;  /* Aumentado de 6px a 8px */
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 1.1rem;  /* Aumentado de 1rem a 1.1rem */
     cursor: pointer;
     transition: background 0.2s, opacity 0.2s;
-    min-width: 50px;
+    min-width: 60px;  /* Aumentado de 50px a 60px */
+    flex: 1;  /* Añadido para que ocupen el espacio disponible */
 }
 .btn-puntaje:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
 .btn-puntaje.btn-3 {
-    background: #F8B195;
-    color: #1a1a2e;
+    background: var(--color-accent);
+    color: #0A0B08;
 }
 .btn-puntaje.btn-3:not(:disabled):hover {
-    background: #fccdb8;
+    background: #fce14a;
 }
 .btn-puntaje.btn-2 {
-    background: #6C5B7B;
+    background: var(--color-primary);
     color: white;
 }
 .btn-puntaje.btn-2:not(:disabled):hover {
-    background: #8a759b;
+    background: #8a5d9e;
 }
 .btn-puntaje.btn-menos {
-    background: #c7403f;
+    background: var(--color-danger);
     color: white;
 }
 .btn-puntaje.btn-menos:not(:disabled):hover {
-    background: #d95a5a;
+    background: #f54a3a;
 }
 .btn-puntaje.btn-mas {
-    background: #4CAF50;
+    background: var(--color-success);
     color: white;
 }
 .btn-puntaje.btn-mas:not(:disabled):hover {
-    background: #66bb6a;
+    background: #14a84a;
 }
 
 /* --- LEADERBOARD --- */
 .leaderboard { 
-    background: #1a1a2e; 
-    padding: 12px; 
+    background: var(--bg-panel); 
+    padding: 15px;  /* Aumentado de 12px a 15px */
     border-radius: 12px; 
     border: 1px solid var(--border-color); 
     display: flex;
@@ -429,18 +452,18 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .leaderboard h3 { 
-    font-size: 0.85rem; 
+    font-size: 1rem;  /* Aumentado de 0.85rem a 1rem */
     color: var(--text-muted); 
     text-align: center; 
-    margin-bottom: 2px; 
+    margin-bottom: 5px;  /* Aumentado de 2px a 5px */
     text-transform: uppercase; 
     letter-spacing: 1px; 
 }
 
 .player-card { 
-    background: #2a2a4a; 
+    background: #1a1a2e; 
     border-radius: 10px; 
-    padding: 10px; 
+    padding: 12px;  /* Aumentado de 10px a 12px */
     display: flex; 
     flex-direction: column; 
     gap: 6px; 
@@ -455,7 +478,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     display: flex; 
     justify-content: space-between; 
     font-weight: bold; 
-    font-size: 0.95rem; 
+    font-size: 1.05rem;  /* Aumentado de 0.95rem a 1.05rem */
     color: var(--text-main); 
 }
 
@@ -467,12 +490,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .player-card-mini {
-    width: 50px;
-    height: 70px;
+    width: 55px;  /* Aumentado de 50px a 55px */
+    height: 75px;  /* Aumentado de 70px a 75px */
     border-radius: 6px;
     border: 2px solid var(--border-color);
     overflow: hidden;
-    background: #1a1a2e;
+    background: var(--bg-panel);
     position: relative;
 }
 
@@ -490,7 +513,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     color: white;
     padding: 1px 4px;
     border-radius: 3px;
-    font-size: 0.5rem;
+    font-size: 0.55rem;  /* Aumentado de 0.5rem a 0.55rem */
     font-weight: bold;
 }
 .mini-puntos {
@@ -499,21 +522,21 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     right: 2px;
     background: rgba(0,0,0,0.7);
     color: white;
-    font-size: 0.5rem;
+    font-size: 0.55rem;  /* Aumentado de 0.5rem a 0.55rem */
     padding: 1px 4px;
     border-radius: 3px;
 }
 
 .no-cards {
     color: var(--text-muted);
-    font-size: 0.8rem;
+    font-size: 0.9rem;  /* Aumentado de 0.8rem a 0.9rem */
     font-style: italic;
 }
 
 /* --- MODAL DE ZOOM --- */
 .zoom-box {
     max-width: 500px;
-    background: #0f0f1f;
+    background: var(--bg-box);
     border: 2px solid var(--color-secondary);
 }
 
@@ -543,12 +566,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .zoom-content .btn-choose {
-    padding: 12px 30px;
-    background: #4CAF50;
+    padding: 14px 35px;  /* Aumentado de 12px 30px a 14px 35px */
+    background: var(--color-success);
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 1.2rem;
+    font-size: 1.3rem;  /* Aumentado de 1.2rem a 1.3rem */
     font-weight: bold;
     cursor: pointer;
     transition: transform 0.1s;
@@ -575,13 +598,13 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     transform: scale(1.02);
 }
 #intercambioContenido .carta-opcion img {
-    width: 80px;
+    width: 90px;  /* Aumentado de 80px a 90px */
     height: auto;
     border-radius: 8px;
 }
 #intercambioContenido .carta-opcion span {
     color: var(--text-main);
-    font-size: 0.8rem;
+    font-size: 0.9rem;  /* Aumentado de 0.8rem a 0.9rem */
     font-weight: bold;
 }
 
@@ -601,7 +624,19 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     }
     
     .my-card-wrapper {
-        width: 100px;
+        width: 90px;  /* Aumentado de 80px a 90px */
+        padding: 6px;  /* Aumentado de 4px a 6px */
+    }
+    
+    .my-card-wrapper .btn-usar {
+        font-size: 0.6rem;  /* Aumentado de 0.5rem a 0.6rem */
+        padding: 3px 6px;  /* Aumentado */
+    }
+    
+    .btn-puntaje {
+        padding: 8px 14px;  /* Ajustado */
+        font-size: 0.95rem;  /* Ajustado */
+        min-width: 50px;
     }
 }
 
@@ -611,15 +646,16 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     .app-container { flex-direction: row; max-width: 100%; height: 98vh; align-items: stretch; gap: 8px; }
     .board-container { flex: 1.4; padding: 10px; display: flex; align-items: center; }
     .card-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
-    .side-panel { flex: 1; max-width: 250px; justify-content: flex-start; overflow-y: auto; padding-right: 4px; }
-    .game-controls { padding: 8px; }
-    .game-controls #startGameBtn { padding: 10px; font-size: 0.9rem; }
-    .total-score { font-size: 0.9rem; padding: 5px; }
-    .leaderboard { padding: 8px; max-height: 300px; overflow-y: auto; }
-    .player-card { padding: 6px; }
-    .player-card-mini { width: 35px; height: 50px; }
-    .my-card-wrapper { width: 80px; }
-    .btn-puntaje { padding: 4px 10px; font-size: 0.8rem; min-width: 35px; }
+    .side-panel { flex: 1; max-width: 300px; justify-content: flex-start; overflow-y: auto; padding-right: 4px; }
+    .game-controls { padding: 10px; }
+    .game-controls #startGameBtn { padding: 12px; font-size: 1rem; }
+    .total-score { font-size: 1rem; padding: 8px; }
+    .leaderboard { padding: 10px; max-height: 300px; overflow-y: auto; }
+    .player-card { padding: 8px; }
+    .player-card-mini { width: 40px; height: 55px; }
+    .my-card-wrapper { width: 80px; padding: 5px; }
+    .my-card-wrapper .btn-usar { font-size: 0.55rem; padding: 3px 5px; }
+    .btn-puntaje { padding: 6px 12px; font-size: 0.85rem; min-width: 40px; }
 }
 
 .ganadora-badge {
@@ -627,76 +663,79 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
-    background: gold;
-    color: #1a1a2e;
+    background: var(--color-accent);
+    color: #0A0B08;
     padding: 2px 8px;
     border-radius: 12px;
-    font-size: 0.6rem;
+    font-size: 0.6rem;  /* Aumentado de 0.5rem a 0.6rem */
     font-weight: bold;
     white-space: nowrap;
     z-index: 2;
 }
 .my-card-wrapper.ganadora {
-    border-color: gold;
-    box-shadow: 0 0 15px rgba(255,215,0,0.6);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 15px rgba(242, 207, 29, 0.6);
 }
 #misPuntosDisplay {
     text-align: center;
-    font-size: 1.2rem;
+    font-size: 1.4rem;  /* Aumentado de 1.2rem a 1.4rem */
     font-weight: bold;
-    margin: 8px 0;
+    margin: 10px 0;  /* Aumentado de 8px a 10px */
     color: var(--text-main);
-    background: #2a2a4a;
-    padding: 6px;
+    background: #1a1a2e;
+    padding: 10px;  /* Aumentado de 6px a 10px */
     border-radius: 8px;
+    width: 100%;
 }
 .puntaje-botones {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     justify-content: center;
-    margin-top: 10px;
-    padding-top: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid var(--border-color);
+    width: 100%;
 }
 .btn-puntaje {
-    padding: 8px 16px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 1.1rem;
     cursor: pointer;
     transition: background 0.2s, opacity 0.2s;
-    min-width: 50px;
+    min-width: 60px;
+    flex: 1;
 }
 .btn-puntaje:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
 .btn-puntaje.btn-3 {
-    background: #F8B195;
-    color: #1a1a2e;
+    background: var(--color-accent);
+    color: #0A0B08;
 }
 .btn-puntaje.btn-3:not(:disabled):hover {
-    background: #fccdb8;
+    background: #fce14a;
 }
 .btn-puntaje.btn-2 {
-    background: #6C5B7B;
+    background: var(--color-primary);
     color: white;
 }
 .btn-puntaje.btn-2:not(:disabled):hover {
-    background: #8a759b;
+    background: #8a5d9e;
 }
 .btn-puntaje.btn-menos {
-    background: #c7403f;
+    background: var(--color-danger);
     color: white;
 }
 .btn-puntaje.btn-menos:not(:disabled):hover {
-    background: #d95a5a;
+    background: #f54a3a;
 }
 .btn-puntaje.btn-mas {
-    background: #4CAF50;
+    background: var(--color-success);
     color: white;
 }
 .btn-puntaje.btn-mas:not(:disabled):hover {
-    background: #66bb6a;
+    background: #14a84a;
 }
