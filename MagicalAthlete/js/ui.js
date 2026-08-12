@@ -10,11 +10,16 @@ function renderizarCartas() {
     }
     
     var disponibles = cartas.filter(function(c) {
-        return !c.seleccionadoPor;
+        return c.tanda === tandaActual && !c.seleccionadoPor;
     });
     
     if (disponibles.length === 0) {
-        if (boardContainer) boardContainer.style.display = 'none';
+        if (tandaActual < TOTAL_TANDAS - 1) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Esperando siguiente tanda...</div>';
+        } else {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas seleccionadas</div>';
+        }
+        if (boardContainer) boardContainer.style.display = 'block';
         return;
     } else {
         if (boardContainer) boardContainer.style.display = 'block';

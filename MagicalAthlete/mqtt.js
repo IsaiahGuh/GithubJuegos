@@ -12,7 +12,6 @@ var gameInitiator = null;
 function connectToRoom(code, isReconnect) {
     if (isReconnect === undefined) isReconnect = false;
     
-    // Limpiar datos de sala anterior si no es reconexion
     if (!isReconnect) {
         playersData = {};
         puntosPorJugador = {};
@@ -20,6 +19,8 @@ function connectToRoom(code, isReconnect) {
         cartas = [];
         misSelecciones = [];
         cartaActivaId = null;
+        tandaActual = 0;
+        avanzando = false;
         gameStarted = false;
         gameInitiator = null;
     }
@@ -102,7 +103,6 @@ function connectToRoom(code, isReconnect) {
             }
 
             if (data.action === 'reset_all') {
-                // Limpiar duplicados locales antes de reiniciar
                 var seenNames = {};
                 var toRemove = [];
                 for (var id in playersData) {
@@ -125,11 +125,13 @@ function connectToRoom(code, isReconnect) {
                 gameStarted = true;
                 gameInitiator = data.id;
                 cartas = data.cartas || [];
+                tandaActual = data.tandaActual !== undefined ? data.tandaActual : 0;
                 if (data.id !== myId) {
                     misSelecciones = [];
                     puntosPorJugador = {};
                     estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
                     cartaActivaId = null;
+                    avanzando = false;
                 }
                 for (var pid in playersData) {
                     if (!puntosPorJugador[pid]) {
@@ -140,6 +142,17 @@ function connectToRoom(code, isReconnect) {
                 renderizarMisCorredores();
                 actualizarUI();
                 saveSession();
+            }
+
+            if (data.action === 'next_tanda') {
+                if (data.tandaActual > tandaActual) {
+                    tandaActual = data.tandaActual;
+                    renderizarCartas();
+                    renderizarMisCorredores();
+                    actualizarUI();
+                    saveSession();
+                }
+                return;
             }
 
             if (data.action === 'puntaje_global') {
@@ -196,6 +209,7 @@ function connectToRoom(code, isReconnect) {
                 var jugadorNombre = data.name;
                 var jugadorId = data.id;
                 var selecciones = data.selecciones || [];
+                var tandaSelect = data.tandaActual !== undefined ? data.tandaActual : 0;
                 
                 for (var i = 0; i < cartas.length; i++) {
                     if (cartas[i].id === cartaId) {
@@ -218,6 +232,10 @@ function connectToRoom(code, isReconnect) {
                 renderLeaderboard();
                 actualizarUI();
                 saveSession();
+
+                if (jugadorId !== myId) {
+                    verificarYAvanzarTanda();
+                }
             }
 
             if (data.action === 'remove') {
@@ -231,6 +249,9 @@ function connectToRoom(code, isReconnect) {
                 if (data.cartas) {
                     cartas = data.cartas;
                     renderizarCartas();
+                }
+                if (data.tandaActual !== undefined) {
+                    tandaActual = data.tandaActual;
                 }
                 if (data.gameStarted !== undefined) {
                     gameStarted = data.gameStarted;
@@ -304,6 +325,7 @@ function broadcastState(action) {
             name: myName,
             selecciones: misSelecciones || [],
             cartas: cartas || [],
+            tandaActual: tandaActual,
             gameStarted: gameStarted,
             gameInitiator: gameInitiator || null,
             playersData: playersData,
@@ -325,7 +347,7 @@ function broadcastRequestState() {
     }
 }
 
-function broadcastStart(cartasArray) {
+function broadcastStart(cartasArray, tanda) {
     if (mqttClient && currentRoom) {
         var topic = 'magical_athlete/room/' + currentRoom;
         var payload = JSON.stringify({
@@ -333,6 +355,7 @@ function broadcastStart(cartasArray) {
             id: myId,
             name: myName,
             cartas: cartasArray,
+            tandaActual: tanda !== undefined ? tanda : 0,
             gameStarted: true,
             playersData: playersData,
             puntosPorJugador: puntosPorJugador,
@@ -341,6 +364,7 @@ function broadcastStart(cartasArray) {
         mqttClient.publish(topic, payload);
         gameStarted = true;
         gameInitiator = myId;
+        tandaActual = tanda !== undefined ? tanda : 0;
     }
 }
 
@@ -352,7 +376,20 @@ function broadcastSelect(cartaId) {
             id: myId,
             name: myName,
             cartaId: cartaId,
-            selecciones: misSelecciones || []
+            selecciones: misSelecciones || [],
+            tandaActual: tandaActual
+        });
+        mqttClient.publish(topic, payload);
+    }
+}
+
+function broadcastNextTanda(nuevaTanda) {
+    if (mqttClient && currentRoom) {
+        var topic = 'magical_athlete/room/' + currentRoom;
+        var payload = JSON.stringify({
+            action: 'next_tanda',
+            id: myId,
+            tandaActual: nuevaTanda
         });
         mqttClient.publish(topic, payload);
     }

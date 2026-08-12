@@ -1,9 +1,12 @@
 // ===== CONFIGURACION =====
 var cartas = [];
 var misSelecciones = [];
-var MAX_SELECCIONES = 2;
+var MAX_SELECCIONES = 2; // por tanda
 var TOTAL_IMAGENES = 36;
 var cartaActivaId = null;
+var tandaActual = 0;
+var TOTAL_TANDAS = 2;
+var avanzando = false;
 
 function seleccionarCarta(cartaId) {
     var carta = null;
@@ -17,12 +20,26 @@ function seleccionarCarta(cartaId) {
         console.error('Carta no encontrada:', cartaId);
         return;
     }
+    if (carta.tanda !== tandaActual) {
+        alert('Esta carta no pertenece a la tanda actual.');
+        return;
+    }
     if (carta.seleccionadoPor) {
         alert('Esta carta ya fue seleccionada por ' + carta.seleccionadoPor);
         return;
     }
-    if (misSelecciones.length >= MAX_SELECCIONES) {
-        alert('Ya seleccionaste tus 2 cartas maximas.');
+    var seleccionadasEnTanda = misSelecciones.filter(function(id) {
+        var c = null;
+        for (var j = 0; j < cartas.length; j++) {
+            if (cartas[j].id === id) {
+                c = cartas[j];
+                break;
+            }
+        }
+        return c && c.tanda === tandaActual;
+    });
+    if (seleccionadasEnTanda.length >= MAX_SELECCIONES) {
+        alert('Ya seleccionaste tus 2 cartas en esta tanda.');
         return;
     }
     carta.seleccionadoPor = myName;
@@ -38,6 +55,7 @@ function seleccionarCarta(cartaId) {
     actualizarUI();
     renderLeaderboard();
     saveSession();
+    verificarYAvanzarTanda();
 }
 window.seleccionarCarta = seleccionarCarta;
 
@@ -47,8 +65,8 @@ function iniciarJuego() {
         alert('No hay jugadores en la sala. Espera a que alguien se una.');
         return;
     }
-    var numCartas = numJugadores * 2;
-    var cartasGeneradas = [];
+    var totalCartas = numJugadores * 4;
+    var cartasPorTanda = numJugadores * 2;
     var indicesDisponibles = [];
     for (var i = 1; i <= TOTAL_IMAGENES; i++) {
         indicesDisponibles.push(i);
@@ -59,33 +77,67 @@ function iniciarJuego() {
         indicesDisponibles[i] = indicesDisponibles[j];
         indicesDisponibles[j] = temp;
     }
-    var indicesSeleccionados = indicesDisponibles.slice(0, numCartas);
-    for (var i = 0; i < indicesSeleccionados.length; i++) {
-        cartasGeneradas.push({
-            id: 'carta-' + i,
-            numero: indicesSeleccionados[i],
-            imagen: 'imagenes/Corredor_' + indicesSeleccionados[i] + '.png',
-            seleccionadoPor: null,
-            seleccionadoPorId: null,
-            esGanadora: false
-        });
+    var indicesSeleccionados = indicesDisponibles.slice(0, totalCartas);
+    var nuevasCartas = [];
+    for (var t = 0; t < TOTAL_TANDAS; t++) {
+        var inicio = t * cartasPorTanda;
+        var fin = inicio + cartasPorTanda;
+        for (var i = inicio; i < fin; i++) {
+            nuevasCartas.push({
+                id: 'carta-' + i,
+                numero: indicesSeleccionados[i],
+                imagen: 'imagenes/Corredor_' + indicesSeleccionados[i] + '.png',
+                seleccionadoPor: null,
+                seleccionadoPorId: null,
+                esGanadora: false,
+                tanda: t
+            });
+        }
     }
     misSelecciones = [];
     cartaActivaId = null;
     puntosPorJugador = {};
     estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+    tandaActual = 0;
+    avanzando = false;
     for (var id in playersData) {
         playersData[id].selecciones = [];
         playersData[id].cartasGanadoras = [];
         puntosPorJugador[id] = 0;
     }
-    cartas = cartasGeneradas;
-    broadcastStart(cartas);
+    cartas = nuevasCartas;
+    broadcastStart(cartas, tandaActual);
     renderizarCartas();
     renderizarMisCorredores();
     actualizarUI();
     saveSession();
 }
+window.iniciarJuego = iniciarJuego;
+
+function verificarYAvanzarTanda() {
+    if (avanzando) return;
+    var disponibles = cartas.filter(function(c) {
+        return c.tanda === tandaActual && !c.seleccionadoPor;
+    });
+    if (disponibles.length === 0 && tandaActual < TOTAL_TANDAS - 1) {
+        avanzando = true;
+        avanzarTanda();
+        setTimeout(function() {
+            avanzando = false;
+        }, 100);
+    }
+}
+
+function avanzarTanda() {
+    tandaActual++;
+    broadcastNextTanda(tandaActual);
+    renderizarCartas();
+    renderizarMisCorredores();
+    actualizarUI();
+    saveSession();
+}
+window.avanzarTanda = avanzarTanda;
+window.verificarYAvanzarTanda = verificarYAvanzarTanda;
 
 function renderizarMisCorredores() {
     var container = document.getElementById('my-cards-container');
@@ -165,6 +217,7 @@ function actualizarUI() {
         actualizarBotonesGlobales();
     }
 }
+window.actualizarUI = actualizarUI;
 
 function resetGlobalGame() {
     if (!currentRoom) {
@@ -177,6 +230,7 @@ function resetGlobalGame() {
     broadcastReset();
     resetLocalGame();
 }
+window.resetGlobalGame = resetGlobalGame;
 
 function resetLocalGame() {
     cartas = [];
@@ -184,6 +238,8 @@ function resetLocalGame() {
     puntosPorJugador = {};
     estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
     cartaActivaId = null;
+    tandaActual = 0;
+    avanzando = false;
     gameStarted = false;
     gameInitiator = null;
     for (var id in playersData) {
@@ -197,7 +253,4 @@ function resetLocalGame() {
     renderLeaderboard();
     saveSession();
 }
-
-window.actualizarUI = actualizarUI;
-window.resetGlobalGame = resetGlobalGame;
 window.resetLocalGame = resetLocalGame;
