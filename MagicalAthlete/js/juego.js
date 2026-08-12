@@ -314,15 +314,42 @@ function actualizarUI() {
     if (typeof actualizarBotonesGlobales === 'function') {
         actualizarBotonesGlobales();
     }
-    var totalGanadoras = 0;
-    for (var i = 0; i < cartas.length; i++) {
-        if (cartas[i].esGanadora) totalGanadoras++;
+    
+    // Verificar si todos los jugadores se han quedado sin cartas disponibles
+    var juegoTerminado = true;
+    if (gameStarted) {
+        for (var id in playersData) {
+            var data = playersData[id];
+            if (!data) continue;
+            var tieneCartas = false;
+            if (data.selecciones) {
+                for (var i = 0; i < data.selecciones.length; i++) {
+                    var cId = data.selecciones[i];
+                    for (var j = 0; j < cartas.length; j++) {
+                        if (cartas[j].id === cId && !cartas[j].descartada) {
+                            tieneCartas = true;
+                            break;
+                        }
+                    }
+                    if (tieneCartas) break;
+                }
+            }
+            if (tieneCartas) {
+                juegoTerminado = false;
+                break;
+            }
+        }
+    } else {
+        juegoTerminado = false; // si no ha empezado, no termina
     }
-    if (totalGanadoras >= 4) {
+    
+    if (juegoTerminado && gameStarted) {
+        // Deshabilitar botones de puntuación
         var btns = document.querySelectorAll('.btn-puntaje');
         for (var b = 0; b < btns.length; b++) {
             btns[b].disabled = true;
         }
+        // Mostrar mensaje
         var list = document.getElementById('playersList');
         if (list) {
             var msg = document.createElement('div');
@@ -330,8 +357,19 @@ function actualizarUI() {
             msg.style.color = '#F8B195';
             msg.style.fontWeight = 'bold';
             msg.style.padding = '10px';
-            msg.textContent = 'Juego terminado: 4 cartas ganadoras acumuladas.';
+            msg.textContent = 'Juego terminado: no quedan cartas disponibles.';
+            // Eliminar mensajes anteriores
+            var oldMsg = list.querySelector('.game-ended-msg');
+            if (oldMsg) oldMsg.remove();
+            msg.className = 'game-ended-msg';
             list.prepend(msg);
+        }
+    } else {
+        // Eliminar mensaje si existe
+        var list2 = document.getElementById('playersList');
+        if (list2) {
+            var oldMsg2 = list2.querySelector('.game-ended-msg');
+            if (oldMsg2) oldMsg2.remove();
         }
     }
 }
