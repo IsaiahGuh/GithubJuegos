@@ -1,4 +1,4 @@
-// js/jugadores.js - Gestión de jugadores locales + sistema de turnos + modal
+// js/jugadores.js - Gestión de jugadores locales + modal
 import { state } from './config.js';
 import { actualizarUI } from './juego.js';
 import { renderLeaderboard } from './leaderboard.js';
@@ -37,14 +37,13 @@ export function crearJugadoresDesdeModal() {
         conectado: true
     }));
     
-    state.turnoActual = 0;
+    // turnoActual eliminado
     
     document.getElementById('lobbyModal').style.display = 'none';
     document.getElementById('leaderboardPanel').style.display = 'flex';
     
     renderLeaderboard();
     actualizarUI();
-    actualizarIndicadorTurno();
     
     console.log('Partida iniciada con', nombres.length, 'jugadores:', nombres);
     return true;
@@ -65,47 +64,6 @@ export function getJugador(index) {
     return state.jugadores[index];
 }
 
-export function getJugadorActual() {
-    return getJugador(state.turnoActual);
-}
-
-export function getTurnoActual() {
-    return state.turnoActual;
-}
-
-// ============================================
-// SISTEMA DE TURNOS
-// ============================================
-
-export function siguienteTurno() {
-    if (!state.jugadores || state.jugadores.length === 0) return;
-    
-    let next = (state.turnoActual + 1) % state.jugadores.length;
-    let intentos = 0;
-    while (state.jugadores[next]?.conectado === false && intentos < state.jugadores.length) {
-        next = (next + 1) % state.jugadores.length;
-        intentos++;
-    }
-    
-    state.turnoActual = next;
-    actualizarIndicadorTurno();
-    renderLeaderboard();
-}
-
-// ============================================
-// CONTAR CARTA ROBADA POR JUGADOR
-// ============================================
-
-export function contarCartaRobada() {
-    const jugador = getJugadorActual();
-    if (!jugador) return false;
-    
-    jugador.cartasRobadas = (jugador.cartasRobadas || 0) + 1;
-    renderLeaderboard();
-    actualizarUI();
-    return true;
-}
-
 // ============================================
 // REINICIAR ESTADO DE JUGADORES
 // ============================================
@@ -118,27 +76,8 @@ export function resetearJugadores() {
         j.conectado = true;
     });
     
-    state.turnoActual = 0;
     renderLeaderboard();
     actualizarUI();
-    actualizarIndicadorTurno();
-}
-
-// ============================================
-// INDICADOR DE TURNO EN UI
-// ============================================
-
-function actualizarIndicadorTurno() {
-    const jugador = getJugadorActual();
-    const el = document.getElementById('turnoIndicador');
-    if (!el) return;
-    
-    if (jugador) {
-        el.textContent = `Turno: ${jugador.nombre}`;
-        el.style.display = 'block';
-    } else {
-        el.style.display = 'none';
-    }
 }
 
 // ============================================
@@ -306,7 +245,6 @@ function mostrarMensaje(texto, tipo = 'info') {
 // ============================================
 
 window.getJugadores = getJugadores;
-window.getTurnoActual = getTurnoActual;
 window.toggleVistaJugadores = toggleVistaJugadores;
 window.agregarJugador = agregarJugador;
 window.iniciarPartida = crearJugadoresDesdeModal;

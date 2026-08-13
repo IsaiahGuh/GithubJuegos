@@ -1,6 +1,6 @@
 // js/ui.js - INTERFAZ DE USUARIO
 import { getCartasRestantes, getHistorial } from './juego.js';
-import { getJugadores, getTurnoActual } from './jugadores.js';
+import { getJugadores } from './jugadores.js';
 import { crearCartaElement, mostrarZoom, cerrarZoom } from './zoom.js';
 
 // ============================================
@@ -13,25 +13,7 @@ export function actualizarUI() {
     const contadorCartasFooter = document.getElementById('contadorCartasFooter');
     if (contadorCartasFooter) contadorCartasFooter.textContent = restantes;
 
-    actualizarIndicadorTurno();
-}
-
-// ============================================
-// INDICADOR DE TURNO
-// ============================================
-
-function actualizarIndicadorTurno() {
-    const jugadores = getJugadores();
-    const turno = getTurnoActual();
-    const el = document.getElementById('turnoIndicador');
-    if (!el) return;
-    
-    if (jugadores && jugadores.length > 0 && jugadores[turno]) {
-        el.textContent = `Turno: ${jugadores[turno].nombre}`;
-        el.style.display = 'block';
-    } else {
-        el.style.display = 'none';
-    }
+    // Indicador de turno eliminado
 }
 
 // ============================================

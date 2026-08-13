@@ -26,7 +26,7 @@ export const state = {
     historial: [],
     cartaActual: null,
     jugadores: [],
-    turnoActual: 0,
+    // turnoActual eliminado
     anguloZoomActual: 0
 };
 
@@ -35,6 +35,5 @@ export function initState() {
     state.historial = [];
     state.cartaActual = null;
     state.jugadores = [];
-    state.turnoActual = 0;
     state.anguloZoomActual = 0;
 }

@@ -4,7 +4,7 @@ import { generarMazo, reiniciarJuego, robarCarta } from './js/juego.js';
 import { actualizarUI, configurarEventos, mostrarHistorial } from './js/ui.js';
 import { mostrarZoom, cerrarZoom, mostrarZoomApuestaColor, mostrarZoomApuestaNegro } from './js/zoom.js';
 import { renderLeaderboard, toggleLeaderboard } from './js/leaderboard.js';
-import { inicializarModal, crearJugadoresDesdeModal, toggleVistaJugadores, agregarJugador, getJugadores, getTurnoActual, contarCartaRobada } from './js/jugadores.js';
+import { inicializarModal, crearJugadoresDesdeModal, toggleVistaJugadores, agregarJugador, getJugadores } from './js/jugadores.js';
 import { inicializarApuestas } from './js/apuestas.js';
 
 // ============================================
@@ -29,14 +29,12 @@ function init() {
     window.agregarJugador = agregarJugador;
     window.iniciarPartida = crearJugadoresDesdeModal;
     window.getJugadores = getJugadores;
-    window.getTurnoActual = getTurnoActual;
     window.mostrarZoomApuestaColor = mostrarZoomApuestaColor;
-    window.mostrarZoomApuestaNegro = mostrarZoomApuestaNegro;  // Nueva función
+    window.mostrarZoomApuestaNegro = mostrarZoomApuestaNegro;
     
     window.robarYMostrar = function() {
         const carta = robarCarta();
         if (carta) {
-            contarCartaRobada();
             mostrarZoom(carta);
         }
     };

@@ -1,7 +1,7 @@
 // js/juego.js - LÓGICA DEL JUEGO
 import { CONFIG, state } from './config.js';
 import { getCartasConTexto } from './cartas.js';
-import { getJugadorActual, siguienteTurno, resetearJugadores } from './jugadores.js';
+import { resetearJugadores } from './jugadores.js';
 
 // ============================================
 // MAZO
@@ -39,7 +39,8 @@ export function robarCarta() {
     state.cartaActual = carta;
     state.historial.unshift({ ...carta, timestamp: Date.now() });
 
-    siguienteTurno();
+    // Ya no se avanza turno ni se cuenta carta para jugador
+
     actualizarUI();
     
     mostrarMensaje(`Carta: ${carta.nombre}`, 'info');
