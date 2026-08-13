@@ -1,4 +1,4 @@
-// js/apuestas.js - Módulo de apuestas con preguntas aleatorias
+// js/apuestas.js - Módulo de apuestas con preguntas aleatorias (estáticas)
 import { CONFIG } from './config.js';
 
 // ============================================
@@ -21,14 +21,14 @@ const PREGUNTAS = [
 ];
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR APUESTA ALEATORIA
+// FUNCIÓN PARA MOSTRAR APUESTA (solo se llama al inicio)
 // ============================================
 
 export function mostrarApuestaAleatoria() {
     const area = document.getElementById('apuestasArea');
     if (!area) return;
 
-    // Elegir pregunta aleatoria
+    // Elegir pregunta aleatoria (una sola vez)
     const indice = Math.floor(Math.random() * PREGUNTAS.length);
     const pregunta = PREGUNTAS[indice];
 
@@ -51,9 +51,7 @@ export function mostrarApuestaAleatoria() {
         img.src = CONFIG.UI.IMAGENES_PATH + color + 'H.png';
         img.alt = color;
         img.draggable = false;
-        img.addEventListener('click', () => {
-            mostrarApuestaAleatoria();
-        });
+        // Sin listener de click
         div.appendChild(img);
         filaSuperior.appendChild(div);
     });
@@ -71,9 +69,7 @@ export function mostrarApuestaAleatoria() {
     imgIzq.src = CONFIG.UI.IMAGENES_PATH + 'Negro.png';
     imgIzq.alt = 'Negro';
     imgIzq.draggable = false;
-    imgIzq.addEventListener('click', () => {
-        mostrarApuestaAleatoria();
-    });
+    // Sin listener
     izqDiv.appendChild(imgIzq);
     filaInferior.appendChild(izqDiv);
 
@@ -85,9 +81,7 @@ export function mostrarApuestaAleatoria() {
     imgGrande.alt = 'Apuesta';
     imgGrande.className = 'apuesta-carta-img';
     imgGrande.draggable = false;
-    imgGrande.addEventListener('click', () => {
-        mostrarApuestaAleatoria();
-    });
+    // Sin listener
 
     const overlay = document.createElement('div');
     overlay.className = 'apuesta-texto-overlay';
@@ -104,9 +98,7 @@ export function mostrarApuestaAleatoria() {
     imgDer.src = CONFIG.UI.IMAGENES_PATH + 'Negro.png';
     imgDer.alt = 'Negro';
     imgDer.draggable = false;
-    imgDer.addEventListener('click', () => {
-        mostrarApuestaAleatoria();
-    });
+    // Sin listener
     derDiv.appendChild(imgDer);
     filaInferior.appendChild(derDiv);
 
@@ -115,16 +107,9 @@ export function mostrarApuestaAleatoria() {
 }
 
 // ============================================
-// INICIALIZAR
+// INICIALIZAR (se llama una sola vez)
 // ============================================
 
 export function inicializarApuestas() {
     mostrarApuestaAleatoria();
 }
-
-// ============================================
-// EXPONER FUNCIONES GLOBALES
-// ============================================
-
-window.mostrarApuestaAleatoria = mostrarApuestaAleatoria;
-window.inicializarApuestas = inicializarApuestas;

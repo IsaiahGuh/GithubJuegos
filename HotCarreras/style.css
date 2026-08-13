@@ -255,7 +255,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 .btn-carta {
     background: var(--color-primary);
-    border: 2px solid var(--color-accent);
 }
 
 .btn-reiniciar {
@@ -676,12 +675,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     .controles-juego { gap: 8px; }
     .btn-control { padding: 5px 10px; font-size: 0.65rem; }
     .apuesta-carta-container {
-        height: 157px;
-        width: 220px;
+        height: 100px;
+        width: 140px;
     }
     .apuesta-texto-overlay {
-        width: 182px;
-        height: 131px;
+        width: 115px;
+        height: 82px;
         font-size: 0.85rem;
         padding: 6px;
     }
@@ -690,8 +689,8 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
         height: 50px;
     }
     .apuesta-carta-vertical {
-        width: 112px;
-        height: 157px;
+        width: 71px;
+        height: 100px;
     }
     .apuestas-fila-superior {
         gap: 6px;
