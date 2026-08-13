@@ -8,12 +8,12 @@ const PREGUNTAS = [
     '¿Terminará Morado entre los 2 últimos?',
     '¿Habrá al menos 2 Colores caídos al mismo tiempo?',
     '¿Habrá al menos 2 Colores en la línea antes de meta al mismo tiempo?',
-    '¿Será descalificada al menos 1 Color?',
-    '¿Se arrastrará una mascota en el tramo final?',
+    '¿Será descalificado al menos 1 Color?',
+    '¿Se arrastrará un Color en el tramo final?',
     '¿Estará vacío el tramo final cuando se gane el primer lugar?',
-    '¿Se saldrá una mascota de los límites?',
-    '¿Estarán 2 mascotas en el mismo espacio al mismo tiempo?',
-    '¿Será noqueada una mascota?'
+    '¿Se saldrá un Color de los límites?',
+    '¿Estarán 2 Colores en el mismo espacio al mismo tiempo?',
+    '¿Será noqueado un Color?'
 ];
 
 export function mostrarApuestaAleatoria() {

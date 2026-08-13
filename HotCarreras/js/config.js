@@ -11,13 +11,13 @@ export const CONFIG = {
     GAME: {
         // Cantidad de cartas por número de jugadores
         CARTAS_POR_JUGADOR: {
-            2: 14,
-            3: 15,
-            4: 16,
-            5: 17,
-            6: 18,
-            7: 19,
-            8: 20
+            2: 12,
+            3: 12,
+            4: 12,
+            5: 12,
+            6: 12,
+            7: 12,
+            8: 12
         }
     },
     UI: {

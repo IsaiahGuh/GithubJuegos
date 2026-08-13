@@ -1,7 +1,6 @@
 /* style.css - Estilos completos para HotCarreras */
 :root {
     --bg-main: #0A0B08;
-    --bg-panel: #1D424C;
     --bg-box: #0A0B08;
     --text-main: #FFFFFF;
     --text-muted: #a8a09a;
@@ -20,6 +19,7 @@
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    cursor: default; /* Fuerza la flecha en todos los elementos */
 }
 
 body {
@@ -32,7 +32,7 @@ body {
     padding: 15px 10px;
 }
 
-/* MODALES */
+/* MODALES - Solo se mantienen bordes en el modal de creación */
 .modal-overlay {
     display: flex;
     position: fixed;
@@ -44,40 +44,122 @@ body {
     padding: 20px;
 }
 
-.modal-box {
+/* Este es el modal de creación (lobby) - mantenemos bordes y redondeo */
+#lobbyModal .modal-box {
     background: var(--bg-box);
     padding: 30px;
-    border-radius: 16px;
+    border-radius: 20px; /* Aumentado */
     text-align: center;
     width: 100%;
     max-width: 380px;
     border: none;
 }
 
-.modal-box h2 { color: var(--text-main); margin-bottom: 5px; font-size: 1.8rem; }
-.modal-box p { color: var(--text-muted); margin-bottom: 25px; }
+#lobbyModal .modal-box h2 { color: var(--text-main); margin-bottom: 5px; font-size: 1.8rem; }
+#lobbyModal .modal-box p { color: var(--text-muted); margin-bottom: 25px; }
 
-.input-group { margin-bottom: 15px; text-align: left; }
-.input-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
-.input-group input {
-    width: 100%; padding: 12px; border-radius: 8px;
-    background: var(--bg-main); border: none;
-    color: var(--text-main); font-size: 1.1rem; font-weight: bold; text-align: center;
+/* Inputs dentro del modal de creación */
+#lobbyModal .input-group { margin-bottom: 15px; text-align: left; }
+#lobbyModal .input-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+#lobbyModal .input-group input {
+    width: 100%; padding: 12px;
+    border-radius: 12px;
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-align: center;
+    cursor: text; /* Solo en inputs */
 }
 
-.modal-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-.modal-buttons .row-btns { display: flex; gap: 10px; }
-
-.modal-btn {
-    padding: 14px 15px; border: none; border-radius: 8px;
-    font-weight: bold; flex: 1; font-size: 1rem;
-    cursor: pointer;
+/* Botones del modal de creación */
+#lobbyModal .modal-btn {
+    padding: 14px 15px;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    flex: 1;
+    font-size: 1rem;
 }
-.modal-btn:active { transform: scale(0.97); }
+#lobbyModal .modal-btn:active { transform: scale(0.97); }
 
-.btn-primary { background: var(--color-primary); color: #FFFFFF; }
-.btn-secondary { background: var(--color-secondary); color: #FFFFFF; }
-.btn-outline { background: transparent; color: var(--text-muted); border: none; }
+#lobbyModal .btn-primary { background: var(--color-primary); color: #FFFFFF; }
+#lobbyModal .btn-secondary { background: var(--color-secondary); color: #FFFFFF; }
+#lobbyModal .btn-outline { background: transparent; color: var(--text-muted); border: none; }
+
+/* Contenedor de la lista de jugadores en el modal */
+#lobbyModal .lista-jugadores {
+    margin: 15px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+#lobbyModal .lista-jugadores::-webkit-scrollbar {
+    width: 4px;
+}
+#lobbyModal .lista-jugadores::-webkit-scrollbar-track {
+    background: var(--bg-main);
+    border-radius: 4px;
+}
+#lobbyModal .lista-jugadores::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+/* Inputs de jugador dentro del modal */
+#lobbyModal .jugador-input input {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-main);
+    padding: 10px 12px;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+    cursor: text;
+}
+#lobbyModal .jugador-input input:focus {
+    border: 2px solid var(--color-primary);
+}
+#lobbyModal .jugador-input input::placeholder {
+    color: #66665a;
+    opacity: 0.7;
+}
+#lobbyModal .jugador-input label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+#lobbyModal #btnAgregarJugador {
+    background: transparent;
+    border: 2px dashed var(--border-color);
+    color: var(--text-muted);
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    transition: all 0.2s;
+    width: 100%;
+}
+#lobbyModal #btnAgregarJugador:hover {
+    border-color: var(--color-primary);
+    color: var(--text-main);
+    background: rgba(122, 77, 142, 0.05);
+}
+#lobbyModal #btnAgregarJugador:active {
+    transform: scale(0.97);
+}
+
+/* Los demás modales - también con bordes redondeados */
+.modal-box:not(#lobbyModal .modal-box) {
+    background: var(--bg-box);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 380px;
+    border: none;
+}
 
 /* HEADER */
 header { text-align: center; margin-bottom: 15px; width: 100%; }
@@ -89,14 +171,14 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     max-width: 900px;
     margin: 0 auto 12px auto;
     padding: 8px 12px;
-    background: var(--bg-panel);
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
+    background: var(--bg-box);
+    border-radius: 16px; /* Restaurado y aumentado */
     text-align: center;
     min-height: 80px;
     display: flex;
     justify-content: center;
     align-items: center;
+    border: none;
 }
 
 .apuestas-container {
@@ -123,16 +205,15 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     flex-wrap: wrap;
 }
 
-/* Cartas pequeñas (120x85) */
+/* Cartas pequeñas - con borde redondeado aumentado */
 .apuesta-carta-pequena {
     width: 120px;
     height: 85px;
-    border-radius: 8px;
     overflow: hidden;
-    border: 1px solid var(--border-color);
-    cursor: pointer;
+    border-radius: 16px;
     transition: transform 0.2s;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    border: none;
 }
 
 .apuesta-carta-pequena img {
@@ -143,22 +224,21 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .apuesta-carta-pequena:hover {
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
-/* Vertical Negro.png - tamaño fijo siempre visible */
+/* Vertical Negro.png - borde redondeado aumentado */
 .apuesta-carta-vertical {
     width: 179px;
     height: 250px;
-    border-radius: 12px;
     overflow: hidden;
-    border: 2px solid var(--border-color);
-    cursor: pointer;
+    border-radius: 16px;
     transition: transform 0.2s;
     box-shadow: 0 4px 20px rgba(0,0,0,0.6);
     flex-shrink: 0;
     display: block;
     opacity: 1;
+    border: none;
 }
 
 .apuesta-carta-vertical img {
@@ -169,30 +249,31 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .apuesta-carta-vertical:hover {
-    transform: scale(1.02);
+    transform: scale(1.03);
 }
 
-/* Carta horizontal (NegroH) */
+/* Carta horizontal (NegroH) - borde redondeado aumentado */
 .apuesta-carta-container {
     position: relative;
     display: inline-block;
     height: 250px;
     width: 350px;
     flex-shrink: 0;
+    border-radius: 16px;
+    overflow: hidden;
 }
 
 .apuesta-carta-img {
     height: 100%;
     width: 100%;
     object-fit: cover;
-    border-radius: 12px;
-    border: 2px solid var(--border-color);
-    cursor: pointer;
     transition: transform 0.2s;
+    border: none;
+    border-radius: 16px;
 }
 
 .apuesta-carta-img:hover {
-    transform: scale(1.02);
+    transform: scale(1.03);
 }
 
 .apuesta-texto-overlay {
@@ -217,7 +298,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     font-family: 'Segoe UI', Roboto, sans-serif;
 }
 
-/* BOTONES */
+/* BOTONES - todos con borde redondeado y sin cursor pointer */
 .controles-juego {
     display: flex;
     gap: 12px;
@@ -232,17 +313,15 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .btn-control {
     padding: 8px 20px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 0.85rem;
     font-weight: bold;
     color: #FFFFFF;
-    transition: all 0.2s;
-    cursor: pointer;
+    transition: transform 0.2s;
 }
 
 .btn-control:hover {
-    transform: scale(1.05);
-    opacity: 0.85;
+    transform: scale(1.03);
 }
 
 .btn-control:active {
@@ -265,7 +344,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 .btn-final:disabled {
     opacity: 0.5;
-    cursor: not-allowed;
     transform: none;
 }
 
@@ -274,12 +352,11 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     color: var(--text-muted);
     padding: 4px 12px;
     background: var(--bg-box);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    border: none;
 }
-.info-mazo strong { color: var(--text-main); }
 
-/* MODALES DE JUEGO */
+/* MODALES DE JUEGO (historial, zoom, selección, finalización) */
 .modal {
     display: none;
     position: fixed;
@@ -295,15 +372,15 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .modal-contenido {
-    background: var(--bg-panel);
+    background: var(--bg-box);
     padding: 25px;
-    border-radius: 16px;
-    border: none;
+    border-radius: 20px;
     text-align: center;
     max-width: 90%;
     max-height: 90%;
     overflow: auto;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    border: none;
 }
 
 #historialLista {
@@ -317,21 +394,22 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     display: flex;
     align-items: center;
     gap: 15px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s;
     background: rgba(0,0,0,0.3);
     padding: 8px 16px;
-    border-radius: 8px;
     width: 100%;
     max-width: 300px;
+    border-radius: 12px;
+    border: none;
 }
 
 .historial-item img {
     width: 60px;
     height: 84px;
-    border-radius: 6px;
     object-fit: cover;
+    border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    border: none;
 }
 
 .historial-item span {
@@ -341,7 +419,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .historial-item:hover {
-    transform: scale(1.02);
+    transform: scale(1.03);
 }
 
 .zoom-contenido {
@@ -373,11 +451,14 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     padding: 6px 16px;
     width: auto;
     min-width: 120px;
+    border: none;
+    border-radius: 12px;
 }
 
 /* Modal de selección de jugador */
 #modalSeleccionJugador .modal-box {
     max-width: 340px;
+    border: none;
 }
 #modalSeleccionJugador .lista-jugadores {
     max-height: 200px;
@@ -386,9 +467,9 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 #modalSeleccionJugador .jugador-input {
     padding: 8px 12px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: none;
     transition: background 0.2s;
+    border-radius: 8px;
 }
 #modalSeleccionJugador .jugador-input:hover {
     background: rgba(255,255,255,0.05);
@@ -396,14 +477,14 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 /* LEADERBOARD */
 .leaderboard {
-    background: var(--color-azul);
+    background: var(--color-success);
     border-radius: 16px;
-    border: none;
     flex-direction: column;
     overflow: hidden;
     width: 100%;
     max-width: 900px;
     margin-top: 12px;
+    border: none;
 }
 
 .leaderboard-header {
@@ -412,9 +493,8 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     align-items: center;
     padding: 8px 12px;
     border-bottom: none;
-    cursor: pointer;
 }
-.leaderboard-header:hover { background: rgba(255,255,255,0.05); }
+.leaderboard-header:hover { background: rgba(0,0,0,0.7); }
 .leaderboard-header h3 { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
 #toggleIcon { color: var(--text-muted); font-size: 0.65rem; }
@@ -425,24 +505,23 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     padding: 8px 12px 12px 12px;
 }
 .leaderboard-content::-webkit-scrollbar { width: 4px; }
-.leaderboard-content::-webkit-scrollbar-track { background: var(--bg-main); }
-.leaderboard-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+.leaderboard-content::-webkit-scrollbar-track { background: var(--bg-main); border-radius: 4px; }
+.leaderboard-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 
 #playersList { display: flex; flex-direction: column; gap: 5px; }
 
 .player-card {
     background: var(--bg-box);
-    border-radius: 6px;
     padding: 6px 8px;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    border: 1px solid rgba(255,255,255,0.05);
-    cursor: pointer;
     transition: background 0.2s;
+    border-radius: 8px;
+    border: none;
 }
 .player-card:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(0, 0, 0, 0.7);
 }
 
 .player-card-header {
@@ -453,75 +532,14 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     color: var(--text-main);
 }
 
-/* MODAL JUGADORES */
-.lista-jugadores {
-    margin: 15px 0;
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-
-.lista-jugadores::-webkit-scrollbar {
-    width: 4px;
-}
-.lista-jugadores::-webkit-scrollbar-track {
-    background: var(--bg-main);
-    border-radius: 2px;
-}
-.lista-jugadores::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 2px;
-}
-
-.jugador-input input {
-    background: var(--bg-main);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-main);
-    padding: 10px 12px;
-    font-size: 1rem;
-    outline: none;
-    transition: border 0.2s;
-}
-.jugador-input input:focus {
-    border: 2px solid var(--color-primary);
-}
-.jugador-input input::placeholder {
-    color: #66665a;
-    opacity: 0.7;
-}
-.jugador-input label {
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-#btnAgregarJugador {
-    background: transparent;
-    border: 2px dashed var(--border-color);
-    color: var(--text-muted);
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-}
-#btnAgregarJugador:hover {
-    border-color: var(--color-primary);
-    color: var(--text-main);
-    background: rgba(122, 77, 142, 0.05);
-}
-#btnAgregarJugador:active {
-    transform: scale(0.97);
-}
-
-/* CARTAS CON TEXTO */
+/* CARTAS CON TEXTO - borde redondeado */
 .carta-con-texto {
     position: relative;
     display: inline-block;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    border: none;
 }
 
 .carta-con-texto img {
@@ -529,8 +547,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 12px;
-    pointer-events: auto;
+    border: none;
 }
 
 .carta-texto-overlay {
@@ -579,6 +596,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     width: 480px;
     height: auto;
     aspect-ratio: 250 / 350;
+    border-radius: 20px;
 }
 .carta-zoom.carta-horizontal {
     width: 480px;
@@ -595,11 +613,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     font-size: 2rem;
 }
 
-/* ---- APUESTAS DE COLOR HORIZONTALES (RosaH, VerdeH, NaranjaH, MoradoH) ---- */
+/* ---- APUESTAS DE COLOR HORIZONTALES ---- */
 .carta-apuestaColor {
     width: 280px;
     height: auto;
     aspect-ratio: 350 / 250;
+    border-radius: 16px;
 }
 .carta-apuestaColor .carta-texto-overlay {
     position: absolute;
@@ -643,7 +662,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     text-align: center;
     padding: 2px;
     box-sizing: border-box;
-    border-right: 2px solid rgba(255,255,255,0.35);
+    border-right: none;
 }
 .apuesta-celda:last-child {
     border-right: none;
@@ -661,11 +680,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     line-height: 1.1;
 }
 
-/* ---- APUESTAS VERTICALES (Negro.png) con layout SI/NO + pts ---- */
+/* ---- APUESTAS VERTICALES (Negro.png) ---- */
 .carta-apuestaColorVertical {
     width: 280px;
     height: auto;
     aspect-ratio: 250 / 350;
+    border-radius: 16px;
 }
 .carta-apuestaColorVertical .carta-texto-overlay {
     position: absolute;
@@ -700,8 +720,8 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     padding: 2px 0;
 }
 .apuesta-negro-fila.con-borde {
-    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
-    margin-bottom: 2px;
+    border-bottom: none;
+    margin-bottom: 0;
 }
 .apuesta-negro-celda {
     flex: 1;
@@ -733,7 +753,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     width: 80px;
     height: auto;
     aspect-ratio: 250 / 350;
-    border-radius: 6px;
+    border-radius: 10px;
 }
 .carta-historial .carta-texto-superior {
     font-size: 0.7rem;
@@ -745,7 +765,8 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     font-size: 0.7rem;
 }
 .carta-historial img {
-    border-radius: 6px;
+    border: none;
+    border-radius: 10px;
 }
 
 #ordenColoresContainer select {
@@ -754,7 +775,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     margin-bottom: 6px;
     background: var(--bg-main);
     color: var(--text-main);
-    border: 1px solid var(--border-color);
+    border: none;
     border-radius: 8px;
     font-size: 1rem;
 }
@@ -762,56 +783,56 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
     h1 { font-size: 1.8rem; }
-    .btn-control { padding: 6px 14px; font-size: 0.75rem; }
-    .carta-zoom { width: 300px; }
+    .btn-control { padding: 6px 14px; font-size: 0.75rem; border-radius: 10px; }
+    .carta-zoom { width: 300px; border-radius: 16px; }
     .carta-zoom.carta-horizontal { width: 300px; }
-    .carta-apuestaColor { width: 200px; }
+    .carta-apuestaColor { width: 200px; border-radius: 14px; }
     .carta-apuestaColor .apuesta-fila:first-child .apuesta-celda { font-size: 2rem; }
     .carta-apuestaColor .apuesta-fila:last-child .apuesta-celda { font-size: 1.2rem; }
     .carta-apuestaColor .apuesta-fila:only-child .apuesta-celda { font-size: 2rem; }
-    .carta-apuestaColorVertical { width: 200px; }
+    .carta-apuestaColorVertical { width: 200px; border-radius: 14px; }
     .apuesta-negro-celda.condicion { font-size: 2rem; }
     .apuesta-negro-celda.puntos { font-size: 1.6rem; }
-    .apuesta-negro-fila.con-borde { border-bottom-width: 1.5px; }
+    .apuesta-negro-fila.con-borde { border-bottom: none; }
     .carta-zoom .carta-texto-superior { font-size: 1.3rem; }
     .carta-zoom .carta-texto-grande { font-size: 4rem; }
     .carta-zoom .carta-texto-pequeno { font-size: 1.3rem; }
-    .modal-box { padding: 20px; max-width: 340px; }
-    .apuesta-carta-container { height: 200px; width: 280px; }
+    .modal-box:not(#lobbyModal .modal-box) { padding: 20px; max-width: 340px; border-radius: 16px; }
+    .apuesta-carta-container { height: 200px; width: 280px; border-radius: 14px; }
     .apuesta-texto-overlay { width: 231px; height: 166px; font-size: 1.1rem; }
-    .apuesta-carta-pequena { width: 100px; height: 71px; }
-    .apuesta-carta-vertical { width: 143px; height: 200px; }
+    .apuesta-carta-pequena { width: 100px; height: 71px; border-radius: 14px; }
+    .apuesta-carta-vertical { width: 143px; height: 200px; border-radius: 14px; }
     .apuestas-fila-superior { gap: 8px; }
     .apuestas-fila-inferior { gap: 8px; }
     .zoom-apuesta-container { gap: 12px; }
-    .apuesta-celda { border-right-width: 1.5px; }
+    .apuesta-celda { border-right: none; }
 }
 
 @media (max-width: 480px) {
-    .carta-zoom { width: 200px; }
+    .carta-zoom { width: 200px; border-radius: 14px; }
     .carta-zoom.carta-horizontal { width: 200px; }
-    .carta-apuestaColor { width: 140px; }
+    .carta-apuestaColor { width: 140px; border-radius: 12px; }
     .carta-apuestaColor .apuesta-fila:first-child .apuesta-celda { font-size: 1.4rem; }
     .carta-apuestaColor .apuesta-fila:last-child .apuesta-celda { font-size: 0.9rem; }
     .carta-apuestaColor .apuesta-fila:only-child .apuesta-celda { font-size: 1.4rem; }
-    .carta-apuestaColorVertical { width: 140px; }
+    .carta-apuestaColorVertical { width: 140px; border-radius: 12px; }
     .apuesta-negro-celda.condicion { font-size: 1.4rem; padding-left: 6px; }
     .apuesta-negro-celda.puntos { font-size: 1.1rem; padding-right: 6px; }
-    .apuesta-negro-fila.con-borde { border-bottom-width: 1px; }
+    .apuesta-negro-fila.con-borde { border-bottom: none; }
     .carta-zoom .carta-texto-superior { font-size: 1rem; }
     .carta-zoom .carta-texto-grande { font-size: 2.8rem; }
     .carta-zoom .carta-texto-pequeno { font-size: 1rem; }
-    .modal-box h2 { font-size: 1.3rem; }
+    .modal-box:not(#lobbyModal .modal-box) h2 { font-size: 1.3rem; }
     .controles-juego { gap: 8px; }
-    .btn-control { padding: 5px 10px; font-size: 0.65rem; }
-    .apuesta-carta-container { height: 100px; width: 140px; }
+    .btn-control { padding: 5px 10px; font-size: 0.65rem; border-radius: 8px; }
+    .apuesta-carta-container { height: 100px; width: 140px; border-radius: 10px; }
     .apuesta-texto-overlay { width: 115px; height: 82px; font-size: 0.85rem; padding: 6px; }
-    .apuesta-carta-pequena { width: 70px; height: 50px; }
-    .apuesta-carta-vertical { width: 71px; height: 100px; }
+    .apuesta-carta-pequena { width: 70px; height: 50px; border-radius: 10px; }
+    .apuesta-carta-vertical { width: 71px; height: 100px; border-radius: 10px; }
     .apuestas-fila-superior { gap: 6px; }
     .apuestas-fila-inferior { gap: 6px; }
     .zoom-apuesta-container { gap: 8px; }
-    .apuesta-celda { border-right-width: 1px; }
+    .apuesta-celda { border-right: none; }
 }
 
 @keyframes slideDown {
