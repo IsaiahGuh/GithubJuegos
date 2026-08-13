@@ -60,6 +60,13 @@ const Config = {
                 ruta: './MagicalAthlete/index.html',
                 color: '#FF9800',
                 topics: ['local', 'dados']
+            },
+            {
+                id: 'HotCarreras',
+                nombre: 'Carreras',
+                ruta: './HotCarreras/index.html',
+                color: '#f5deb2',
+                topics: ['mqtt', 'cartas']
             }
         ];
     },
