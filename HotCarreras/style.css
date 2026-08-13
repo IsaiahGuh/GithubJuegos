@@ -252,14 +252,21 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .btn-historial {
     background: var(--color-secondary);
 }
-
 .btn-carta {
     background: var(--color-primary);
 }
-
+.btn-final {
+    background: var(--color-accent);
+    color: #0A0B08;
+}
 .btn-reiniciar {
     background: var(--color-danger);
     color: #FFFFFF;
+}
+.btn-final:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .info-mazo {
@@ -354,6 +361,39 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     flex-wrap: wrap;
 }
 
+.zoom-apuesta-container > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.zoom-apuesta-container .btn-control {
+    font-size: 0.9rem;
+    padding: 6px 16px;
+    width: auto;
+    min-width: 120px;
+}
+
+/* Modal de selección de jugador */
+#modalSeleccionJugador .modal-box {
+    max-width: 340px;
+}
+#modalSeleccionJugador .lista-jugadores {
+    max-height: 200px;
+    overflow-y: auto;
+    margin: 12px 0;
+}
+#modalSeleccionJugador .jugador-input {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+#modalSeleccionJugador .jugador-input:hover {
+    background: rgba(255,255,255,0.05);
+}
+
 /* LEADERBOARD */
 .leaderboard {
     background: var(--color-azul);
@@ -398,6 +438,11 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     flex-direction: column;
     gap: 2px;
     border: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.player-card:hover {
+    background: rgba(255,255,255,0.05);
 }
 
 .player-card-header {
@@ -419,12 +464,10 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .lista-jugadores::-webkit-scrollbar {
     width: 4px;
 }
-
 .lista-jugadores::-webkit-scrollbar-track {
     background: var(--bg-main);
     border-radius: 2px;
 }
-
 .lista-jugadores::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 2px;
@@ -440,16 +483,13 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     outline: none;
     transition: border 0.2s;
 }
-
 .jugador-input input:focus {
     border: 2px solid var(--color-primary);
 }
-
 .jugador-input input::placeholder {
     color: #66665a;
     opacity: 0.7;
 }
-
 .jugador-input label {
     color: var(--text-muted);
     font-weight: 500;
@@ -466,13 +506,11 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     transition: all 0.2s;
     width: 100%;
 }
-
 #btnAgregarJugador:hover {
     border-color: var(--color-primary);
     color: var(--text-main);
     background: rgba(122, 77, 142, 0.05);
 }
-
 #btnAgregarJugador:active {
     transform: scale(0.97);
 }
@@ -522,14 +560,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     letter-spacing: 1px;
     margin-bottom: 2px;
 }
-
 .carta-texto-grande {
     font-size: 5rem;
     font-weight: 900;
     line-height: 1;
     margin: 0;
 }
-
 .carta-texto-pequeno {
     font-size: 1.4rem;
     font-weight: bold;
@@ -544,21 +580,17 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     height: auto;
     aspect-ratio: 250 / 350;
 }
-
 .carta-zoom.carta-horizontal {
     width: 480px;
     height: auto;
     aspect-ratio: 350 / 250;
 }
-
 .carta-zoom .carta-texto-superior {
     font-size: 2rem;
 }
-
 .carta-zoom .carta-texto-grande {
     font-size: 7rem;
 }
-
 .carta-zoom .carta-texto-pequeno {
     font-size: 2rem;
 }
@@ -569,15 +601,13 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     height: auto;
     aspect-ratio: 350 / 250;
 }
-
-/* Overlay centrado con área exacta de 289x208 px (proporcional) */
 .carta-apuestaColor .carta-texto-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 82.6%;   /* 289/350 ≈ 82.6% */
-    height: 83.3%;  /* 208/250 ≈ 83.3% */
+    width: 82.6%;
+    height: 83.3%;
     padding: 4px;
     display: flex;
     flex-direction: column;
@@ -586,8 +616,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     background: transparent;
     box-sizing: border-box;
 }
-
-/* Contenedor de filas */
 .apuesta-filas-container {
     display: flex;
     flex-direction: column;
@@ -596,8 +624,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     justify-content: center;
     align-items: stretch;
 }
-
-/* Cada fila: 3 columnas iguales con separador vertical */
 .apuesta-fila {
     display: flex;
     flex: 1;
@@ -606,8 +632,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     align-items: center;
     min-height: 0;
 }
-
-/* Cada celda ocupa 1/3, centra su contenido */
 .apuesta-celda {
     flex: 1;
     display: flex;
@@ -621,25 +645,17 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     box-sizing: border-box;
     border-right: 2px solid rgba(255,255,255,0.35);
 }
-
-/* Última celda sin borde derecho */
 .apuesta-celda:last-child {
     border-right: none;
 }
-
-/* Primera fila: fuente más grande */
 .apuesta-fila:first-child .apuesta-celda {
     font-size: 2.8rem;
     line-height: 1.1;
 }
-
-/* Segunda fila: fuente más pequeña (solo si existe) */
 .apuesta-fila:last-child .apuesta-celda {
     font-size: 1.6rem;
     line-height: 1.1;
 }
-
-/* Si solo hay una fila, usa el tamaño grande */
 .apuesta-fila:only-child .apuesta-celda {
     font-size: 2.8rem;
     line-height: 1.1;
@@ -651,15 +667,13 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     height: auto;
     aspect-ratio: 250 / 350;
 }
-
-/* Overlay centrado con área exacta de 208.31x289.274 px (proporcional) */
 .carta-apuestaColorVertical .carta-texto-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 83.3%;   /* 208.31/250 ≈ 83.3% */
-    height: 82.6%;  /* 289.274/350 ≈ 82.6% */
+    width: 83.3%;
+    height: 82.6%;
     padding: 4px;
     display: flex;
     flex-direction: column;
@@ -668,8 +682,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     background: transparent;
     box-sizing: border-box;
 }
-
-/* Contenedor principal del layout */
 .apuesta-negro-container {
     display: flex;
     flex-direction: column;
@@ -678,8 +690,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     justify-content: center;
     align-items: stretch;
 }
-
-/* Cada fila ocupa el 50% de la altura y tiene dos celdas */
 .apuesta-negro-fila {
     display: flex;
     flex: 1;
@@ -689,14 +699,10 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     min-height: 0;
     padding: 2px 0;
 }
-
-/* Línea divisoria: se aplica a la primera fila (SI) para que tenga borde inferior */
 .apuesta-negro-fila.con-borde {
     border-bottom: 2px solid rgba(255, 255, 255, 0.5);
     margin-bottom: 2px;
 }
-
-/* Cada celda: izquierda (condición) y derecha (puntos) */
 .apuesta-negro-celda {
     flex: 1;
     display: flex;
@@ -709,16 +715,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     padding: 2px;
     box-sizing: border-box;
 }
-
-/* La celda de condición (SI/NO) */
 .apuesta-negro-celda.condicion {
     font-size: 2.8rem;
     line-height: 1.1;
     justify-content: flex-start;
     padding-left: 10px;
 }
-
-/* La celda de puntos (pts) */
 .apuesta-negro-celda.puntos {
     font-size: 2.2rem;
     line-height: 1.1;
@@ -733,210 +735,86 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     aspect-ratio: 250 / 350;
     border-radius: 6px;
 }
-
 .carta-historial .carta-texto-superior {
     font-size: 0.7rem;
 }
-
 .carta-historial .carta-texto-grande {
     font-size: 1.8rem;
 }
-
 .carta-historial .carta-texto-pequeno {
     font-size: 0.7rem;
 }
-
 .carta-historial img {
     border-radius: 6px;
+}
+
+#ordenColoresContainer select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 6px;
+    background: var(--bg-main);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
 }
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
     h1 { font-size: 1.8rem; }
     .btn-control { padding: 6px 14px; font-size: 0.75rem; }
-    .carta-zoom {
-        width: 300px;
-    }
-    .carta-zoom.carta-horizontal {
-        width: 300px;
-    }
-    .carta-apuestaColor {
-        width: 200px;
-    }
-    .carta-apuestaColor .apuesta-fila:first-child .apuesta-celda {
-        font-size: 2rem;
-    }
-    .carta-apuestaColor .apuesta-fila:last-child .apuesta-celda {
-        font-size: 1.2rem;
-    }
-    .carta-apuestaColor .apuesta-fila:only-child .apuesta-celda {
-        font-size: 2rem;
-    }
-    .carta-apuestaColorVertical {
-        width: 200px;
-    }
-    .apuesta-negro-celda.condicion {
-        font-size: 2rem;
-    }
-    .apuesta-negro-celda.puntos {
-        font-size: 1.6rem;
-    }
-    .apuesta-negro-fila.con-borde {
-        border-bottom-width: 1.5px;
-    }
-    .carta-zoom .carta-texto-superior {
-        font-size: 1.3rem;
-    }
-    .carta-zoom .carta-texto-grande {
-        font-size: 4rem;
-    }
-    .carta-zoom .carta-texto-pequeno {
-        font-size: 1.3rem;
-    }
+    .carta-zoom { width: 300px; }
+    .carta-zoom.carta-horizontal { width: 300px; }
+    .carta-apuestaColor { width: 200px; }
+    .carta-apuestaColor .apuesta-fila:first-child .apuesta-celda { font-size: 2rem; }
+    .carta-apuestaColor .apuesta-fila:last-child .apuesta-celda { font-size: 1.2rem; }
+    .carta-apuestaColor .apuesta-fila:only-child .apuesta-celda { font-size: 2rem; }
+    .carta-apuestaColorVertical { width: 200px; }
+    .apuesta-negro-celda.condicion { font-size: 2rem; }
+    .apuesta-negro-celda.puntos { font-size: 1.6rem; }
+    .apuesta-negro-fila.con-borde { border-bottom-width: 1.5px; }
+    .carta-zoom .carta-texto-superior { font-size: 1.3rem; }
+    .carta-zoom .carta-texto-grande { font-size: 4rem; }
+    .carta-zoom .carta-texto-pequeno { font-size: 1.3rem; }
     .modal-box { padding: 20px; max-width: 340px; }
-    .apuesta-carta-container {
-        height: 200px;
-        width: 280px;
-    }
-    .apuesta-texto-overlay {
-        width: 231px;
-        height: 166px;
-        font-size: 1.1rem;
-    }
-    .apuesta-carta-pequena {
-        width: 100px;
-        height: 71px;
-    }
-    .apuesta-carta-vertical {
-        width: 143px;
-        height: 200px;
-    }
-    .apuestas-fila-superior {
-        gap: 8px;
-    }
-    .apuestas-fila-inferior {
-        gap: 8px;
-    }
-    .zoom-apuesta-container {
-        gap: 12px;
-    }
-    .apuesta-celda {
-        border-right-width: 1.5px;
-    }
+    .apuesta-carta-container { height: 200px; width: 280px; }
+    .apuesta-texto-overlay { width: 231px; height: 166px; font-size: 1.1rem; }
+    .apuesta-carta-pequena { width: 100px; height: 71px; }
+    .apuesta-carta-vertical { width: 143px; height: 200px; }
+    .apuestas-fila-superior { gap: 8px; }
+    .apuestas-fila-inferior { gap: 8px; }
+    .zoom-apuesta-container { gap: 12px; }
+    .apuesta-celda { border-right-width: 1.5px; }
 }
 
 @media (max-width: 480px) {
-    .carta-zoom {
-        width: 200px;
-    }
-    .carta-zoom.carta-horizontal {
-        width: 200px;
-    }
-    .carta-apuestaColor {
-        width: 140px;
-    }
-    .carta-apuestaColor .apuesta-fila:first-child .apuesta-celda {
-        font-size: 1.4rem;
-    }
-    .carta-apuestaColor .apuesta-fila:last-child .apuesta-celda {
-        font-size: 0.9rem;
-    }
-    .carta-apuestaColor .apuesta-fila:only-child .apuesta-celda {
-        font-size: 1.4rem;
-    }
-    .carta-apuestaColorVertical {
-        width: 140px;
-    }
-    .apuesta-negro-celda.condicion {
-        font-size: 1.4rem;
-        padding-left: 6px;
-    }
-    .apuesta-negro-celda.puntos {
-        font-size: 1.1rem;
-        padding-right: 6px;
-    }
-    .apuesta-negro-fila.con-borde {
-        border-bottom-width: 1px;
-    }
-    .carta-zoom .carta-texto-superior {
-        font-size: 1rem;
-    }
-    .carta-zoom .carta-texto-grande {
-        font-size: 2.8rem;
-    }
-    .carta-zoom .carta-texto-pequeno {
-        font-size: 1rem;
-    }
+    .carta-zoom { width: 200px; }
+    .carta-zoom.carta-horizontal { width: 200px; }
+    .carta-apuestaColor { width: 140px; }
+    .carta-apuestaColor .apuesta-fila:first-child .apuesta-celda { font-size: 1.4rem; }
+    .carta-apuestaColor .apuesta-fila:last-child .apuesta-celda { font-size: 0.9rem; }
+    .carta-apuestaColor .apuesta-fila:only-child .apuesta-celda { font-size: 1.4rem; }
+    .carta-apuestaColorVertical { width: 140px; }
+    .apuesta-negro-celda.condicion { font-size: 1.4rem; padding-left: 6px; }
+    .apuesta-negro-celda.puntos { font-size: 1.1rem; padding-right: 6px; }
+    .apuesta-negro-fila.con-borde { border-bottom-width: 1px; }
+    .carta-zoom .carta-texto-superior { font-size: 1rem; }
+    .carta-zoom .carta-texto-grande { font-size: 2.8rem; }
+    .carta-zoom .carta-texto-pequeno { font-size: 1rem; }
     .modal-box h2 { font-size: 1.3rem; }
     .controles-juego { gap: 8px; }
     .btn-control { padding: 5px 10px; font-size: 0.65rem; }
-    .apuesta-carta-container {
-        height: 100px;
-        width: 140px;
-    }
-    .apuesta-texto-overlay {
-        width: 115px;
-        height: 82px;
-        font-size: 0.85rem;
-        padding: 6px;
-    }
-    .apuesta-carta-pequena {
-        width: 70px;
-        height: 50px;
-    }
-    .apuesta-carta-vertical {
-        width: 71px;
-        height: 100px;
-    }
-    .apuestas-fila-superior {
-        gap: 6px;
-    }
-    .apuestas-fila-inferior {
-        gap: 6px;
-    }
-    .zoom-apuesta-container {
-        gap: 8px;
-    }
-    .apuesta-celda {
-        border-right-width: 1px;
-    }
+    .apuesta-carta-container { height: 100px; width: 140px; }
+    .apuesta-texto-overlay { width: 115px; height: 82px; font-size: 0.85rem; padding: 6px; }
+    .apuesta-carta-pequena { width: 70px; height: 50px; }
+    .apuesta-carta-vertical { width: 71px; height: 100px; }
+    .apuestas-fila-superior { gap: 6px; }
+    .apuestas-fila-inferior { gap: 6px; }
+    .zoom-apuesta-container { gap: 8px; }
+    .apuesta-celda { border-right-width: 1px; }
 }
 
 @keyframes slideDown {
     from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
-/* Estilos para los botones dentro del zoom de apuestas */
-.zoom-apuesta-container > div {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-}
-
-.zoom-apuesta-container .btn-control {
-    font-size: 0.9rem;
-    padding: 6px 16px;
-    width: auto;
-    min-width: 120px;
-}
-
-/* Modal de selección de jugador */
-#modalSeleccionJugador .modal-box {
-    max-width: 340px;
-}
-#modalSeleccionJugador .lista-jugadores {
-    max-height: 200px;
-    overflow-y: auto;
-    margin: 12px 0;
-}
-#modalSeleccionJugador .jugador-input {
-    padding: 8px 12px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
-    transition: background 0.2s;
-}
-#modalSeleccionJugador .jugador-input:hover {
-    background: rgba(255,255,255,0.05);
 }

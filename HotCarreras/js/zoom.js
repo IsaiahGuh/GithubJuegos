@@ -1,19 +1,10 @@
-// js/zoom.js - LÓGICA DE ZOOM Y VISUALIZACIÓN DE CARTAS
 import { CONFIG, state } from './config.js';
 import { getJugador, mostrarSelectorJugador, asignarApuestaColor, asignarApuestaSiNo } from './jugadores.js';
 
-// ============================================
-// ALMACENAMIENTO DE VALORES ARRIESGADOS (persistentes entre aperturas)
-// ============================================
-
 const valoresArriesgados = {
-    color: {},   // clave: color (ej. 'Rosa'), valor: [random1, random2, random3]
-    siNo: {}    // clave: lado (ej. 'izquierda'), valor: { alto, bajo }
+    color: {},
+    siNo: {}
 };
-
-// ============================================
-// CREAR ELEMENTO CARTA CON TEXTO
-// ============================================
 
 export function crearCartaElement(carta, size = 'zoom', esHorizontal = false) {
     const container = document.createElement('div');
@@ -27,7 +18,6 @@ export function crearCartaElement(carta, size = 'zoom', esHorizontal = false) {
             container.classList.add('carta-horizontal');
         }
     }
-
     const img = document.createElement('img');
     img.src = CONFIG.UI.IMAGENES_PATH + carta.imagen;
     img.alt = carta.nombre || 'Carta';
@@ -104,18 +94,12 @@ export function crearCartaElement(carta, size = 'zoom', esHorizontal = false) {
         }
         container.appendChild(overlay);
     }
-
     const imgElement = container.querySelector('img');
     if (imgElement) {
         imgElement.style.pointerEvents = 'auto';
     }
-
     return container;
 }
-
-// ============================================
-// MOSTRAR ZOOM (cartas normales)
-// ============================================
 
 export function mostrarZoom(carta, esHorizontal = false) {
     const modal = document.getElementById('modalZoom');
@@ -138,17 +122,12 @@ export function mostrarZoom(carta, esHorizontal = false) {
     modal.style.display = 'flex';
 }
 
-// ============================================
-// SELECCIÓN DE APUESTA DE COLOR
-// ============================================
-
 export function mostrarZoomApuestaColorSeleccion(color) {
     const modal = document.getElementById('modalZoom');
     const contenido = modal.querySelector('.zoom-contenido');
     if (!modal || !contenido) return;
     contenido.innerHTML = '';
 
-    // Obtener o generar valores para opción arriesgada (persistentes)
     if (!valoresArriesgados.color[color]) {
         valoresArriesgados.color[color] = [
             Math.floor(Math.random() * 11) + 15,
@@ -203,15 +182,10 @@ export function mostrarZoomApuestaColorSeleccion(color) {
     const btnArriesgada = document.createElement('button');
     btnArriesgada.textContent = 'Arriesgada';
     btnArriesgada.className = 'btn-control btn-primary';
-
-    // Capturar los valores actuales antes de abrir el selector
     const valoresActuales = [`${r1}pts`, `${r2}pts`, `${r3}pts`];
-
     btnArriesgada.addEventListener('click', () => {
         mostrarSelectorJugador((index) => {
-            // Asignar con los valores actuales (los que se ven en la carta)
             asignarApuestaColor(index, color, 'arriesgada', 2, valoresActuales);
-            // Después de asignar, regenerar nuevos valores para futuras apuestas
             const nuevos = [
                 Math.floor(Math.random() * 11) + 15,
                 Math.floor(Math.random() * 4),
@@ -228,17 +202,12 @@ export function mostrarZoomApuestaColorSeleccion(color) {
     modal.style.display = 'flex';
 }
 
-// ============================================
-// SELECCIÓN DE APUESTA SÍ/NO (vertical)
-// ============================================
-
 export function mostrarZoomApuestaNegroSeleccion(lado) {
     const modal = document.getElementById('modalZoom');
     const contenido = modal.querySelector('.zoom-contenido');
     if (!modal || !contenido) return;
     contenido.innerHTML = '';
 
-    // Obtener o generar valores para opción arriesgada (persistentes)
     if (!valoresArriesgados.siNo[lado]) {
         valoresArriesgados.siNo[lado] = {
             alto: Math.floor(Math.random() * 6) + 10,
@@ -249,7 +218,6 @@ export function mostrarZoomApuestaNegroSeleccion(lado) {
 
     let opcion1_filas, opcion2_filas;
     let label1, label2, tipo1, tipo2;
-
     if (lado === 'izquierda') {
         opcion1_filas = [['SI', '5pts'], ['NO', '0pts']];
         opcion2_filas = [['SI', `${alto}pts`], ['NO', `${bajo}pts`]];
@@ -295,15 +263,10 @@ export function mostrarZoomApuestaNegroSeleccion(lado) {
     const btn2 = document.createElement('button');
     btn2.textContent = label2;
     btn2.className = 'btn-control btn-primary';
-
-    // Capturar los valores actuales antes de abrir el selector
-    const valoresActuales = opcion2_filas.slice(); // copia
-
+    const valoresActuales = opcion2_filas.slice();
     btn2.addEventListener('click', () => {
         mostrarSelectorJugador((index) => {
-            // Asignar con los valores actuales (los que se ven en la carta)
             asignarApuestaSiNo(index, lado, tipo2, 2, valoresActuales);
-            // Después de asignar, regenerar nuevos valores para futuras apuestas
             const nuevoAlto = Math.floor(Math.random() * 6) + 10;
             const nuevoBajo = Math.floor(Math.random() * 6) - 5;
             valoresArriesgados.siNo[lado] = { alto: nuevoAlto, bajo: nuevoBajo };
@@ -317,10 +280,6 @@ export function mostrarZoomApuestaNegroSeleccion(lado) {
     modal.style.display = 'flex';
 }
 
-// ============================================
-// MOSTRAR APUESTAS DE UN JUGADOR (desde leaderboard)
-// ============================================
-
 export function mostrarApuestasJugador(jugadorIndex) {
     const jugador = getJugador(jugadorIndex);
     if (!jugador) return;
@@ -333,7 +292,6 @@ export function mostrarApuestasJugador(jugadorIndex) {
     const container = document.createElement('div');
     container.className = 'zoom-apuesta-container';
 
-    // Apuesta de color
     if (apuestas.color) {
         const { color, tipo, valores } = apuestas.color;
         const filas = [
@@ -362,7 +320,6 @@ export function mostrarApuestasJugador(jugadorIndex) {
         container.appendChild(msg);
     }
 
-    // Apuesta de Sí/No
     if (apuestas.siNo) {
         const { tipo, valores } = apuestas.siNo;
         const carta = {
@@ -391,18 +348,10 @@ export function mostrarApuestasJugador(jugadorIndex) {
     modal.style.display = 'flex';
 }
 
-// ============================================
-// CERRAR ZOOM
-// ============================================
-
 export function cerrarZoom() {
     const modal = document.getElementById('modalZoom');
     if (modal) modal.style.display = 'none';
 }
-
-// ============================================
-// EXPONER FUNCIONES GLOBALES (para uso en HTML)
-// ============================================
 
 window.mostrarZoom = mostrarZoom;
 window.cerrarZoom = cerrarZoom;

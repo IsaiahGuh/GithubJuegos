@@ -1,56 +1,38 @@
-// js/jugadores.js - Gestión de jugadores + apuestas + selector
 import { state } from './config.js';
 import { actualizarUI } from './juego.js';
 import { renderLeaderboard } from './leaderboard.js';
-
-// ============================================
-// ESTADO DEL MODAL (interno)
-// ============================================
 
 const modalState = {
     modo: 'principal',
     jugadores: ['', '']
 };
 
-// ============================================
-// CREAR JUGADORES (desde el modal)
-// ============================================
-
 export function crearJugadoresDesdeModal() {
     const nombres = modalState.jugadores.map(n => n.trim());
     const vacios = nombres.some(n => n === '');
-    
     if (vacios) {
         mostrarMensaje('Todos los jugadores deben tener un nombre', 'warning');
         return false;
     }
-    
     if (nombres.length < 2) {
         mostrarMensaje('Se necesitan al menos 2 jugadores', 'warning');
         return false;
     }
-    
     state.jugadores = nombres.map((nombre, index) => ({
         id: index,
         nombre: nombre || `Jugador ${index + 1}`,
         cartasRobadas: 0,
         conectado: true,
-        apuestas: { color: null, siNo: null }
+        apuestas: { color: null, siNo: null },
+        puntaje: 0
     }));
-    
     document.getElementById('lobbyModal').style.display = 'none';
     document.getElementById('leaderboardPanel').style.display = 'flex';
-    
     renderLeaderboard();
     actualizarUI();
-    
     console.log('Partida iniciada con', nombres.length, 'jugadores:', nombres);
     return true;
 }
-
-// ============================================
-// OBTENER JUGADORES
-// ============================================
 
 export function getJugadores() {
     return state.jugadores || [];
@@ -62,10 +44,6 @@ export function getJugador(index) {
     }
     return state.jugadores[index];
 }
-
-// ============================================
-// APUESTAS (ahora con valores)
-// ============================================
 
 export function asignarApuestaColor(jugadorIndex, color, tipo, opcion, valores) {
     const jugador = getJugador(jugadorIndex);
@@ -91,14 +69,13 @@ export function asignarApuestaSiNo(jugadorIndex, lado, tipo, opcion, valores) {
     return true;
 }
 
-export function getApuestasJugador(index) {
-    const jugador = getJugador(index);
-    return jugador ? (jugador.apuestas || null) : null;
+export function sumarPuntosAJugador(jugadorIndex, puntos) {
+    const jugador = getJugador(jugadorIndex);
+    if (!jugador) return false;
+    jugador.puntaje = (jugador.puntaje || 0) + puntos;
+    renderLeaderboard();
+    return true;
 }
-
-// ============================================
-// REINICIAR
-// ============================================
 
 export function resetearJugadores() {
     if (!state.jugadores) return;
@@ -106,19 +83,15 @@ export function resetearJugadores() {
         j.cartasRobadas = 0;
         j.conectado = true;
         j.apuestas = { color: null, siNo: null };
+        j.puntaje = 0;
     });
     renderLeaderboard();
     actualizarUI();
 }
 
-// ============================================
-// MODAL - VISTAS
-// ============================================
-
 export function toggleVistaJugadores() {
     const vistaPrincipal = document.getElementById('vistaPrincipal');
     const vistaJugadores = document.getElementById('vistaJugadores');
-    
     if (modalState.modo === 'principal') {
         modalState.modo = 'edicion';
         vistaPrincipal.style.display = 'none';
@@ -131,18 +104,11 @@ export function toggleVistaJugadores() {
     }
 }
 
-// ============================================
-// MODAL - LISTA DE JUGADORES
-// ============================================
-
 function renderizarListaJugadores() {
     const container = document.getElementById('listaJugadoresContainer');
     if (!container) return;
-    
     container.innerHTML = '';
-    
     const placeholders = ['Leo', 'Ana'];
-    
     modalState.jugadores.forEach((nombre, index) => {
         const div = document.createElement('div');
         div.className = 'input-group jugador-input';
@@ -150,12 +116,10 @@ function renderizarListaJugadores() {
         div.style.display = 'flex';
         div.style.alignItems = 'center';
         div.style.gap = '8px';
-        
         const label = document.createElement('label');
         label.textContent = `Jugador ${index + 1}:`;
         label.style.minWidth = '70px';
         label.style.fontSize = '0.85rem';
-        
         const input = document.createElement('input');
         input.type = 'text';
         input.id = `nombreJugador_${index}`;
@@ -165,14 +129,11 @@ function renderizarListaJugadores() {
         input.style.flex = '1';
         input.style.textAlign = 'left';
         input.style.paddingLeft = '12px';
-        
         input.addEventListener('input', () => {
             modalState.jugadores[index] = input.value;
         });
-        
         div.appendChild(label);
         div.appendChild(input);
-        
         if (modalState.jugadores.length > 2) {
             const btnEliminar = document.createElement('button');
             btnEliminar.textContent = 'X';
@@ -195,10 +156,8 @@ function renderizarListaJugadores() {
             });
             div.appendChild(btnEliminar);
         }
-        
         container.appendChild(div);
     });
-    
     const btnAgregar = document.getElementById('btnAgregarJugador');
     if (btnAgregar) {
         if (modalState.jugadores.length >= 6) {
@@ -227,17 +186,12 @@ function eliminarJugador(index) {
     renderizarListaJugadores();
 }
 
-// ============================================
-// MODAL SELECCION JUGADOR (para apuestas)
-// ============================================
-
 let selectorCallback = null;
 
 export function mostrarSelectorJugador(callback) {
     const modal = document.getElementById('modalSeleccionJugador');
     const lista = document.getElementById('listaJugadoresSeleccion');
     if (!modal || !lista) return;
-    
     const jugadores = getJugadores();
     lista.innerHTML = '';
     jugadores.forEach((j, index) => {
@@ -265,17 +219,9 @@ export function cerrarSelectorJugador() {
     selectorCallback = null;
 }
 
-// ============================================
-// INICIALIZAR MODAL
-// ============================================
-
 export function inicializarModal() {
     renderizarListaJugadores();
 }
-
-// ============================================
-// MOSTRAR MENSAJES
-// ============================================
 
 function mostrarMensaje(texto, tipo = 'info') {
     const colores = {
@@ -284,7 +230,6 @@ function mostrarMensaje(texto, tipo = 'info') {
         warning: '#CA7A02',
         info: '#1D424C'
     };
-    
     const msg = document.createElement('div');
     msg.style.cssText = `
         position: fixed;
@@ -303,18 +248,14 @@ function mostrarMensaje(texto, tipo = 'info') {
     `;
     msg.textContent = texto;
     document.body.appendChild(msg);
-    
     setTimeout(() => {
         if (msg.parentNode) msg.remove();
     }, 2000);
 }
-
-// ============================================
-// EXPONER FUNCIONES GLOBALES PARA HTML
-// ============================================
 
 window.getJugadores = getJugadores;
 window.toggleVistaJugadores = toggleVistaJugadores;
 window.agregarJugador = agregarJugador;
 window.iniciarPartida = crearJugadoresDesdeModal;
 window.cerrarSeleccionJugador = cerrarSelectorJugador;
+window.sumarPuntosAJugador = sumarPuntosAJugador;

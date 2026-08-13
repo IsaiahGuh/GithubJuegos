@@ -1,4 +1,3 @@
-// js/apuestas.js - Módulo de apuestas con preguntas aleatorias
 import { CONFIG } from './config.js';
 import { mostrarZoom, mostrarZoomApuestaColorSeleccion, mostrarZoomApuestaNegroSeleccion } from './zoom.js';
 
@@ -20,12 +19,9 @@ const PREGUNTAS = [
 export function mostrarApuestaAleatoria() {
     const area = document.getElementById('apuestasArea');
     if (!area) return;
-
     const indice = Math.floor(Math.random() * PREGUNTAS.length);
     const pregunta = PREGUNTAS[indice];
-
     area.innerHTML = '';
-
     const container = document.createElement('div');
     container.className = 'apuestas-container';
 
@@ -51,8 +47,6 @@ export function mostrarApuestaAleatoria() {
     // FILA INFERIOR: vertical izquierdo + NegroH + vertical derecho
     const filaInferior = document.createElement('div');
     filaInferior.className = 'apuestas-fila-inferior';
-
-    // Vertical izquierdo
     const izqDiv = document.createElement('div');
     izqDiv.className = 'apuesta-carta-vertical';
     const imgIzq = document.createElement('img');
@@ -66,7 +60,6 @@ export function mostrarApuestaAleatoria() {
     });
     filaInferior.appendChild(izqDiv);
 
-    // NegroH con texto
     const containerGrande = document.createElement('div');
     containerGrande.className = 'apuesta-carta-container';
     const imgGrande = document.createElement('img');
@@ -85,16 +78,13 @@ export function mostrarApuestaAleatoria() {
         };
         mostrarZoom(cartaZoom, true);
     });
-
     const overlay = document.createElement('div');
     overlay.className = 'apuesta-texto-overlay';
     overlay.textContent = pregunta;
-
     containerGrande.appendChild(imgGrande);
     containerGrande.appendChild(overlay);
     filaInferior.appendChild(containerGrande);
 
-    // Vertical derecho
     const derDiv = document.createElement('div');
     derDiv.className = 'apuesta-carta-vertical';
     const imgDer = document.createElement('img');
@@ -107,7 +97,6 @@ export function mostrarApuestaAleatoria() {
         mostrarZoomApuestaNegroSeleccion('derecha');
     });
     filaInferior.appendChild(derDiv);
-
     container.appendChild(filaInferior);
     area.appendChild(container);
 }

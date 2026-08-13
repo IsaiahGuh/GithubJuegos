@@ -55,6 +55,28 @@
     </div>
 
     <!-- ============================================ -->
+    <!-- MODAL FINALIZACIÓN -->
+    <!-- ============================================ -->
+    <div id="modalFinalizacion" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h3>Finalizar Partida</h3>
+            <p>Ingresa el orden de los colores (posición 1 a 4):</p>
+            <div id="ordenColoresContainer" style="margin:12px 0;"></div>
+            <div style="margin:12px 0;">
+                <label>¿Ganó el "Sí" o el "No"?</label>
+                <select id="resultadoSiNo" style="width:100%;padding:8px;background:var(--bg-main);color:var(--text-main);border:1px solid var(--border-color);border-radius:8px;">
+                    <option value="SI">Sí</option>
+                    <option value="NO">No</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-primary" onclick="window.calcularYFinalizar()">Calcular y finalizar</button>
+                <button class="modal-btn btn-secondary" onclick="window.cerrarFinalizacion()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
     <!-- UI DEL JUEGO -->
     <!-- ============================================ -->
     <header>
@@ -72,6 +94,7 @@
     <div class="controles-juego">
         <button class="btn-control btn-historial" onclick="window.mostrarHistorial()">Historial</button>
         <button class="btn-control btn-carta" onclick="window.robarYMostrar()">Carta</button>
+        <button class="btn-control btn-final" onclick="window.mostrarFinalizacion()">Final</button>
         <button class="btn-control btn-reiniciar" onclick="window.reiniciarPartida()">Reiniciar</button>
         <div class="info-mazo">
             <span>Restantes: <strong id="contadorCartasFooter">0</strong></span>

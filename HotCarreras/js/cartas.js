@@ -1,7 +1,5 @@
-// js/cartas.js - Definición de cartas con texto (sin Negras)
 export function getCartasConTexto() {
     const cartas = [];
-
     function agregarCarta(color, imagen, textoConfig) {
         cartas.push({
             nombre: color,
@@ -9,8 +7,6 @@ export function getCartasConTexto() {
             ...textoConfig
         });
     }
-
-    // Colores base: Rosa, Verde, Naranja, Morado
     const coloresBase = ['Rosa', 'Verde', 'Naranja', 'Morado'];
     const textosBase = [
         { grande: '1', pequeno: 'Levantar' },
@@ -28,14 +24,11 @@ export function getCartasConTexto() {
         { grande: '3', pequeno: 'Desviar a la Derecha' },
         { grande: '3', pequeno: 'Desviar a la Izquierda' }
     ];
-
     for (const color of coloresBase) {
         for (const txt of textosBase) {
             agregarCarta(color, `${color}.png`, txt);
         }
     }
-
-    // Azul - todas tienen "Todos" arriba
     const azulTextos = [
         { superior: 'Todos', grande: '2', pequeno: 'Levantar' },
         { superior: 'Todos', grande: '3', pequeno: 'Levantar' },
@@ -51,7 +44,5 @@ export function getCartasConTexto() {
     for (const txt of azulTextos) {
         agregarCarta('Azul', 'Azul.png', txt);
     }
-
-    // Ya no se incluyen las cartas Negras
     return cartas;
 }

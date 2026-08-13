@@ -1,4 +1,3 @@
-// js/config.js
 export const COLORS = [
     { nombre: 'Azul', imagen: 'Azul.png' },
     { nombre: 'Morado', imagen: 'Morado.png' },
@@ -25,7 +24,7 @@ export const state = {
     cartaActual: null,
     jugadores: [],
     anguloZoomActual: 0,
-    apuestaPendiente: null // { tipo: 'color' | 'siNo', data: { ... } }
+    apuestaPendiente: null
 };
 
 export function initState() {
