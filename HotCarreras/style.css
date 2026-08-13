@@ -311,6 +311,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 .btn-control {
+    background-color: var(--color-rose);
     padding: 8px 20px;
     border: none;
     border-radius: 12px;
@@ -455,24 +456,44 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     border-radius: 12px;
 }
 
-/* Modal de selección de jugador */
-#modalSeleccionJugador .modal-box {
-    max-width: 340px;
-    border: none;
-}
+/* ========================================================= */
+/* MODAL DE SELECCIÓN DE JUGADOR - Estilo tipo leaderboard con color primario */
+/* ========================================================= */
+
 #modalSeleccionJugador .lista-jugadores {
+    background: var(--bg-box);
+    padding: 0;
+    margin: 10px 0;
     max-height: 200px;
     overflow-y: auto;
-    margin: 12px 0;
 }
+
+#modalSeleccionJugador .lista-jugadores::-webkit-scrollbar {
+    width: 4px;
+}
+#modalSeleccionJugador .lista-jugadores::-webkit-scrollbar-track {
+    background: var(--bg-box);
+    border-radius: 4px;
+}
+#modalSeleccionJugador .lista-jugadores::-webkit-scrollbar-thumb {
+    background: var(--bg-box);
+    border-radius: 4px;
+}
+
 #modalSeleccionJugador .jugador-input {
-    padding: 8px 12px;
-    border-bottom: none;
+    background: var(--color-primary);
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 6px;
+    color: var(--text-main);
+    font-weight: bold;
     transition: background 0.2s;
-    border-radius: 8px;
+    border: none;
+    cursor: pointer;
 }
+
 #modalSeleccionJugador .jugador-input:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* LEADERBOARD */

@@ -219,12 +219,7 @@ export function mostrarSelectorJugador(callback, tipo) {
     disponibles.forEach((j, index) => {
         const originalIndex = jugadores.indexOf(j);
         const div = document.createElement('div');
-        div.className = 'jugador-input';
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.padding = '6px';
-        div.style.cursor = 'pointer';
-        div.style.borderBottom = '1px solid var(--border-color)';
+        div.className = 'jugador-input';  // Solo la clase, sin estilos inline
         div.textContent = j.nombre;
         div.addEventListener('click', () => {
             if (callback) callback(originalIndex);
@@ -233,7 +228,6 @@ export function mostrarSelectorJugador(callback, tipo) {
         lista.appendChild(div);
     });
 
-    // Remover listener previo para evitar duplicados
     modal.removeEventListener('click', handleModalClick);
     modal.addEventListener('click', handleModalClick);
 
