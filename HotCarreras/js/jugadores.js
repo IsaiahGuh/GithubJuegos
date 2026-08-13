@@ -188,13 +188,36 @@ function eliminarJugador(index) {
 
 let selectorCallback = null;
 
-export function mostrarSelectorJugador(callback) {
+// Función manejadora para el clic en el overlay
+function handleModalClick(e) {
+    const modal = document.getElementById('modalSeleccionJugador');
+    if (e.target === modal) {
+        cerrarSelectorJugador();
+    }
+}
+
+export function mostrarSelectorJugador(callback, tipo) {
     const modal = document.getElementById('modalSeleccionJugador');
     const lista = document.getElementById('listaJugadoresSeleccion');
     if (!modal || !lista) return;
+
     const jugadores = getJugadores();
+    let disponibles = jugadores;
+    if (tipo === 'color') {
+        disponibles = jugadores.filter(j => !j.apuestas.color);
+    } else if (tipo === 'siNo') {
+        disponibles = jugadores.filter(j => !j.apuestas.siNo);
+    }
+
+    if (disponibles.length === 0) {
+        mostrarMensaje('No hay jugadores disponibles para este tipo de apuesta', 'warning');
+        cerrarSelectorJugador();
+        return;
+    }
+
     lista.innerHTML = '';
-    jugadores.forEach((j, index) => {
+    disponibles.forEach((j, index) => {
+        const originalIndex = jugadores.indexOf(j);
         const div = document.createElement('div');
         div.className = 'jugador-input';
         div.style.display = 'flex';
@@ -204,18 +227,26 @@ export function mostrarSelectorJugador(callback) {
         div.style.borderBottom = '1px solid var(--border-color)';
         div.textContent = j.nombre;
         div.addEventListener('click', () => {
-            if (callback) callback(index);
+            if (callback) callback(originalIndex);
             cerrarSelectorJugador();
         });
         lista.appendChild(div);
     });
+
+    // Remover listener previo para evitar duplicados
+    modal.removeEventListener('click', handleModalClick);
+    modal.addEventListener('click', handleModalClick);
+
     selectorCallback = callback;
     modal.style.display = 'flex';
 }
 
 export function cerrarSelectorJugador() {
     const modal = document.getElementById('modalSeleccionJugador');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        modal.removeEventListener('click', handleModalClick);
+    }
     selectorCallback = null;
 }
 

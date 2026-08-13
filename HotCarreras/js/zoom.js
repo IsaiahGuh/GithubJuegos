@@ -161,7 +161,7 @@ export function mostrarZoomApuestaColorSeleccion(color) {
         mostrarSelectorJugador((index) => {
             asignarApuestaColor(index, color, 'segura', 1, valores);
             cerrarZoom();
-        });
+        }, 'color');
     });
     wrap1.appendChild(btnSegura);
     container.appendChild(wrap1);
@@ -193,7 +193,7 @@ export function mostrarZoomApuestaColorSeleccion(color) {
             ];
             valoresArriesgados.color[color] = nuevos;
             cerrarZoom();
-        });
+        }, 'color');
     });
     wrap2.appendChild(btnArriesgada);
     container.appendChild(wrap2);
@@ -250,7 +250,7 @@ export function mostrarZoomApuestaNegroSeleccion(lado) {
         mostrarSelectorJugador((index) => {
             asignarApuestaSiNo(index, lado, tipo1, 1, valores);
             cerrarZoom();
-        });
+        }, 'siNo');
     });
     wrap1.appendChild(btn1);
     container.appendChild(wrap1);
@@ -271,7 +271,7 @@ export function mostrarZoomApuestaNegroSeleccion(lado) {
             const nuevoBajo = Math.floor(Math.random() * 6) - 5;
             valoresArriesgados.siNo[lado] = { alto: nuevoAlto, bajo: nuevoBajo };
             cerrarZoom();
-        });
+        }, 'siNo');
     });
     wrap2.appendChild(btn2);
     container.appendChild(wrap2);

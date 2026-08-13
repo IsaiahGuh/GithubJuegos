@@ -17,11 +17,7 @@ export function renderLeaderboard() {
         div.innerHTML = `
             <div class="player-card-header">
                 <span>${j.nombre}</span>
-                <span style="font-size:0.55rem;color:#666;">#${index + 1}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:2px;font-size:0.7rem;color:var(--text-muted);">
-                <span>Cartas: <strong style="color:var(--text-main);">${j.cartasRobadas || 0}</strong></span>
-                <span>Puntos: <strong style="color:var(--color-accent);">${j.puntaje || 0}</strong></span>
+                <span style="font-size:0.7rem;color:var(--color-accent);margin-left:auto;">Total: ${j.puntaje || 0}pts</span>
             </div>
         `;
         div.addEventListener('click', () => {
