@@ -337,36 +337,11 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     transform: scale(1.02);
 }
 
-.cerrar-btn {
-    background: var(--color-secondary);
-    color: #FFFFFF;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 15px;
-}
-
 .zoom-contenido {
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
-}
-
-.cerrar-zoom-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0,0,0,0.7);
-    color: var(--text-main);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    cursor: pointer;
 }
 
 .zoom-modal {
@@ -580,6 +555,13 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     aspect-ratio: 250 / 350;
 }
 
+/* Carta horizontal en zoom - invierte la proporción */
+.carta-zoom.carta-horizontal {
+    width: 480px;
+    height: auto;
+    aspect-ratio: 350 / 250;
+}
+
 .carta-zoom .carta-texto-superior {
     font-size: 2rem;
 }
@@ -623,6 +605,9 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     .carta-zoom {
         width: 300px;
     }
+    .carta-zoom.carta-horizontal {
+        width: 300px;
+    }
     .carta-zoom .carta-texto-superior {
         font-size: 1.3rem;
     }
@@ -660,6 +645,9 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 @media (max-width: 480px) {
     .carta-zoom {
+        width: 200px;
+    }
+    .carta-zoom.carta-horizontal {
         width: 200px;
     }
     .carta-zoom .carta-texto-superior {

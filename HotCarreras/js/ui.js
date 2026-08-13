@@ -1,7 +1,7 @@
 // js/ui.js - INTERFAZ DE USUARIO
-import { CONFIG, state } from './config.js';
 import { getCartasRestantes, getHistorial } from './juego.js';
 import { getJugadores, getTurnoActual } from './jugadores.js';
+import { crearCartaElement, mostrarZoom, cerrarZoom } from './zoom.js';
 
 // ============================================
 // RENDERIZAR UI
@@ -35,107 +35,6 @@ function actualizarIndicadorTurno() {
 }
 
 // ============================================
-// CREAR ELEMENTO CARTA CON TEXTO
-// ============================================
-
-export function crearCartaElement(carta, size = 'zoom') {
-    const container = document.createElement('div');
-    container.className = `carta-con-texto carta-${size}`;
-
-    // Imagen de fondo
-    const img = document.createElement('img');
-    img.src = CONFIG.UI.IMAGENES_PATH + carta.imagen;
-    img.alt = carta.nombre;
-    container.appendChild(img);
-
-    // Overlay de texto (solo si hay texto)
-    const hasText = carta.grande || carta.pequeno || carta.superior;
-    if (hasText) {
-        const overlay = document.createElement('div');
-        overlay.className = 'carta-texto-overlay';
-
-        // Texto superior (opcional)
-        if (carta.superior) {
-            const sup = document.createElement('div');
-            sup.className = 'carta-texto-superior';
-            sup.textContent = carta.superior;
-            overlay.appendChild(sup);
-        }
-
-        // Texto grande (principal)
-        if (carta.grande) {
-            const grande = document.createElement('div');
-            grande.className = 'carta-texto-grande';
-            grande.textContent = carta.grande;
-            overlay.appendChild(grande);
-        }
-
-        // Texto pequeño (debajo del grande)
-        if (carta.pequeno) {
-            const pequeno = document.createElement('div');
-            pequeno.className = 'carta-texto-pequeno';
-            pequeno.textContent = carta.pequeno;
-            overlay.appendChild(pequeno);
-        }
-
-        container.appendChild(overlay);
-    }
-
-    // Para el zoom, permitir rotación al hacer clic en la imagen (no en el overlay)
-    const imgElement = container.querySelector('img');
-    if (imgElement) {
-        imgElement.style.pointerEvents = 'auto';
-    }
-
-    return container;
-}
-
-// ============================================
-// MOSTRAR ZOOM
-// ============================================
-
-export function mostrarZoom(carta) {
-    const modal = document.getElementById('modalZoom');
-    const contenido = modal.querySelector('.zoom-contenido');
-    if (!modal || !contenido) return;
-
-    // Limpiar contenido anterior
-    contenido.innerHTML = '';
-    
-    // Crear elemento carta
-    const cartaElement = crearCartaElement(carta, 'zoom');
-    cartaElement.id = 'zoomCarta';
-    contenido.appendChild(cartaElement);
-
-    // Añadir botón cerrar
-    const btn = document.createElement('button');
-    btn.id = 'cerrarZoomBtn';
-    btn.className = 'cerrar-zoom-btn';
-    btn.textContent = 'X';
-    btn.addEventListener('click', cerrarZoom);
-    contenido.appendChild(btn);
-
-    // Configurar rotación al hacer clic en la imagen
-    const img = cartaElement.querySelector('img');
-    if (img) {
-        img.addEventListener('click', () => {
-            const el = document.getElementById('zoomCarta');
-            if (el) {
-                state.anguloZoomActual = (state.anguloZoomActual + 90) % 360;
-                el.style.transform = `rotate(${state.anguloZoomActual}deg)`;
-            }
-        });
-    }
-
-    modal.style.display = 'flex';
-}
-
-export function cerrarZoom() {
-    const modal = document.getElementById('modalZoom');
-    if (modal) modal.style.display = 'none';
-}
-
-// ============================================
 // MOSTRAR HISTORIAL
 // ============================================
 
@@ -154,11 +53,9 @@ export function mostrarHistorial() {
             const item = document.createElement('div');
             item.className = 'historial-item';
 
-            // Crear carta en tamaño pequeño
             const cartaElement = crearCartaElement(carta, 'historial');
             item.appendChild(cartaElement);
 
-            // Al hacer clic en el item, abrir zoom
             item.addEventListener('click', () => {
                 mostrarZoom(carta);
             });
@@ -216,11 +113,6 @@ export function mostrarMensaje(texto, tipo = 'info') {
 // ============================================
 
 export function configurarEventos() {
-    const cerrarHistorial = document.getElementById('cerrarHistorialBtn');
-    if (cerrarHistorial) {
-        cerrarHistorial.addEventListener('click', ocultarHistorial);
-    }
-
     // Cerrar modales al hacer clic fuera
     const modales = ['modalHistorial', 'modalZoom'];
     for (const id of modales) {
@@ -248,5 +140,3 @@ export function configurarEventos() {
 // ============================================
 
 window.mostrarHistorial = mostrarHistorial;
-window.mostrarZoom = mostrarZoom;
-window.cerrarZoom = cerrarZoom;

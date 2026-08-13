@@ -1,7 +1,8 @@
 // main.js - PUNTO DE ENTRADA
 import { state, initState } from './js/config.js';
 import { generarMazo, reiniciarJuego, robarCarta } from './js/juego.js';
-import { actualizarUI, configurarEventos, mostrarHistorial, mostrarZoom, cerrarZoom } from './js/ui.js';
+import { actualizarUI, configurarEventos, mostrarHistorial } from './js/ui.js';
+import { mostrarZoom, cerrarZoom } from './js/zoom.js';
 import { renderLeaderboard, toggleLeaderboard } from './js/leaderboard.js';
 import { inicializarModal, crearJugadoresDesdeModal, toggleVistaJugadores, agregarJugador, getJugadores, getTurnoActual, contarCartaRobada } from './js/jugadores.js';
 import { inicializarApuestas } from './js/apuestas.js';
@@ -15,7 +16,7 @@ function init() {
     generarMazo();
     configurarEventos();
     inicializarModal();
-    inicializarApuestas(); // Muestra una apuesta aleatoria al inicio
+    inicializarApuestas();
     actualizarUI();
     renderLeaderboard();
     

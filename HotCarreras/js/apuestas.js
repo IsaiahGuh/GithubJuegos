@@ -1,5 +1,6 @@
 // js/apuestas.js - Módulo de apuestas con preguntas aleatorias (estáticas)
 import { CONFIG } from './config.js';
+import { mostrarZoom } from './zoom.js';
 
 // ============================================
 // LISTA DE PREGUNTAS (Sí/No)
@@ -51,7 +52,6 @@ export function mostrarApuestaAleatoria() {
         img.src = CONFIG.UI.IMAGENES_PATH + color + 'H.png';
         img.alt = color;
         img.draggable = false;
-        // Sin listener de click
         div.appendChild(img);
         filaSuperior.appendChild(div);
     });
@@ -69,11 +69,10 @@ export function mostrarApuestaAleatoria() {
     imgIzq.src = CONFIG.UI.IMAGENES_PATH + 'Negro.png';
     imgIzq.alt = 'Negro';
     imgIzq.draggable = false;
-    // Sin listener
     izqDiv.appendChild(imgIzq);
     filaInferior.appendChild(izqDiv);
 
-    // NegroH con texto
+    // NegroH con texto - ahora con evento de clic
     const containerGrande = document.createElement('div');
     containerGrande.className = 'apuesta-carta-container';
     const imgGrande = document.createElement('img');
@@ -81,7 +80,18 @@ export function mostrarApuestaAleatoria() {
     imgGrande.alt = 'Apuesta';
     imgGrande.className = 'apuesta-carta-img';
     imgGrande.draggable = false;
-    // Sin listener
+    
+    imgGrande.style.cursor = 'pointer';
+    imgGrande.addEventListener('click', () => {
+        const cartaZoom = {
+            nombre: 'Apuesta',
+            imagen: 'NegroH.png',
+            grande: '?',
+            pequeno: pregunta,
+            superior: ''
+        };
+        mostrarZoom(cartaZoom, true);
+    });
 
     const overlay = document.createElement('div');
     overlay.className = 'apuesta-texto-overlay';
@@ -98,7 +108,6 @@ export function mostrarApuestaAleatoria() {
     imgDer.src = CONFIG.UI.IMAGENES_PATH + 'Negro.png';
     imgDer.alt = 'Negro';
     imgDer.draggable = false;
-    // Sin listener
     derDiv.appendChild(imgDer);
     filaInferior.appendChild(derDiv);
 
