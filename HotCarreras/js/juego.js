@@ -1,3 +1,4 @@
+// juego.js
 import { CONFIG, state } from './config.js';
 import { getCartasConTexto } from './cartas.js';
 import { resetearJugadores, getJugadores, sumarPuntosAJugador } from './jugadores.js';
@@ -18,8 +19,12 @@ export function generarMazo() {
     const numJugadores = getJugadores().length;
     const cantidadCartas = CONFIG.GAME.CARTAS_POR_JUGADOR[numJugadores] || 20;
     
-    const cartasSeleccionadas = seleccionarCartasAleatorias(todasLasCartas, cantidadCartas);
-    state.mazo = mezclarArray(cartasSeleccionadas);
+    if (!state.mazoInicial) {
+        const cartasSeleccionadas = seleccionarCartasAleatorias(todasLasCartas, cantidadCartas);
+        state.mazoInicial = cartasSeleccionadas;
+    }
+    
+    state.mazo = mezclarArray(state.mazoInicial);
     
     console.log(`Mazo generado con ${state.mazo.length} cartas para ${numJugadores} jugadores`);
 }
@@ -43,9 +48,19 @@ function seleccionarCartasAleatorias(cartas, cantidad) {
     return seleccionadas;
 }
 
+export function mezclarMazo() {
+    if (!state.mazoInicial) {
+        generarMazo();
+    } else {
+        state.mazo = mezclarArray(state.mazoInicial);
+        actualizarUI();
+    }
+}
+
 export function reiniciarJuego() {
     state.historial = [];
     state.cartaActual = null;
+    state.mazoInicial = null;
     generarMazo();
     resetearJugadores();
     actualizarUI();
@@ -118,10 +133,6 @@ export function setActualizarUICallback(callback) {
     window._actualizarUICallback = callback;
 }
 
-// ============================================
-// FINALIZAR PARTIDA - PODIO Y TOGGLE
-// ============================================
-
 export function mostrarFinalizacion() {
     const modal = document.getElementById('modalFinalizacion');
     if (!modal) return;
@@ -134,12 +145,10 @@ export function mostrarFinalizacion() {
 
     const colores = ['Rosa', 'Verde', 'Naranja', 'Morado'];
 
-    // Limpiar contenedores
     podioContainer.innerHTML = '';
     pos4Container.innerHTML = '';
     toggleContainer.innerHTML = '';
 
-    // Crear podio (posiciones 1,2,3)
     for (let i = 1; i <= 3; i++) {
         const col = document.createElement('div');
         col.className = 'podio-col';
@@ -160,7 +169,6 @@ export function mostrarFinalizacion() {
         podioContainer.appendChild(col);
     }
 
-    // Posición 4 (fuera del podio)
     const pos4Div = document.createElement('div');
     pos4Div.className = 'pos4-item';
     const num4 = document.createElement('span');
@@ -179,10 +187,9 @@ export function mostrarFinalizacion() {
     pos4Div.appendChild(select4);
     pos4Container.appendChild(pos4Div);
 
-    // Toggle Sí/No
     const btnSi = document.createElement('button');
     btnSi.className = 'toggle-btn active';
-    btnSi.textContent = 'Sí';
+    btnSi.textContent = 'Si';
     btnSi.dataset.value = 'SI';
     const btnNo = document.createElement('button');
     btnNo.className = 'toggle-btn';
@@ -210,7 +217,6 @@ export function calcularYFinalizar() {
     const modal = document.getElementById('modalFinalizacion');
     if (!modal) return;
 
-    // Obtener orden de colores
     const orden = [];
     for (let i = 1; i <= 4; i++) {
         const select = document.getElementById(`posicion_${i}`);
@@ -218,23 +224,20 @@ export function calcularYFinalizar() {
         orden.push(select.value);
     }
 
-    // Validar colores únicos
     const set = new Set(orden);
     if (set.size !== 4) {
-        mostrarMensaje('Debes elegir un color diferente para cada posición', 'warning');
+        mostrarMensaje('Debes elegir un color diferente para cada posicion', 'warning');
         return;
     }
 
-    // Obtener resultado del toggle (el botón activo)
     const toggleContainer = document.getElementById('toggleSiNoContainer');
     const activeBtn = toggleContainer?.querySelector('.toggle-btn.active');
     if (!activeBtn) {
-        mostrarMensaje('Selecciona Sí o No', 'warning');
+        mostrarMensaje('Selecciona Si o No', 'warning');
         return;
     }
     const resultadoSiNo = activeBtn.dataset.value;
 
-    // Calcular puntos
     const jugadores = getJugadores();
     jugadores.forEach((j, index) => {
         let puntos = 0;
@@ -271,12 +274,10 @@ export function calcularYFinalizar() {
     cerrarFinalizacion();
     mostrarMensaje('Puntajes calculados y actualizados', 'success');
 
-    // Deshabilitar botón Final
     const btnFinal = document.querySelector('.btn-final');
     if (btnFinal) btnFinal.disabled = true;
 }
 
-// Exponer funciones globales
 window.mostrarFinalizacion = mostrarFinalizacion;
 window.cerrarFinalizacion = cerrarFinalizacion;
 window.calcularYFinalizar = calcularYFinalizar;

@@ -1,3 +1,4 @@
+// ui.js
 import { getCartasRestantes, getHistorial } from './juego.js';
 import { getJugadores } from './jugadores.js';
 import { crearCartaElement, mostrarZoom, cerrarZoom } from './zoom.js';
@@ -6,6 +7,11 @@ export function actualizarUI() {
     const restantes = getCartasRestantes();
     const contadorCartasFooter = document.getElementById('contadorCartasFooter');
     if (contadorCartasFooter) contadorCartasFooter.textContent = restantes;
+
+    const btnCarta = document.querySelector('.btn-carta');
+    if (btnCarta) {
+        btnCarta.textContent = restantes === 0 ? 'Mezclar' : 'Carta';
+    }
 }
 
 export function mostrarHistorial() {
@@ -37,7 +43,6 @@ export function ocultarHistorial() {
 }
 
 export function configurarEventos() {
-    // Cerrar modales al hacer clic en el overlay (fondo)
     const modales = ['modalHistorial', 'modalZoom', 'modalFinalizacion'];
     for (const id of modales) {
         const modal = document.getElementById(id);
@@ -45,7 +50,6 @@ export function configurarEventos() {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.style.display = 'none';
-                    // Si es el modal de finalización, también llamamos a cerrarFinalizacion (por si hay lógica extra)
                     if (id === 'modalFinalizacion' && window.cerrarFinalizacion) {
                         window.cerrarFinalizacion();
                     }

@@ -1,3 +1,4 @@
+// config.js
 export const COLORS = [
     { nombre: 'Azul', imagen: 'Azul.png' },
     { nombre: 'Morado', imagen: 'Morado.png' },
@@ -9,7 +10,6 @@ export const COLORS = [
 
 export const CONFIG = {
     GAME: {
-        // Cantidad de cartas por número de jugadores
         CARTAS_POR_JUGADOR: {
             2: 12,
             3: 12,
@@ -31,7 +31,8 @@ export const CONFIG = {
 
 export const state = {
     mazo: [],
-    mazoCompleto: [], // Guardamos el mazo completo para seleccionar cartas
+    mazoCompleto: [],
+    mazoInicial: null,
     historial: [],
     cartaActual: null,
     jugadores: [],
@@ -42,6 +43,7 @@ export const state = {
 export function initState() {
     state.mazo = [];
     state.mazoCompleto = [];
+    state.mazoInicial = null;
     state.historial = [];
     state.cartaActual = null;
     state.jugadores = [];

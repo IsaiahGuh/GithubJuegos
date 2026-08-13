@@ -1,5 +1,6 @@
+// main.js
 import { state, initState } from './js/config.js';
-import { generarMazo, reiniciarJuego, robarCarta, mostrarFinalizacion, cerrarFinalizacion, calcularYFinalizar, setActualizarUICallback } from './js/juego.js';
+import { generarMazo, reiniciarJuego, robarCarta, mostrarFinalizacion, cerrarFinalizacion, calcularYFinalizar, setActualizarUICallback, mezclarMazo, getCartasRestantes } from './js/juego.js';
 import { actualizarUI as actualizarUIFromUI, configurarEventos, mostrarHistorial } from './js/ui.js';
 import { mostrarZoom, cerrarZoom } from './js/zoom.js';
 import { renderLeaderboard, toggleLeaderboard } from './js/leaderboard.js';
@@ -40,6 +41,10 @@ function init() {
     window.sumarPuntosAJugador = sumarPuntosAJugador;
 
     window.robarYMostrar = function() {
+        if (getCartasRestantes() === 0) {
+            mezclarMazo();
+            return;
+        }
         const carta = robarCarta();
         if (carta) {
             mostrarZoom(carta);
@@ -47,7 +52,7 @@ function init() {
     };
 
     console.log('HotCarreras - Iniciado');
-    console.log('Esperando configuración de jugadores...');
+    console.log('Esperando configuracion de jugadores...');
 }
 
 document.addEventListener('DOMContentLoaded', init);
