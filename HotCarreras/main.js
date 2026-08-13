@@ -3,8 +3,8 @@ import { state, initState } from './js/config.js';
 import { generarMazo, reiniciarJuego, robarCarta } from './js/juego.js';
 import { actualizarUI, configurarEventos, mostrarHistorial, mostrarZoom, cerrarZoom } from './js/ui.js';
 import { renderLeaderboard, toggleLeaderboard } from './js/leaderboard.js';
-import { inicializarModal, crearJugadoresDesdeModal, toggleVistaJugadores, agregarJugador, getJugadores, getTurnoActual } from './js/jugadores.js';
-import { contarCartaRobada } from './js/jugadores.js';
+import { inicializarModal, crearJugadoresDesdeModal, toggleVistaJugadores, agregarJugador, getJugadores, getTurnoActual, contarCartaRobada } from './js/jugadores.js';
+import { inicializarApuestas } from './js/apuestas.js';
 
 // ============================================
 // INICIALIZACION
@@ -15,9 +15,11 @@ function init() {
     generarMazo();
     configurarEventos();
     inicializarModal();
+    inicializarApuestas(); // Muestra una apuesta aleatoria al inicio
     actualizarUI();
     renderLeaderboard();
     
+    // Exponer funciones globales para uso en HTML
     window.cerrarZoom = cerrarZoom;
     window.toggleLeaderboard = toggleLeaderboard;
     window.mostrarHistorial = mostrarHistorial;

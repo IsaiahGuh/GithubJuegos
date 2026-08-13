@@ -1,4 +1,4 @@
-// js/cartas.js - Definición de cartas con texto
+// js/cartas.js - Definición de cartas con texto (sin Negras)
 export function getCartasConTexto() {
     const cartas = [];
 
@@ -37,20 +37,14 @@ export function getCartasConTexto() {
 
     // Azul - todas tienen "Todos" arriba
     const azulTextos = [
-        // Levantar y luego 2
         { superior: 'Todos', grande: '2', pequeno: 'Levantar' },
-        // Levantar y luego 3
         { superior: 'Todos', grande: '3', pequeno: 'Levantar' },
-        // 1 x2 (aparece 2 veces)
         { superior: 'Todos', grande: '1', pequeno: 'Desviar a la Derecha' },
         { superior: 'Todos', grande: '1', pequeno: 'Desviar a la Izquierda' },
-        // 2 x2 (aparece 2 veces)
         { superior: 'Todos', grande: '2', pequeno: 'Desviar a la Derecha' },
         { superior: 'Todos', grande: '2', pequeno: 'Desviar a la Izquierda' },
-        // 3 x2 (aparece 2 veces)
         { superior: 'Todos', grande: '3', pequeno: 'Desviar a la Derecha' },
         { superior: 'Todos', grande: '3', pequeno: 'Desviar a la Izquierda' },
-        // -2 x2 (aparece 2 veces)
         { superior: 'Todos', grande: '-2', pequeno: 'Desviar a la Derecha' },
         { superior: 'Todos', grande: '-2', pequeno: 'Desviar a la Izquierda' }
     ];
@@ -58,10 +52,6 @@ export function getCartasConTexto() {
         agregarCarta('Azul', 'Azul.png', txt);
     }
 
-    // Negra (sin texto) - 4 cartas
-    for (let i = 0; i < 4; i++) {
-        agregarCarta('Negra', 'Negro.png', {});
-    }
-
+    // Ya no se incluyen las cartas Negras
     return cartas;
 }
