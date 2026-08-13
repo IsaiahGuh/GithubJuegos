@@ -44,6 +44,17 @@
     </div>
 
     <!-- ============================================ -->
+    <!-- MODAL SELECCION JUGADOR (para apuestas) -->
+    <!-- ============================================ -->
+    <div id="modalSeleccionJugador" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h3>Selecciona un jugador</h3>
+            <div id="listaJugadoresSeleccion" class="lista-jugadores"></div>
+            <button class="modal-btn btn-secondary" onclick="window.cerrarSeleccionJugador()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
     <!-- UI DEL JUEGO -->
     <!-- ============================================ -->
     <header>
@@ -78,7 +89,7 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- MODAL ZOOM -->
+    <!-- MODAL ZOOM (también se usa para mostrar apuestas del jugador) -->
     <!-- ============================================ -->
     <div id="modalZoom" class="modal zoom-modal">
         <div class="zoom-contenido">

@@ -9,9 +9,7 @@ export const COLORS = [
 ];
 
 export const CONFIG = {
-    GAME: {
-        // Ya no usamos CARTAS_POR_COLOR, ahora las cartas vienen de cartas.js
-    },
+    GAME: {},
     UI: {
         IMAGENES_PATH: 'imagenes/',
     },
@@ -26,8 +24,8 @@ export const state = {
     historial: [],
     cartaActual: null,
     jugadores: [],
-    // turnoActual eliminado
-    anguloZoomActual: 0
+    anguloZoomActual: 0,
+    apuestaPendiente: null // { tipo: 'color' | 'siNo', data: { ... } }
 };
 
 export function initState() {
@@ -36,4 +34,5 @@ export function initState() {
     state.cartaActual = null;
     state.jugadores = [];
     state.anguloZoomActual = 0;
+    state.apuestaPendiente = null;
 }

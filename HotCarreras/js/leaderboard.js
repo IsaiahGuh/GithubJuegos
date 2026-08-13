@@ -1,9 +1,6 @@
-// js/leaderboard.js - LISTA DE JUGADORES
+// js/leaderboard.js - LISTA DE JUGADORES (click para ver apuestas)
 import { getJugadores } from './jugadores.js';
-
-// ============================================
-// RENDERIZAR LEADERBOARD
-// ============================================
+import { mostrarApuestasJugador } from './zoom.js';
 
 export function renderLeaderboard() {
     const list = document.getElementById('playersList');
@@ -31,19 +28,18 @@ export function renderLeaderboard() {
                 <span>Cartas: <strong style="color:var(--text-main);">${j.cartasRobadas || 0}</strong></span>
             </div>
         `;
+        // Al hacer clic en la tarjeta del jugador, mostrar sus apuestas
+        div.addEventListener('click', () => {
+            mostrarApuestasJugador(index);
+        });
         list.appendChild(div);
     });
 }
-
-// ============================================
-// TOGGLE LEADERBOARD
-// ============================================
 
 export function toggleLeaderboard() {
     const content = document.getElementById('leaderboardContent');
     const icon = document.getElementById('toggleIcon');
     if (!content || !icon) return;
-    
     if (content.style.display === 'none') {
         content.style.display = 'block';
         icon.textContent = '▲';

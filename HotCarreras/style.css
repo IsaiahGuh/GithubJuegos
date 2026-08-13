@@ -906,3 +906,37 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* Estilos para los botones dentro del zoom de apuestas */
+.zoom-apuesta-container > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.zoom-apuesta-container .btn-control {
+    font-size: 0.9rem;
+    padding: 6px 16px;
+    width: auto;
+    min-width: 120px;
+}
+
+/* Modal de selección de jugador */
+#modalSeleccionJugador .modal-box {
+    max-width: 340px;
+}
+#modalSeleccionJugador .lista-jugadores {
+    max-height: 200px;
+    overflow-y: auto;
+    margin: 12px 0;
+}
+#modalSeleccionJugador .jugador-input {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+#modalSeleccionJugador .jugador-input:hover {
+    background: rgba(255,255,255,0.05);
+}

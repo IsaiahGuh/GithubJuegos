@@ -1,10 +1,6 @@
-// js/apuestas.js - Módulo de apuestas con preguntas aleatorias (estáticas)
+// js/apuestas.js - Módulo de apuestas con preguntas aleatorias
 import { CONFIG } from './config.js';
-import { mostrarZoom, mostrarZoomApuestaColor, mostrarZoomApuestaNegro } from './zoom.js';
-
-// ============================================
-// LISTA DE PREGUNTAS (Sí/No)
-// ============================================
+import { mostrarZoom, mostrarZoomApuestaColorSeleccion, mostrarZoomApuestaNegroSeleccion } from './zoom.js';
 
 const PREGUNTAS = [
     '¿Terminará Rosa entre los 2 últimos?',
@@ -21,10 +17,6 @@ const PREGUNTAS = [
     '¿Será noqueada una mascota?'
 ];
 
-// ============================================
-// FUNCIÓN PARA MOSTRAR APUESTA (solo se llama al inicio)
-// ============================================
-
 export function mostrarApuestaAleatoria() {
     const area = document.getElementById('apuestasArea');
     if (!area) return;
@@ -37,10 +29,9 @@ export function mostrarApuestaAleatoria() {
     const container = document.createElement('div');
     container.className = 'apuestas-container';
 
-    // ---- FILA SUPERIOR: 4 colores pequeños ----
+    // FILA SUPERIOR: 4 colores pequeños
     const filaSuperior = document.createElement('div');
     filaSuperior.className = 'apuestas-fila-superior';
-
     const colores = ['Rosa', 'Verde', 'Naranja', 'Morado'];
     colores.forEach(color => {
         const div = document.createElement('div');
@@ -51,18 +42,17 @@ export function mostrarApuestaAleatoria() {
         img.draggable = false;
         div.appendChild(img);
         div.addEventListener('click', () => {
-            mostrarZoomApuestaColor(color);
+            mostrarZoomApuestaColorSeleccion(color);
         });
         filaSuperior.appendChild(div);
     });
-
     container.appendChild(filaSuperior);
 
-    // ---- FILA INFERIOR: vertical izquierdo + NegroH + vertical derecho ----
+    // FILA INFERIOR: vertical izquierdo + NegroH + vertical derecho
     const filaInferior = document.createElement('div');
     filaInferior.className = 'apuestas-fila-inferior';
 
-    // Vertical izquierdo (Negro.png)
+    // Vertical izquierdo
     const izqDiv = document.createElement('div');
     izqDiv.className = 'apuesta-carta-vertical';
     const imgIzq = document.createElement('img');
@@ -72,7 +62,7 @@ export function mostrarApuestaAleatoria() {
     izqDiv.appendChild(imgIzq);
     izqDiv.style.cursor = 'pointer';
     izqDiv.addEventListener('click', () => {
-        mostrarZoomApuestaNegro('izquierda');
+        mostrarZoomApuestaNegroSeleccion('izquierda');
     });
     filaInferior.appendChild(izqDiv);
 
@@ -104,7 +94,7 @@ export function mostrarApuestaAleatoria() {
     containerGrande.appendChild(overlay);
     filaInferior.appendChild(containerGrande);
 
-    // Vertical derecho (Negro.png)
+    // Vertical derecho
     const derDiv = document.createElement('div');
     derDiv.className = 'apuesta-carta-vertical';
     const imgDer = document.createElement('img');
@@ -114,17 +104,13 @@ export function mostrarApuestaAleatoria() {
     derDiv.appendChild(imgDer);
     derDiv.style.cursor = 'pointer';
     derDiv.addEventListener('click', () => {
-        mostrarZoomApuestaNegro('derecha');
+        mostrarZoomApuestaNegroSeleccion('derecha');
     });
     filaInferior.appendChild(derDiv);
 
     container.appendChild(filaInferior);
     area.appendChild(container);
 }
-
-// ============================================
-// INICIALIZAR (se llama una sola vez)
-// ============================================
 
 export function inicializarApuestas() {
     mostrarApuestaAleatoria();

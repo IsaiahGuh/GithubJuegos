@@ -1,4 +1,4 @@
-// js/jugadores.js - Gestión de jugadores locales + modal
+// js/jugadores.js - Gestión de jugadores + apuestas + selector
 import { state } from './config.js';
 import { actualizarUI } from './juego.js';
 import { renderLeaderboard } from './leaderboard.js';
@@ -34,10 +34,9 @@ export function crearJugadoresDesdeModal() {
         id: index,
         nombre: nombre || `Jugador ${index + 1}`,
         cartasRobadas: 0,
-        conectado: true
+        conectado: true,
+        apuestas: { color: null, siNo: null }
     }));
-    
-    // turnoActual eliminado
     
     document.getElementById('lobbyModal').style.display = 'none';
     document.getElementById('leaderboardPanel').style.display = 'flex';
@@ -65,17 +64,49 @@ export function getJugador(index) {
 }
 
 // ============================================
-// REINICIAR ESTADO DE JUGADORES
+// APUESTAS (ahora con valores)
+// ============================================
+
+export function asignarApuestaColor(jugadorIndex, color, tipo, opcion, valores) {
+    const jugador = getJugador(jugadorIndex);
+    if (!jugador) return false;
+    if (jugador.apuestas.color) {
+        mostrarMensaje('Este jugador ya tiene una apuesta de color', 'warning');
+        return false;
+    }
+    jugador.apuestas.color = { color, tipo, opcion, valores };
+    renderLeaderboard();
+    return true;
+}
+
+export function asignarApuestaSiNo(jugadorIndex, lado, tipo, opcion, valores) {
+    const jugador = getJugador(jugadorIndex);
+    if (!jugador) return false;
+    if (jugador.apuestas.siNo) {
+        mostrarMensaje('Este jugador ya tiene una apuesta de Sí/No', 'warning');
+        return false;
+    }
+    jugador.apuestas.siNo = { lado, tipo, opcion, valores };
+    renderLeaderboard();
+    return true;
+}
+
+export function getApuestasJugador(index) {
+    const jugador = getJugador(index);
+    return jugador ? (jugador.apuestas || null) : null;
+}
+
+// ============================================
+// REINICIAR
 // ============================================
 
 export function resetearJugadores() {
     if (!state.jugadores) return;
-    
     state.jugadores.forEach(j => {
         j.cartasRobadas = 0;
         j.conectado = true;
+        j.apuestas = { color: null, siNo: null };
     });
-    
     renderLeaderboard();
     actualizarUI();
 }
@@ -197,6 +228,44 @@ function eliminarJugador(index) {
 }
 
 // ============================================
+// MODAL SELECCION JUGADOR (para apuestas)
+// ============================================
+
+let selectorCallback = null;
+
+export function mostrarSelectorJugador(callback) {
+    const modal = document.getElementById('modalSeleccionJugador');
+    const lista = document.getElementById('listaJugadoresSeleccion');
+    if (!modal || !lista) return;
+    
+    const jugadores = getJugadores();
+    lista.innerHTML = '';
+    jugadores.forEach((j, index) => {
+        const div = document.createElement('div');
+        div.className = 'jugador-input';
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.padding = '6px';
+        div.style.cursor = 'pointer';
+        div.style.borderBottom = '1px solid var(--border-color)';
+        div.textContent = j.nombre;
+        div.addEventListener('click', () => {
+            if (callback) callback(index);
+            cerrarSelectorJugador();
+        });
+        lista.appendChild(div);
+    });
+    selectorCallback = callback;
+    modal.style.display = 'flex';
+}
+
+export function cerrarSelectorJugador() {
+    const modal = document.getElementById('modalSeleccionJugador');
+    if (modal) modal.style.display = 'none';
+    selectorCallback = null;
+}
+
+// ============================================
 // INICIALIZAR MODAL
 // ============================================
 
@@ -248,3 +317,4 @@ window.getJugadores = getJugadores;
 window.toggleVistaJugadores = toggleVistaJugadores;
 window.agregarJugador = agregarJugador;
 window.iniciarPartida = crearJugadoresDesdeModal;
+window.cerrarSeleccionJugador = cerrarSelectorJugador;

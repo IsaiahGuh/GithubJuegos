@@ -2,14 +2,10 @@
 import { state, initState } from './js/config.js';
 import { generarMazo, reiniciarJuego, robarCarta } from './js/juego.js';
 import { actualizarUI, configurarEventos, mostrarHistorial } from './js/ui.js';
-import { mostrarZoom, cerrarZoom, mostrarZoomApuestaColor, mostrarZoomApuestaNegro } from './js/zoom.js';
+import { mostrarZoom, cerrarZoom } from './js/zoom.js';
 import { renderLeaderboard, toggleLeaderboard } from './js/leaderboard.js';
 import { inicializarModal, crearJugadoresDesdeModal, toggleVistaJugadores, agregarJugador, getJugadores } from './js/jugadores.js';
 import { inicializarApuestas } from './js/apuestas.js';
-
-// ============================================
-// INICIALIZACION
-// ============================================
 
 function init() {
     initState();
@@ -20,7 +16,6 @@ function init() {
     actualizarUI();
     renderLeaderboard();
     
-    // Exponer funciones globales para uso en HTML
     window.cerrarZoom = cerrarZoom;
     window.toggleLeaderboard = toggleLeaderboard;
     window.mostrarHistorial = mostrarHistorial;
@@ -29,8 +24,6 @@ function init() {
     window.agregarJugador = agregarJugador;
     window.iniciarPartida = crearJugadoresDesdeModal;
     window.getJugadores = getJugadores;
-    window.mostrarZoomApuestaColor = mostrarZoomApuestaColor;
-    window.mostrarZoomApuestaNegro = mostrarZoomApuestaNegro;
     
     window.robarYMostrar = function() {
         const carta = robarCarta();
