@@ -61,7 +61,7 @@ export function asignarApuestaSiNo(jugadorIndex, lado, tipo, opcion, valores) {
     const jugador = getJugador(jugadorIndex);
     if (!jugador) return false;
     if (jugador.apuestas.siNo) {
-        mostrarMensaje('Este jugador ya tiene una apuesta de Sí/No', 'warning');
+        mostrarMensaje('Este jugador ya tiene una apuesta de Si/No', 'warning');
         return false;
     }
     jugador.apuestas.siNo = { lado, tipo, opcion, valores };
@@ -87,6 +87,14 @@ export function resetearJugadores() {
     });
     renderLeaderboard();
     actualizarUI();
+}
+
+export function limpiarApuestas() {
+    if (!state.jugadores) return;
+    state.jugadores.forEach(j => {
+        j.apuestas = { color: null, siNo: null };
+    });
+    renderLeaderboard();
 }
 
 export function toggleVistaJugadores() {
@@ -170,7 +178,7 @@ function renderizarListaJugadores() {
 
 export function agregarJugador() {
     if (modalState.jugadores.length >= 8) {
-        mostrarMensaje('Máximo 8 jugadores', 'warning');
+        mostrarMensaje('Maximo 8 jugadores', 'warning');
         return;
     }
     modalState.jugadores.push('');
@@ -179,7 +187,7 @@ export function agregarJugador() {
 
 function eliminarJugador(index) {
     if (modalState.jugadores.length <= 2) {
-        mostrarMensaje('Mínimo 2 jugadores', 'warning');
+        mostrarMensaje('Minimo 2 jugadores', 'warning');
         return;
     }
     modalState.jugadores.splice(index, 1);
@@ -188,7 +196,6 @@ function eliminarJugador(index) {
 
 let selectorCallback = null;
 
-// Función manejadora para el clic en el overlay
 function handleModalClick(e) {
     const modal = document.getElementById('modalSeleccionJugador');
     if (e.target === modal) {
@@ -219,7 +226,7 @@ export function mostrarSelectorJugador(callback, tipo) {
     disponibles.forEach((j, index) => {
         const originalIndex = jugadores.indexOf(j);
         const div = document.createElement('div');
-        div.className = 'jugador-input';  // Solo la clase, sin estilos inline
+        div.className = 'jugador-input';
         div.textContent = j.nombre;
         div.addEventListener('click', () => {
             if (callback) callback(originalIndex);

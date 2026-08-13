@@ -1,7 +1,7 @@
-// juego.js
 import { CONFIG, state } from './config.js';
 import { getCartasConTexto } from './cartas.js';
-import { resetearJugadores, getJugadores, sumarPuntosAJugador } from './jugadores.js';
+import { resetearJugadores, getJugadores, sumarPuntosAJugador, limpiarApuestas } from './jugadores.js';
+import { mostrarApuestaAleatoria } from './apuestas.js';
 
 function mezclarArray(array) {
     const copia = [...array];
@@ -63,6 +63,7 @@ export function reiniciarJuego() {
     state.mazoInicial = null;
     generarMazo();
     resetearJugadores();
+    mostrarApuestaAleatoria(); // Actualizar la pregunta de NegroH
     actualizarUI();
     const btnFinal = document.querySelector('.btn-final');
     if (btnFinal) btnFinal.disabled = false;
@@ -271,11 +272,21 @@ export function calcularYFinalizar() {
         sumarPuntosAJugador(index, puntos);
     });
 
-    cerrarFinalizacion();
-    mostrarMensaje('Puntajes calculados y actualizados', 'success');
+    // Limpiar apuestas de todos los jugadores
+    limpiarApuestas();
 
+    // Generar nuevo mazo con cartas diferentes (no las mismas)
+    state.mazoInicial = null;
+    generarMazo();
+    mostrarApuestaAleatoria(); // Actualizar la pregunta de NegroH
+    actualizarUI();
+
+    // Habilitar botón Final para la siguiente ronda
     const btnFinal = document.querySelector('.btn-final');
-    if (btnFinal) btnFinal.disabled = true;
+    if (btnFinal) btnFinal.disabled = false;
+
+    cerrarFinalizacion();
+    mostrarMensaje('Puntajes calculados, apuestas limpias y nuevo mazo generado', 'success');
 }
 
 window.mostrarFinalizacion = mostrarFinalizacion;

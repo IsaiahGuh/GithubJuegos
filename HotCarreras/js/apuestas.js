@@ -2,18 +2,18 @@ import { CONFIG } from './config.js';
 import { mostrarZoom, mostrarZoomApuestaColorSeleccion, mostrarZoomApuestaNegroSeleccion } from './zoom.js';
 
 const PREGUNTAS = [
-    '¿Terminará Rosa entre los 2 últimos?',
-    '¿Terminará Verde entre los 2 últimos?',
-    '¿Terminará Naranja entre los 2 últimos?',
-    '¿Terminará Morado entre los 2 últimos?',
-    '¿Habrá al menos 2 Colores caídos al mismo tiempo?',
-    '¿Habrá al menos 2 Colores en la línea antes de meta al mismo tiempo?',
-    '¿Será descalificado al menos 1 Color?',
-    '¿Se arrastrará un Color en el tramo final?',
-    '¿Estará vacío el tramo final cuando se gane el primer lugar?',
-    '¿Se saldrá un Color de los límites?',
-    '¿Estarán 2 Colores en el mismo espacio al mismo tiempo?',
-    '¿Será noqueado un Color?'
+    '¿Terminara Rosa entre los 2 ultimos?',
+    '¿Terminara Verde entre los 2 ultimos?',
+    '¿Terminara Naranja entre los 2 ultimos?',
+    '¿Terminara Morado entre los 2 ultimos?',
+    '¿Habra al menos 2 Colores caidos al mismo tiempo?',
+    '¿Habra al menos 2 Colores en la linea antes de meta al mismo tiempo?',
+    '¿Sera descalificado al menos 1 Color?',
+    '¿Se arrastrara un Color en el tramo final?',
+    '¿Estara vacio el tramo final cuando se gane el primer lugar?',
+    '¿Se saldra un Color de los limites?',
+    '¿Estaran 2 Colores en el mismo espacio al mismo tiempo?',
+    '¿Sera noqueado un Color?'
 ];
 
 export function mostrarApuestaAleatoria() {
