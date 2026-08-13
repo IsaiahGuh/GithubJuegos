@@ -1,6 +1,6 @@
 // js/apuestas.js - Módulo de apuestas con preguntas aleatorias (estáticas)
 import { CONFIG } from './config.js';
-import { mostrarZoom } from './zoom.js';
+import { mostrarZoom, mostrarZoomApuestaColor, mostrarZoomApuestaNegro } from './zoom.js';
 
 // ============================================
 // LISTA DE PREGUNTAS (Sí/No)
@@ -29,14 +29,11 @@ export function mostrarApuestaAleatoria() {
     const area = document.getElementById('apuestasArea');
     if (!area) return;
 
-    // Elegir pregunta aleatoria (una sola vez)
     const indice = Math.floor(Math.random() * PREGUNTAS.length);
     const pregunta = PREGUNTAS[indice];
 
-    // Limpiar área
     area.innerHTML = '';
 
-    // Contenedor principal
     const container = document.createElement('div');
     container.className = 'apuestas-container';
 
@@ -53,6 +50,9 @@ export function mostrarApuestaAleatoria() {
         img.alt = color;
         img.draggable = false;
         div.appendChild(img);
+        div.addEventListener('click', () => {
+            mostrarZoomApuestaColor(color);
+        });
         filaSuperior.appendChild(div);
     });
 
@@ -62,17 +62,21 @@ export function mostrarApuestaAleatoria() {
     const filaInferior = document.createElement('div');
     filaInferior.className = 'apuestas-fila-inferior';
 
-    // Vertical izquierdo
+    // Vertical izquierdo (Negro.png)
     const izqDiv = document.createElement('div');
     izqDiv.className = 'apuesta-carta-vertical';
     const imgIzq = document.createElement('img');
     imgIzq.src = CONFIG.UI.IMAGENES_PATH + 'Negro.png';
-    imgIzq.alt = 'Negro';
+    imgIzq.alt = 'Negro Izquierda';
     imgIzq.draggable = false;
     izqDiv.appendChild(imgIzq);
+    izqDiv.style.cursor = 'pointer';
+    izqDiv.addEventListener('click', () => {
+        mostrarZoomApuestaNegro('izquierda');
+    });
     filaInferior.appendChild(izqDiv);
 
-    // NegroH con texto - ahora con evento de clic
+    // NegroH con texto
     const containerGrande = document.createElement('div');
     containerGrande.className = 'apuesta-carta-container';
     const imgGrande = document.createElement('img');
@@ -80,7 +84,6 @@ export function mostrarApuestaAleatoria() {
     imgGrande.alt = 'Apuesta';
     imgGrande.className = 'apuesta-carta-img';
     imgGrande.draggable = false;
-    
     imgGrande.style.cursor = 'pointer';
     imgGrande.addEventListener('click', () => {
         const cartaZoom = {
@@ -101,14 +104,18 @@ export function mostrarApuestaAleatoria() {
     containerGrande.appendChild(overlay);
     filaInferior.appendChild(containerGrande);
 
-    // Vertical derecho
+    // Vertical derecho (Negro.png)
     const derDiv = document.createElement('div');
     derDiv.className = 'apuesta-carta-vertical';
     const imgDer = document.createElement('img');
     imgDer.src = CONFIG.UI.IMAGENES_PATH + 'Negro.png';
-    imgDer.alt = 'Negro';
+    imgDer.alt = 'Negro Derecha';
     imgDer.draggable = false;
     derDiv.appendChild(imgDer);
+    derDiv.style.cursor = 'pointer';
+    derDiv.addEventListener('click', () => {
+        mostrarZoomApuestaNegro('derecha');
+    });
     filaInferior.appendChild(derDiv);
 
     container.appendChild(filaInferior);

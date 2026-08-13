@@ -344,8 +344,14 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     position: relative;
 }
 
-.zoom-modal {
-    position: fixed;
+/* Contenedor para dos cartas de apuesta de color */
+.zoom-apuesta-container {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 /* LEADERBOARD */
@@ -548,14 +554,13 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     letter-spacing: 1px;
 }
 
-/* Tamaño zoom */
+/* Tamaño zoom para cartas normales */
 .carta-zoom {
     width: 480px;
     height: auto;
     aspect-ratio: 250 / 350;
 }
 
-/* Carta horizontal en zoom - invierte la proporción */
 .carta-zoom.carta-horizontal {
     width: 480px;
     height: auto;
@@ -574,7 +579,170 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     font-size: 2rem;
 }
 
-/* Tamaño historial */
+/* ---- APUESTAS DE COLOR HORIZONTALES (RosaH, VerdeH, NaranjaH, MoradoH) ---- */
+.carta-apuestaColor {
+    width: 280px;
+    height: auto;
+    aspect-ratio: 350 / 250;
+}
+
+/* Overlay centrado con área exacta de 289x208 px (proporcional) */
+.carta-apuestaColor .carta-texto-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 82.6%;   /* 289/350 ≈ 82.6% */
+    height: 83.3%;  /* 208/250 ≈ 83.3% */
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+/* Contenedor de filas */
+.apuesta-filas-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: stretch;
+}
+
+/* Cada fila: 3 columnas iguales con separador vertical */
+.apuesta-fila {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+}
+
+/* Cada celda ocupa 1/3, centra su contenido */
+.apuesta-celda {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+    text-align: center;
+    padding: 2px;
+    box-sizing: border-box;
+    border-right: 2px solid rgba(255,255,255,0.35);
+}
+
+/* Última celda sin borde derecho */
+.apuesta-celda:last-child {
+    border-right: none;
+}
+
+/* Primera fila: fuente más grande */
+.apuesta-fila:first-child .apuesta-celda {
+    font-size: 2.8rem;
+    line-height: 1.1;
+}
+
+/* Segunda fila: fuente más pequeña (solo si existe) */
+.apuesta-fila:last-child .apuesta-celda {
+    font-size: 1.6rem;
+    line-height: 1.1;
+}
+
+/* Si solo hay una fila, usa el tamaño grande */
+.apuesta-fila:only-child .apuesta-celda {
+    font-size: 2.8rem;
+    line-height: 1.1;
+}
+
+/* ---- APUESTAS VERTICALES (Negro.png) con layout SI/NO + pts ---- */
+.carta-apuestaColorVertical {
+    width: 280px;
+    height: auto;
+    aspect-ratio: 250 / 350;
+}
+
+/* Overlay centrado con área exacta de 208.31x289.274 px (proporcional) */
+.carta-apuestaColorVertical .carta-texto-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 83.3%;   /* 208.31/250 ≈ 83.3% */
+    height: 82.6%;  /* 289.274/350 ≈ 82.6% */
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+/* Contenedor principal del layout */
+.apuesta-negro-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: stretch;
+}
+
+/* Cada fila ocupa el 50% de la altura y tiene dos celdas */
+.apuesta-negro-fila {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+    padding: 2px 0;
+}
+
+/* Línea divisoria: se aplica a la primera fila (SI) para que tenga borde inferior */
+.apuesta-negro-fila.con-borde {
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+    margin-bottom: 2px;
+}
+
+/* Cada celda: izquierda (condición) y derecha (puntos) */
+.apuesta-negro-celda {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+    text-align: center;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+/* La celda de condición (SI/NO) */
+.apuesta-negro-celda.condicion {
+    font-size: 2.8rem;
+    line-height: 1.1;
+    justify-content: flex-start;
+    padding-left: 10px;
+}
+
+/* La celda de puntos (pts) */
+.apuesta-negro-celda.puntos {
+    font-size: 2.2rem;
+    line-height: 1.1;
+    justify-content: flex-end;
+    padding-right: 10px;
+}
+
+/* ---- Tamaño historial ---- */
 .carta-historial {
     width: 80px;
     height: auto;
@@ -598,7 +766,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     border-radius: 6px;
 }
 
-/* Responsive */
+/* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
     h1 { font-size: 1.8rem; }
     .btn-control { padding: 6px 14px; font-size: 0.75rem; }
@@ -607,6 +775,30 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     }
     .carta-zoom.carta-horizontal {
         width: 300px;
+    }
+    .carta-apuestaColor {
+        width: 200px;
+    }
+    .carta-apuestaColor .apuesta-fila:first-child .apuesta-celda {
+        font-size: 2rem;
+    }
+    .carta-apuestaColor .apuesta-fila:last-child .apuesta-celda {
+        font-size: 1.2rem;
+    }
+    .carta-apuestaColor .apuesta-fila:only-child .apuesta-celda {
+        font-size: 2rem;
+    }
+    .carta-apuestaColorVertical {
+        width: 200px;
+    }
+    .apuesta-negro-celda.condicion {
+        font-size: 2rem;
+    }
+    .apuesta-negro-celda.puntos {
+        font-size: 1.6rem;
+    }
+    .apuesta-negro-fila.con-borde {
+        border-bottom-width: 1.5px;
     }
     .carta-zoom .carta-texto-superior {
         font-size: 1.3rem;
@@ -641,6 +833,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     .apuestas-fila-inferior {
         gap: 8px;
     }
+    .zoom-apuesta-container {
+        gap: 12px;
+    }
+    .apuesta-celda {
+        border-right-width: 1.5px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -649,6 +847,32 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     }
     .carta-zoom.carta-horizontal {
         width: 200px;
+    }
+    .carta-apuestaColor {
+        width: 140px;
+    }
+    .carta-apuestaColor .apuesta-fila:first-child .apuesta-celda {
+        font-size: 1.4rem;
+    }
+    .carta-apuestaColor .apuesta-fila:last-child .apuesta-celda {
+        font-size: 0.9rem;
+    }
+    .carta-apuestaColor .apuesta-fila:only-child .apuesta-celda {
+        font-size: 1.4rem;
+    }
+    .carta-apuestaColorVertical {
+        width: 140px;
+    }
+    .apuesta-negro-celda.condicion {
+        font-size: 1.4rem;
+        padding-left: 6px;
+    }
+    .apuesta-negro-celda.puntos {
+        font-size: 1.1rem;
+        padding-right: 6px;
+    }
+    .apuesta-negro-fila.con-borde {
+        border-bottom-width: 1px;
     }
     .carta-zoom .carta-texto-superior {
         font-size: 1rem;
@@ -685,6 +909,12 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     }
     .apuestas-fila-inferior {
         gap: 6px;
+    }
+    .zoom-apuesta-container {
+        gap: 8px;
+    }
+    .apuesta-celda {
+        border-right-width: 1px;
     }
 }
 
