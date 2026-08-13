@@ -160,7 +160,7 @@ function renderizarListaJugadores() {
     });
     const btnAgregar = document.getElementById('btnAgregarJugador');
     if (btnAgregar) {
-        if (modalState.jugadores.length >= 6) {
+        if (modalState.jugadores.length >= 8) {
             btnAgregar.style.display = 'none';
         } else {
             btnAgregar.style.display = 'block';
@@ -169,8 +169,8 @@ function renderizarListaJugadores() {
 }
 
 export function agregarJugador() {
-    if (modalState.jugadores.length >= 6) {
-        mostrarMensaje('Máximo 6 jugadores', 'warning');
+    if (modalState.jugadores.length >= 8) {
+        mostrarMensaje('Máximo 8 jugadores', 'warning');
         return;
     }
     modalState.jugadores.push('');

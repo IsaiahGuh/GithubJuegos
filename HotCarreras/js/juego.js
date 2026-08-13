@@ -12,8 +12,38 @@ function mezclarArray(array) {
 }
 
 export function generarMazo() {
-    const cartas = getCartasConTexto();
-    state.mazo = mezclarArray(cartas);
+    const todasLasCartas = getCartasConTexto();
+    state.mazoCompleto = todasLasCartas;
+    
+    const numJugadores = getJugadores().length;
+    const cantidadCartas = CONFIG.GAME.CARTAS_POR_JUGADOR[numJugadores] || 20;
+    
+    // Seleccionar cartas al azar del mazo completo
+    const cartasSeleccionadas = seleccionarCartasAleatorias(todasLasCartas, cantidadCartas);
+    state.mazo = mezclarArray(cartasSeleccionadas);
+    
+    console.log(`Mazo generado con ${state.mazo.length} cartas para ${numJugadores} jugadores`);
+}
+
+function seleccionarCartasAleatorias(cartas, cantidad) {
+    const copia = [...cartas];
+    const seleccionadas = [];
+    const total = copia.length;
+    
+    if (cantidad > total) {
+        console.warn(`Solo hay ${total} cartas disponibles, se usan todas`);
+        return copia;
+    }
+    
+    // Fisher-Yates parcial para seleccionar N elementos aleatorios
+    for (let i = 0; i < cantidad; i++) {
+        const idx = Math.floor(Math.random() * (total - i));
+        seleccionadas.push(copia[idx]);
+        // Intercambiar con la última posición no seleccionada
+        [copia[idx], copia[total - 1 - i]] = [copia[total - 1 - i], copia[idx]];
+    }
+    
+    return seleccionadas;
 }
 
 export function reiniciarJuego() {

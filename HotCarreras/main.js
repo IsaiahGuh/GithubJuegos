@@ -8,12 +8,25 @@ import { inicializarApuestas } from './js/apuestas.js';
 
 function init() {
     initState();
-    generarMazo();
     configurarEventos();
     inicializarModal();
     inicializarApuestas();
     actualizarUI();
     renderLeaderboard();
+
+    // NO generar mazo aquí, se generará cuando se creen los jugadores
+    
+    // Sobrescribir iniciarPartida para generar mazo después de crear jugadores
+    const originalIniciarPartida = crearJugadoresDesdeModal;
+    window.iniciarPartida = function() {
+        const resultado = originalIniciarPartida();
+        if (resultado !== false) {
+            // Generar mazo después de crear jugadores
+            generarMazo();
+            actualizarUI();
+        }
+        return resultado;
+    };
 
     window.cerrarZoom = cerrarZoom;
     window.toggleLeaderboard = toggleLeaderboard;
@@ -21,7 +34,6 @@ function init() {
     window.reiniciarPartida = reiniciarJuego;
     window.toggleVistaJugadores = toggleVistaJugadores;
     window.agregarJugador = agregarJugador;
-    window.iniciarPartida = crearJugadoresDesdeModal;
     window.getJugadores = getJugadores;
     window.mostrarFinalizacion = mostrarFinalizacion;
     window.cerrarFinalizacion = cerrarFinalizacion;
@@ -36,7 +48,7 @@ function init() {
     };
 
     console.log('HotCarreras - Iniciado');
-    console.log('Cartas en mazo: ' + state.mazo.length);
+    console.log('Esperando configuración de jugadores...');
 }
 
 document.addEventListener('DOMContentLoaded', init);

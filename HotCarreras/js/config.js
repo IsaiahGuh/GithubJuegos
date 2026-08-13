@@ -8,18 +8,30 @@ export const COLORS = [
 ];
 
 export const CONFIG = {
-    GAME: {},
+    GAME: {
+        // Cantidad de cartas por número de jugadores
+        CARTAS_POR_JUGADOR: {
+            2: 14,
+            3: 15,
+            4: 16,
+            5: 17,
+            6: 18,
+            7: 19,
+            8: 20
+        }
+    },
     UI: {
         IMAGENES_PATH: 'imagenes/',
     },
     JUGADORES: {
         MIN: 2,
-        MAX: 6,
+        MAX: 8,
     }
 };
 
 export const state = {
     mazo: [],
+    mazoCompleto: [], // Guardamos el mazo completo para seleccionar cartas
     historial: [],
     cartaActual: null,
     jugadores: [],
@@ -29,6 +41,7 @@ export const state = {
 
 export function initState() {
     state.mazo = [];
+    state.mazoCompleto = [];
     state.historial = [];
     state.cartaActual = null;
     state.jugadores = [];
