@@ -12,19 +12,17 @@ function init() {
     inicializarModal();
     inicializarApuestas();
     
-    // Configurar el callback para que actualice el contador
     setActualizarUICallback(actualizarUIFromUI);
     
-    actualizarUIFromUI(); // actualiza el contador inicial
+    actualizarUIFromUI();
     renderLeaderboard();
 
-    // Sobrescribir iniciarPartida para generar mazo después de crear jugadores
     const originalIniciarPartida = crearJugadoresDesdeModal;
     window.iniciarPartida = function() {
         const resultado = originalIniciarPartida();
         if (resultado !== false) {
             generarMazo();
-            actualizarUIFromUI(); // actualiza contador después de generar mazo
+            actualizarUIFromUI();
         }
         return resultado;
     };

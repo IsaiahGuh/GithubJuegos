@@ -860,3 +860,92 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* ========================================================= */
+/* NUEVOS ESTILOS PARA PODIO Y TOGGLE (Finalización)        */
+/* ========================================================= */
+
+#podioContainer {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.podio-col {
+    flex: 1;
+    min-width: 80px;
+    background: var(--bg-main);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+}
+.podio-col .numero {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--color-accent);
+    display: block;
+    margin-bottom: 6px;
+}
+.podio-col select {
+    width: 100%;
+    padding: 6px;
+    background: var(--color-success);
+    border: none;
+    color: var(--text-main);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+#pos4Container {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0 12px;
+}
+.pos4-item {
+    background: var(--bg-main);
+    border-radius: 12px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.pos4-item .numero {
+    font-weight: bold;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}
+.pos4-item select {
+    padding: 4px 8px;
+    background: var(--color-danger);
+    color: var(--text-main);
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+/* Toggle Sí/No */
+#toggleSiNoContainer {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+.toggle-btn {
+    padding: 10px 28px;
+    border-radius: 30px;
+    background: var(--bg-main);
+    border: none;
+    color: var(--text-muted);
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+    flex: 1;
+    max-width: 140px;
+}
+.toggle-btn.active {
+    background: var(--color-azul);
+    color: white;
+    box-shadow: 0 0 12px rgba(122, 77, 142, 0.5);
+}
+.toggle-btn:not(.active):hover {
+    background: rgba(255,255,255,0.05);
+}

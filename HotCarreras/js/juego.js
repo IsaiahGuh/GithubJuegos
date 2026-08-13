@@ -18,7 +18,6 @@ export function generarMazo() {
     const numJugadores = getJugadores().length;
     const cantidadCartas = CONFIG.GAME.CARTAS_POR_JUGADOR[numJugadores] || 20;
     
-    // Seleccionar cartas al azar del mazo completo
     const cartasSeleccionadas = seleccionarCartasAleatorias(todasLasCartas, cantidadCartas);
     state.mazo = mezclarArray(cartasSeleccionadas);
     
@@ -35,11 +34,9 @@ function seleccionarCartasAleatorias(cartas, cantidad) {
         return copia;
     }
     
-    // Fisher-Yates parcial para seleccionar N elementos aleatorios
     for (let i = 0; i < cantidad; i++) {
         const idx = Math.floor(Math.random() * (total - i));
         seleccionadas.push(copia[idx]);
-        // Intercambiar con la última posición no seleccionada
         [copia[idx], copia[total - 1 - i]] = [copia[total - 1 - i], copia[idx]];
     }
     
@@ -122,41 +119,86 @@ export function setActualizarUICallback(callback) {
 }
 
 // ============================================
-// FINALIZAR PARTIDA - CÁLCULO DE PUNTOS
+// FINALIZAR PARTIDA - PODIO Y TOGGLE
 // ============================================
 
 export function mostrarFinalizacion() {
     const modal = document.getElementById('modalFinalizacion');
-    const container = document.getElementById('ordenColoresContainer');
-    if (!modal || !container) return;
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    const podioContainer = document.getElementById('podioContainer');
+    const pos4Container = document.getElementById('pos4Container');
+    const toggleContainer = document.getElementById('toggleSiNoContainer');
+    if (!podioContainer || !pos4Container || !toggleContainer) return;
 
     const colores = ['Rosa', 'Verde', 'Naranja', 'Morado'];
-    container.innerHTML = '';
-    for (let i = 1; i <= 4; i++) {
-        const div = document.createElement('div');
-        div.style.marginBottom = '6px';
-        const label = document.createElement('label');
-        label.textContent = `Posición ${i}: `;
-        label.style.marginRight = '8px';
+
+    // Limpiar contenedores
+    podioContainer.innerHTML = '';
+    pos4Container.innerHTML = '';
+    toggleContainer.innerHTML = '';
+
+    // Crear podio (posiciones 1,2,3)
+    for (let i = 1; i <= 3; i++) {
+        const col = document.createElement('div');
+        col.className = 'podio-col';
+        const numSpan = document.createElement('span');
+        numSpan.className = 'numero';
+        numSpan.textContent = i;
+        col.appendChild(numSpan);
+
         const select = document.createElement('select');
         select.id = `posicion_${i}`;
-        select.style.width = '100%';
-        select.style.padding = '8px';
-        select.style.background = 'var(--bg-main)';
-        select.style.color = 'var(--text-main)';
-        select.style.border = '1px solid var(--border-color)';
-        select.style.borderRadius = '8px';
         colores.forEach(color => {
             const option = document.createElement('option');
             option.value = color;
             option.textContent = color;
             select.appendChild(option);
         });
-        div.appendChild(label);
-        div.appendChild(select);
-        container.appendChild(div);
+        col.appendChild(select);
+        podioContainer.appendChild(col);
     }
-    modal.style.display = 'flex';
+
+    // Posición 4 (fuera del podio)
+    const pos4Div = document.createElement('div');
+    pos4Div.className = 'pos4-item';
+    const num4 = document.createElement('span');
+    num4.className = 'numero';
+    num4.textContent = '4';
+    pos4Div.appendChild(num4);
+
+    const select4 = document.createElement('select');
+    select4.id = 'posicion_4';
+    colores.forEach(color => {
+        const option = document.createElement('option');
+        option.value = color;
+        option.textContent = color;
+        select4.appendChild(option);
+    });
+    pos4Div.appendChild(select4);
+    pos4Container.appendChild(pos4Div);
+
+    // Toggle Sí/No
+    const btnSi = document.createElement('button');
+    btnSi.className = 'toggle-btn active';
+    btnSi.textContent = 'Sí';
+    btnSi.dataset.value = 'SI';
+    const btnNo = document.createElement('button');
+    btnNo.className = 'toggle-btn';
+    btnNo.textContent = 'No';
+    btnNo.dataset.value = 'NO';
+
+    const toggleClick = (e) => {
+        const target = e.currentTarget;
+        toggleContainer.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+        target.classList.add('active');
+    };
+    btnSi.addEventListener('click', toggleClick);
+    btnNo.addEventListener('click', toggleClick);
+
+    toggleContainer.appendChild(btnSi);
+    toggleContainer.appendChild(btnNo);
 }
 
 export function cerrarFinalizacion() {
@@ -176,25 +218,30 @@ export function calcularYFinalizar() {
         orden.push(select.value);
     }
 
-    // Validar que los 4 colores sean distintos
+    // Validar colores únicos
     const set = new Set(orden);
     if (set.size !== 4) {
         mostrarMensaje('Debes elegir un color diferente para cada posición', 'warning');
         return;
     }
 
-    // Obtener resultado Sí/No
-    const resultadoSiNo = document.getElementById('resultadoSiNo').value;
+    // Obtener resultado del toggle (el botón activo)
+    const toggleContainer = document.getElementById('toggleSiNoContainer');
+    const activeBtn = toggleContainer?.querySelector('.toggle-btn.active');
+    if (!activeBtn) {
+        mostrarMensaje('Selecciona Sí o No', 'warning');
+        return;
+    }
+    const resultadoSiNo = activeBtn.dataset.value;
 
     // Calcular puntos
     const jugadores = getJugadores();
     jugadores.forEach((j, index) => {
         let puntos = 0;
 
-        // Apuesta de color
         if (j.apuestas.color) {
             const { color, valores } = j.apuestas.color;
-            const posicion = orden.indexOf(color) + 1; // 1-4
+            const posicion = orden.indexOf(color) + 1;
             let pts = 0;
             if (posicion >= 1 && posicion <= 3) {
                 const ptsStr = valores[posicion - 1];
@@ -203,7 +250,6 @@ export function calcularYFinalizar() {
             puntos += pts;
         }
 
-        // Apuesta SI/NO
         if (j.apuestas.siNo) {
             const { lado, valores } = j.apuestas.siNo;
             let filaIndice = -1;
@@ -219,7 +265,6 @@ export function calcularYFinalizar() {
             }
         }
 
-        // Sumar al jugador
         sumarPuntosAJugador(index, puntos);
     });
 
