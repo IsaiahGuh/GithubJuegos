@@ -104,6 +104,36 @@ function colorHexOf(colorId) {
     return found ? found.hex : '#808BC3';
 }
 function myColorHex() { return colorHexOf(playerColors[myId]); }
+function hexToRgba(hex, alpha) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+function blendHex(hex, baseHex, ratio) {
+    // ratio = proporción del color del jugador mezclado sobre el fondo base (0 = fondo puro, 1 = color puro)
+    const h1 = hex.replace('#', ''), h2 = baseHex.replace('#', '');
+    const r1 = parseInt(h1.substr(0, 2), 16), g1 = parseInt(h1.substr(2, 2), 16), b1 = parseInt(h1.substr(4, 2), 16);
+    const r2 = parseInt(h2.substr(0, 2), 16), g2 = parseInt(h2.substr(2, 2), 16), b2 = parseInt(h2.substr(4, 2), 16);
+    const r = Math.round(r1 * ratio + r2 * (1 - ratio));
+    const g = Math.round(g1 * ratio + g2 * (1 - ratio));
+    const b = Math.round(b1 * ratio + b2 * (1 - ratio));
+    return `rgb(${r},${g},${b})`;
+}
+function applyBoardTheme() {
+    const board = document.querySelector('.board-container');
+    if (!board) return;
+    const hex = myColorHex();
+    const solidBg = blendHex(hex, '#1c1c26', 0.22);
+    board.style.borderColor = hexToRgba(hex, 0.7);
+    board.style.boxShadow = `0 0 0 1px ${hexToRgba(hex, 0.28)} inset, 0 10px 28px ${hexToRgba(hex, 0.14)}`;
+    board.style.background = solidBg;
+}
+function readableTextOn(hex) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? '#1a1a1a' : '#ECE5DB';
+}
 
 function emptyScores() {
     const s = {};
@@ -141,11 +171,33 @@ let mqttClient = null;
 let currentRoom = null;
 let playersData = {};
 let isRoomCreator = false;
+let hostId = null;
+function refreshHostStatus() {
+    isRoomCreator = (hostId !== null && hostId === myId);
+}
+function hostIsPresent() {
+    return hostId !== null && !!playersData[hostId];
+}
+function claimHost() {
+    hostId = myId;
+    isRoomCreator = true;
+    broadcastSync();
+    if (gameStarted) broadcastGameStateSync();
+    updateHostWarning();
+    renderPreGame(); renderTurnBanner(); renderLeaderboard();
+}
+function updateHostWarning() {
+    const bar = document.getElementById('hostWarningBar');
+    if (!bar) return;
+    const shouldShow = !!currentRoom && hostId !== null && !hostIsPresent() && !isRoomCreator;
+    bar.style.display = shouldShow ? 'flex' : 'none';
+}
 let pendingOrder = [];
 let turnOrder = [];
 let playerColors = {};
 let currentTurnIndex = 0;
 let gameStarted = false;
+let gameFinished = false;
 
 function isMyTurn() {
     return gameStarted && turnOrder.length > 0 && turnOrder[currentTurnIndex] === myId;
@@ -237,7 +289,73 @@ function renderLog() {
     }).join('');
 }
 
+// ===== SONIDOS (sintetizados, sin archivos externos) =====
+let audioCtx = null;
+function getAudioCtx() {
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { return null; }
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+function primeAudio() { getAudioCtx(); }
+function playTone(freq, start, duration, type = 'sine', peak = 0.16) {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    const t0 = ctx.currentTime + start;
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(peak, t0 + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.05);
+}
+function sfxDiceTap() { playTone(500 + Math.random() * 90, 0, 0.08, 'square', 0.10); }
+function sfxLock() { playTone(660, 0, 0.11, 'triangle', 0.14); playTone(880, 0.07, 0.14, 'triangle', 0.11); }
+function sfxYatzy() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => playTone(f, i * 0.1, 0.22, 'triangle', 0.15)); }
+function sfxBonus() { [660, 880, 1108, 1318].forEach((f, i) => playTone(f, i * 0.06, 0.16, 'sine', 0.13)); }
+function sfxUndo() { playTone(260, 0, 0.1, 'sawtooth', 0.08); playTone(180, 0.05, 0.12, 'sawtooth', 0.07); }
+function sfxTurnEnd() { playTone(340, 0, 0.12, 'sine', 0.09); playTone(230, 0.09, 0.18, 'sine', 0.07); }
+function sfxButton() { playTone(720, 0, 0.05, 'square', 0.05); }
+function sfxWin() { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => playTone(f, i * 0.12, 0.3, 'triangle', 0.15)); }
+
+// ===== ANIMACIONES DE CELDAS =====
+function triggerPop(elId) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.classList.remove('pop-anim');
+    void el.offsetWidth;
+    el.classList.add('pop-anim');
+}
+function triggerShake(elId) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.classList.remove('shake-anim');
+    void el.offsetWidth;
+    el.classList.add('shake-anim');
+}
+
 // ===== TOAST DE EVENTOS =====
+let pendingEvents = [];
+function queueEvent(tag, text) {
+    pendingEvents = pendingEvents.filter(e => e.tag !== tag);
+    pendingEvents.push({ tag, text });
+}
+function dequeueEvent(tag) {
+    pendingEvents = pendingEvents.filter(e => e.tag !== tag);
+}
+function flushPendingEvents() {
+    if (pendingEvents.length === 0) return;
+    pendingEvents.forEach((e, i) => {
+        setTimeout(() => { showEventToast(e.text); broadcastEvent(e.text); }, i * 3800);
+    });
+    pendingEvents = [];
+}
 function showEventToast(text) {
     const el = document.getElementById('eventToast');
     el.textContent = text;
@@ -262,6 +380,7 @@ function renderBoard() {
         row.className = 'cat-row';
         const catCell = document.createElement('div');
         catCell.className = 'cat-cell';
+        catCell.id = `cat-${cat.id}`;
         catCell.innerHTML = catIconHTML(cat);
         catCell.addEventListener('click', () => showTooltip(cat.id));
         const scoreCell = document.createElement('div');
@@ -308,6 +427,25 @@ function jokerEligibleCategories() {
     return eligible;
 }
 
+function applyJokerScore(catId) {
+    if (myScores[catId] !== null) return;
+    const jokerFixed = { fullHouse: 25, smallStraight: 30, largeStraight: 40 };
+    const value = jokerFixed[catId] !== undefined ? jokerFixed[catId] : CATEGORIES.find(c => c.id === catId).calc(myDice);
+    lockCategory(catId, value, { joker: true });
+}
+
+function grantExtraYatzy() {
+    myExtraYatzys++;
+    logMove('yatzy_extra', {});
+    const msg = `⭐⭐ ${myName} logró otro YATZY! +100 bono`;
+    queueEvent('extra_yatzy', msg);
+    jokerModeActive = true;
+    saveState();
+    renderScores();
+    sfxYatzy();
+    triggerPop('cat-yatzy');
+}
+
 function renderScores() {
     const diceReady = myDice.every(d => d !== null);
     const myTurn = isMyTurn();
@@ -318,25 +456,28 @@ function renderScores() {
         if (!cell) return;
         cell.classList.remove('ghost', 'locked', 'disabled-turn', 'yatzy-again', 'joker-eligible', 'undoable');
         cell.style.borderColor = '';
+        cell.style.background = '';
+        cell.style.color = '';
         cell.innerHTML = '';
 
         const lockedVal = myScores[cat.id];
         if (lockedVal !== null) {
             cell.textContent = lockedVal;
             cell.classList.add('locked');
-            cell.style.borderColor = myColorHex();
+            const myColor = myColorHex();
+            cell.style.background = myColor;
+            cell.style.borderColor = myColor;
+            cell.style.color = readableTextOn(myColor);
             if (markedThisTurn && cat.id === lastMarkedCatId) cell.classList.add('undoable');
             if (jokerModeActive && cat.id === 'yatzy') cell.classList.add('undoable');
-            if (cat.id === 'yatzy' && myExtraYatzys > 0) {
-                const checks = document.createElement('div');
-                checks.className = 'yatzy-checks';
-                checks.textContent = '✔'.repeat(Math.min(myExtraYatzys, 6));
-                cell.appendChild(checks);
-            }
         } else {
             if (jokerModeActive) {
-                if (eligible.includes(cat.id)) cell.classList.add('joker-eligible');
-                else cell.classList.add('disabled-turn');
+                if (eligible.includes(cat.id)) {
+                    cell.classList.add('joker-eligible');
+                    const jokerFixed = { fullHouse: 25, smallStraight: 30, largeStraight: 40 };
+                    const previewVal = jokerFixed[cat.id] !== undefined ? jokerFixed[cat.id] : cat.calc(myDice);
+                    cell.textContent = previewVal;
+                } else cell.classList.add('disabled-turn');
             } else if (myTurn && diceReady && !markedThisTurn) {
                 const preview = cat.calc(myDice);
                 cell.textContent = preview;
@@ -354,9 +495,24 @@ function renderScores() {
         yatzyCell.classList.add('yatzy-again');
     }
 
+    // Insignia de Yatzys extra (en la casilla de categoria "YATZY", no en el puntaje)
+    const catYatzyCell = document.getElementById('cat-yatzy');
+    if (catYatzyCell) {
+        const existing = catYatzyCell.querySelector('.yatzy-checks');
+        if (existing) existing.remove();
+        if (myExtraYatzys > 0) {
+            const checks = document.createElement('div');
+            checks.className = 'yatzy-checks';
+            checks.textContent = `×${myExtraYatzys}`;
+            catYatzyCell.appendChild(checks);
+        }
+    }
+
     updateBonusCell();
     updateTotalScore();
     renderTurnActions();
+    checkGameFinished();
+    applyBoardTheme();
 }
 
 function updateBonusCell() {
@@ -378,6 +534,7 @@ function renderTurnBanner() {
     const banner = document.getElementById('turnBanner');
     const resetBtn = document.getElementById('resetGameBtn');
     if (resetBtn) resetBtn.style.display = (isRoomCreator && gameStarted && currentRoom) ? 'block' : 'none';
+    updateHostWarning();
     if (!banner) return;
     if (!gameStarted || turnOrder.length === 0) { banner.textContent = ''; banner.classList.remove('my-turn'); return; }
     const currentId = turnOrder[currentTurnIndex];
@@ -400,15 +557,26 @@ function closeTooltip() { document.getElementById('tooltipModal').style.display 
 // ===== DADOS =====
 function tapDiceCell(index) {
     if (!isMyTurn() || markedThisTurn) return;
+    primeAudio();
+    sfxButton();
     activeDiceIndex = index;
     document.getElementById('diceModal').style.display = 'flex';
 }
 function setDiceValue(val) {
     if (activeDiceIndex === null) return;
     myDice[activeDiceIndex] = val;
+    const idx = activeDiceIndex;
     activeDiceIndex = null;
     document.getElementById('diceModal').style.display = 'none';
     renderDice(); renderScores();
+    sfxDiceTap();
+    const row = document.getElementById('diceRow');
+    if (row && row.children[idx]) {
+        const cell = row.children[idx];
+        cell.classList.remove('pop-anim');
+        void cell.offsetWidth;
+        cell.classList.add('pop-anim');
+    }
 }
 function closeDiceModal() { activeDiceIndex = null; document.getElementById('diceModal').style.display = 'none'; }
 
@@ -422,9 +590,7 @@ function handleCategoryTap(catId) {
         if (myScores[catId] !== null) return;
         const eligible = jokerEligibleCategories();
         if (!eligible.includes(catId)) return;
-        const jokerFixed = { fullHouse: 25, smallStraight: 30, largeStraight: 40 };
-        const value = jokerFixed[catId] !== undefined ? jokerFixed[catId] : CATEGORIES.find(c => c.id === catId).calc(myDice);
-        lockCategory(catId, value, { joker: true });
+        applyJokerScore(catId);
         return;
     }
 
@@ -438,7 +604,7 @@ function handleCategoryTap(catId) {
         if (!myDice.every(d => d !== null)) return;
         lockCategory(catId, CATEGORIES.find(c => c.id === catId).calc(myDice));
     } else if (catId === 'yatzy' && myDice.every(d => d !== null) && isYatzy(myDice)) {
-        document.getElementById('yatzyExtraModal').style.display = 'flex';
+        grantExtraYatzy();
     }
 }
 
@@ -448,12 +614,16 @@ function undoLastCategory() {
     const catId = lastMarkedCatId;
     myScores[catId] = null;
     logMove('score', { catId, action: 'unmark' });
+    dequeueEvent('yatzy');
+    checkBonusJustCompleted();
     lastMarkedCatId = null;
     lastMarkedWasJoker = false;
     markedThisTurn = false;
     if (wasJoker) jokerModeActive = true; // vuelve a ofrecer las casillas de comodin para elegir de nuevo
     saveState();
     renderDice(); renderScores();
+    sfxUndo();
+    triggerShake(`score-${catId}`);
 }
 
 function undoExtraYatzy() {
@@ -461,8 +631,11 @@ function undoExtraYatzy() {
     myExtraYatzys--;
     jokerModeActive = false;
     logMove('yatzy_extra', { action: 'undo' });
+    dequeueEvent('extra_yatzy');
     saveState();
     renderScores();
+    sfxUndo();
+    triggerShake('cat-yatzy');
 }
 
 function lockCategory(catId, value, opts = {}) {
@@ -473,33 +646,26 @@ function lockCategory(catId, value, opts = {}) {
     lastMarkedWasJoker = !!opts.joker;
     logMove('score', { catId, value, auto: !!opts.joker });
 
-    if (catId === 'yatzy' && value === 50) {
+    const isYatzyScore = (catId === 'yatzy' && value === 50);
+    if (isYatzyScore) {
         const msg = `⭐ ${myName} hizo YATZY! (+50)`;
-        showEventToast(msg); broadcastEvent(msg);
+        queueEvent('yatzy', msg);
     }
     saveState();
     checkBonusJustCompleted();
     renderDice(); renderScores();
+    triggerPop(`score-${catId}`);
+    isYatzyScore ? sfxYatzy() : sfxLock();
 }
 
 function checkBonusJustCompleted() {
     if (!myBonusAnnounced && upperBonus(myScores) === 35) {
-        myBonusAnnounced = true;
-        const msg = `🎉 ${myName} consiguió el BONO +35!`;
-        showEventToast(msg); broadcastEvent(msg);
+        queueEvent('bonus', `🎉 ${myName} consiguió el BONO +35!`);
+        sfxBonus();
+        triggerPop('bonusCell');
+    } else if (upperBonus(myScores) !== 35) {
+        dequeueEvent('bonus');
     }
-}
-
-function declineYatzyExtra() { document.getElementById('yatzyExtraModal').style.display = 'none'; }
-function acceptYatzyExtra() {
-    document.getElementById('yatzyExtraModal').style.display = 'none';
-    myExtraYatzys++;
-    logMove('yatzy_extra', {});
-    const msg = `⭐⭐ ${myName} logró otro YATZY! +100 bono`;
-    showEventToast(msg); broadcastEvent(msg);
-    jokerModeActive = true;
-    saveState();
-    renderScores();
 }
 
 // ===== GUARDAR / SINCRONIZAR ESTADO =====
@@ -517,7 +683,8 @@ function broadcastSync(action = 'sync') {
     if (mqttClient && currentRoom) {
         mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({
             action, id: myId, name: myName, color: playerColors[myId] || null,
-            scores: myScores, extraYatzys: myExtraYatzys, score: totalScore(myScores, myExtraYatzys)
+            scores: myScores, extraYatzys: myExtraYatzys, score: totalScore(myScores, myExtraYatzys),
+            hostId
         }));
     }
 }
@@ -542,6 +709,45 @@ function renderLeaderboard() {
         card.addEventListener('click', () => openViewPlayer(p.id));
         list.appendChild(card);
     });
+    checkGameFinished();
+}
+
+// ===== FIN DE LA PARTIDA =====
+function checkGameFinished() {
+    if (!gameStarted || gameFinished || turnOrder.length === 0) return;
+    const allDone = turnOrder.every(id => {
+        const p = playersData[id];
+        return p && p.scores && Object.values(p.scores).every(v => v !== null);
+    });
+    if (allDone) {
+        gameFinished = true;
+        showGameOverModal();
+    }
+}
+
+function showGameOverModal() {
+    const arr = turnOrder.map(id => ({ id, ...playersData[id] })).sort((a, b) => (b.score || 0) - (a.score || 0));
+    const list = document.getElementById('finalRankList');
+    if (list) {
+        list.innerHTML = arr.map((p, idx) => {
+            const hex = colorHexOf(p.color);
+            const isWinner = idx === 0;
+            const medal = idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+            return `<div class="final-rank-row${isWinner ? ' winner' : ''}" style="border-left-color:${hex};">
+                <span class="frank-medal">${medal}</span>
+                <span class="frank-name">${p.name}${p.id === myId ? ' (Tu)' : ''}</span>
+                <span class="frank-score">${p.score || 0}</span>
+            </div>`;
+        }).join('');
+    }
+    const resetBtn = document.getElementById('gameOverResetBtn');
+    if (resetBtn) resetBtn.style.display = isRoomCreator ? 'block' : 'none';
+    const modal = document.getElementById('gameOverModal');
+    if (modal) modal.style.display = 'flex';
+    sfxWin();
+}
+function closeGameOverModal() {
+    document.getElementById('gameOverModal').style.display = 'none';
 }
 
 function openViewPlayer(id) {
@@ -549,23 +755,63 @@ function openViewPlayer(id) {
     if (!p) return;
     document.getElementById('viewPlayerTitle').textContent = `${p.name}${id === myId ? ' (Tu)' : ''}`;
     const scores = p.scores || {};
-    const colorHex = colorHexOf(p.color);
-    const rowHtml = c => {
-        const val = scores[c.id];
-        const has = val !== null && val !== undefined;
-        return `<div style="display:flex;justify-content:space-between;padding:6px 8px;border-radius:6px;background:#2a2a2a;${has ? `border:2px solid ${colorHex};` : ''}">
-            <span>${c.label}</span><b>${has ? val : '-'}</b></div>`;
-    };
-    let html = '<div style="flex:1;display:flex;flex-direction:column;gap:4px;">';
-    CATEGORIES.filter(c => c.section === 'upper').forEach(c => html += rowHtml(c));
-    const bonus = upperBonus(scores);
-    html += `<div style="display:flex;justify-content:space-between;padding:6px 8px;border-radius:6px;background:#2a2a2a;">
-        <span>BONO</span><b>${bonus === 35 ? '+35 ✓' : `${upperSum(scores)}/63`}</b></div></div>`;
-    html += '<div style="flex:1;display:flex;flex-direction:column;gap:4px;">';
-    CATEGORIES.filter(c => c.section === 'lower').forEach(c => html += rowHtml(c));
-    if (p.extraYatzys) html += `<div style="text-align:center;font-size:0.75rem;color:#EBC21A;margin-top:4px;">⭐ Yatzys extra: ${p.extraYatzys} (+${p.extraYatzys * 100})</div>`;
-    html += '</div>';
-    document.getElementById('viewPlayerSheet').innerHTML = html;
+    const hex = colorHexOf(p.color);
+    const container = document.getElementById('viewPlayerSheet');
+    container.innerHTML = '';
+
+    const board = document.createElement('div');
+    board.className = 'yatzy-board mini-board';
+    const upperCol = document.createElement('div'); upperCol.className = 'yatzy-col';
+    const lowerCol = document.createElement('div'); lowerCol.className = 'yatzy-col';
+    board.appendChild(upperCol); board.appendChild(lowerCol);
+
+    function buildMiniCol(section, col) {
+        CATEGORIES.filter(c => c.section === section).forEach(cat => {
+            const row = document.createElement('div');
+            row.className = 'cat-row';
+            const catCell = document.createElement('div');
+            catCell.className = 'cat-cell';
+            catCell.innerHTML = catIconHTML(cat);
+            const scoreCell = document.createElement('div');
+            scoreCell.className = 'score-cell';
+            const val = scores[cat.id];
+            if (val !== null && val !== undefined) {
+                scoreCell.classList.add('locked');
+                scoreCell.style.background = hex;
+                scoreCell.style.borderColor = hex;
+                scoreCell.style.color = readableTextOn(hex);
+                scoreCell.textContent = val;
+            } else {
+                scoreCell.classList.add('disabled-turn');
+            }
+            row.appendChild(catCell); row.appendChild(scoreCell);
+            col.appendChild(row);
+        });
+    }
+    buildMiniCol('upper', upperCol);
+    buildMiniCol('lower', lowerCol);
+
+    const bonusRow = document.createElement('div');
+    bonusRow.className = 'bonus-row';
+    const bonusCat = document.createElement('div');
+    bonusCat.className = 'cat-cell'; bonusCat.style.flex = '1.15'; bonusCat.textContent = 'BONO';
+    const bonusCell = document.createElement('div');
+    bonusCell.className = 'bonus-cell';
+    const uSum = upperSum(scores);
+    if (uSum >= 63) { bonusCell.innerHTML = '+35<br>✓'; bonusCell.classList.add('done'); }
+    else { bonusCell.innerHTML = `${uSum}<br>/63`; }
+    bonusRow.appendChild(bonusCat); bonusRow.appendChild(bonusCell);
+    upperCol.appendChild(bonusRow);
+
+    container.appendChild(board);
+
+    if (p.extraYatzys) {
+        const extra = document.createElement('p');
+        extra.style.cssText = 'text-align:center;font-size:0.75rem;color:#EBC21A;margin-top:8px;';
+        extra.textContent = `⭐ Yatzys extra: ${p.extraYatzys} (+${p.extraYatzys * 100})`;
+        container.appendChild(extra);
+    }
+
     document.getElementById('viewPlayerModal').style.display = 'flex';
 }
 function closeViewPlayer() { document.getElementById('viewPlayerModal').style.display = 'none'; }
@@ -575,6 +821,7 @@ function renderPreGame() {
     const panel = document.getElementById('preGamePanel');
     const gameArea = document.getElementById('gameArea');
     if (!panel || !gameArea) return;
+    updateHostWarning();
 
     if (gameStarted) { panel.style.display = 'none'; gameArea.style.display = 'flex'; return; }
     panel.style.display = 'block'; gameArea.style.display = 'none';
@@ -630,6 +877,7 @@ function startGame() {
     Object.keys(playersData).forEach(id => { if (playersData[id]) playersData[id].color = colors[id]; });
     currentTurnIndex = 0;
     gameStarted = true;
+    gameFinished = false;
     broadcastGameStart();
     afterTurnBecameMine();
     renderPreGame(); renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard();
@@ -637,12 +885,12 @@ function startGame() {
 }
 function broadcastGameStart() {
     if (mqttClient && currentRoom) {
-        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'game_start', id: myId, turnOrder, colors: playerColors }));
+        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'game_start', id: myId, turnOrder, colors: playerColors, hostId }));
     }
 }
 function broadcastGameStateSync() {
     if (mqttClient && currentRoom) {
-        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'game_state_sync', id: myId, turnOrder, colors: playerColors, currentTurnIndex }));
+        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'game_state_sync', id: myId, turnOrder, colors: playerColors, currentTurnIndex, hostId }));
     }
 }
 
@@ -658,6 +906,9 @@ function afterTurnBecameMine() {
 function endTurn() {
     if (!isMyTurn() || !markedThisTurn) return;
     logMove('end_turn', {});
+    if (upperBonus(myScores) === 35) myBonusAnnounced = true;
+    flushPendingEvents();
+    sfxTurnEnd();
     const nextIndex = (currentTurnIndex + 1) % turnOrder.length;
     broadcastTurnAdvance(nextIndex);
     applyTurnAdvance(nextIndex);
@@ -683,8 +934,10 @@ function applyGameReset() {
     lastMarkedCatId = null;
     lastMarkedWasJoker = false;
     gameStarted = false;
+    gameFinished = false;
     turnOrder = [];
     currentTurnIndex = 0;
+    pendingEvents = [];
 
     Object.keys(playersData).forEach(id => {
         playersData[id].scores = emptyScores();
@@ -694,6 +947,7 @@ function applyGameReset() {
     });
 
     logMove('reset', {});
+    document.getElementById('gameOverModal').style.display = 'none';
     renderPreGame(); renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard();
     saveState();
 }
@@ -724,6 +978,7 @@ function playSolo() {
     playerColors = { [myId]: 'rojo' };
     currentTurnIndex = 0;
     gameStarted = true;
+    gameFinished = false;
     myScores = emptyScores();
     myExtraYatzys = 0;
     playersData[myId] = { name: myName, color: 'rojo', scores: myScores, extraYatzys: 0, score: 0 };
@@ -749,6 +1004,7 @@ function createRoom() {
     myScores = emptyScores();
     myExtraYatzys = 0;
     isRoomCreator = true;
+    hostId = myId;
     pendingOrder = [];
     const code = Math.random().toString(36).substring(2, 6).toUpperCase();
     connectToRoom(code);
@@ -814,7 +1070,12 @@ function connectToRoom(code, isReconnect = false) {
             const data = JSON.parse(message.toString());
             if (data.id === myId) return;
 
-            if (data.action === 'remove') { delete playersData[data.id]; renderLeaderboard(); return; }
+            if (data.hostId && (!hostId || !hostIsPresent())) {
+                hostId = data.hostId;
+                refreshHostStatus();
+            }
+
+            if (data.action === 'remove') { delete playersData[data.id]; renderLeaderboard(); renderPreGame(); updateHostWarning(); return; }
 
             if (data.action === 'claim_offer') {
                 if (data.targetId === myId && !claimResolved && Object.values(myScores).every(v => v === null) && (data.scores)) {
@@ -867,6 +1128,7 @@ function connectToRoom(code, isReconnect = false) {
             playersData[data.id] = { name: data.name, color: data.color, scores: data.scores, extraYatzys: data.extraYatzys || 0, score: data.score };
             renderLeaderboard();
             renderPreGame();
+            updateHostWarning();
 
             if (data.action === 'join') {
                 broadcastSync();
@@ -896,8 +1158,11 @@ function acceptClaim() {
     myScores = { ...pendingClaim.scores };
     myExtraYatzys = pendingClaim.extraYatzys || 0;
     myBonusAnnounced = upperBonus(myScores) === 35;
+    refreshHostStatus();
     saveState();
     renderScores();
+    renderPreGame();
+    updateHostWarning();
     document.getElementById('claimModal').style.display = 'none';
     pendingClaim = null;
 }
@@ -946,6 +1211,9 @@ document.addEventListener('DOMContentLoaded', function () {
     renderBoard();
     renderDice();
     renderScores();
+    document.querySelectorAll('.dice-face-btn').forEach(btn => {
+        btn.innerHTML = pipsHTML(parseInt(btn.dataset.value, 10));
+    });
 
     const session = loadSession();
     const banner = document.getElementById('sessionBanner');
@@ -953,6 +1221,15 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('sessionBannerText').textContent = `Tenias una partida abierta en la sala ${session.roomCode} como "${session.myName}".`;
         banner.style.display = 'block';
     }
+
+    // Desbloquear audio con el primer toque (requisito de navegadores moviles)
+    document.addEventListener('pointerdown', primeAudio, { once: true });
+
+    // Sonido de clic generico para botones de menus/modales (no pisa los sonidos especificos del juego)
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.modal-btn');
+        if (btn && !btn.closest('#turnActions')) sfxButton();
+    }, true);
 });
 
 // ===== EXPORTAR FUNCIONES GLOBALES =====
@@ -968,8 +1245,7 @@ window.declineClaim = declineClaim;
 window.closeTooltip = closeTooltip;
 window.setDiceValue = setDiceValue;
 window.closeDiceModal = closeDiceModal;
-window.declineYatzyExtra = declineYatzyExtra;
-window.acceptYatzyExtra = acceptYatzyExtra;
+window.closeGameOverModal = closeGameOverModal;
 window.closeViewPlayer = closeViewPlayer;
 window.startGame = startGame;
 window.endTurn = endTurn;
