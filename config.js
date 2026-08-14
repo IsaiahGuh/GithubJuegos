@@ -69,9 +69,9 @@ const Config = {
                 topics: ['local', 'cartas']
             },
             {
-                id: 'YahtzeeDados',
+                id: 'YatziDados',
                 nombre: 'Yahtzee',
-                ruta: './YahtzeeDados/index.html',
+                ruta: './YatziDados/index.html',
                 color: '#f5deb2',
                 topics: ['mqtt', 'dados']
             }

@@ -178,7 +178,7 @@
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
         
-        if (gameId === 'YahtzeeDados') {
+        if (gameId === 'YatziDados') {
             const separator = url.includes('?') ? '&' : '?';
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
