@@ -178,6 +178,11 @@
             url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
         }
         
+        if (gameId === 'YahtzeeDados') {
+            const separator = url.includes('?') ? '&' : '?';
+            url += separator + 'nombre=' + encodeURIComponent(nombre) + '&sala=' + codigo;
+        }
+        
         window.open(url, '_blank');
     };
 

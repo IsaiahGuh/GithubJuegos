@@ -67,6 +67,13 @@ const Config = {
                 ruta: './HotCarreras/index.html',
                 color: '#f5deb2',
                 topics: ['local', 'cartas']
+            },
+            {
+                id: 'YahtzeeDados',
+                nombre: 'Yahtzee',
+                ruta: './YahtzeeDados/index.html',
+                color: '#f5deb2',
+                topics: ['mqtt', 'dados']
             }
         ];
     },
