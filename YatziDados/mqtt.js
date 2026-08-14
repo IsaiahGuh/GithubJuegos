@@ -45,6 +45,15 @@ function connectToRoom(code, isReconnect = false) {
         joinSuccess(code);
         broadcastSync('join');
         persistSession();
+
+        // Si nadie responde con un anfitrion dentro de este margen (sala vacia
+        // o todos llegaron por link sin pasar por "Crear Sala"), me reclamo host.
+        // El jitter evita que dos personas que entran al mismo tiempo se
+        // autoreclamen host en el mismo instante.
+        const claimDelay = 1400 + Math.random() * 900;
+        setTimeout(() => {
+            if (currentRoom === code && !hostId) claimHost();
+        }, claimDelay);
     });
 
     mqttClient.on('message', (topic, message) => {
