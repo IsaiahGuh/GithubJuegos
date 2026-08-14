@@ -37,18 +37,25 @@ const CATEGORIES = [
     { id: 'chance',        section: 'lower', label: 'Probabilidad',         iconType: 'text', icon: '?', calc: d => sumAll(d) }
 ];
 
-// ===== ICONOS: puntos de dado, casa y cartas =====
+// ===== ICONOS: puntos de dado (SVG), casa y cartas =====
 const DIE_PATTERNS = {
     1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8],
     5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
 };
+const PIP_POS = [
+    [20, 20], [50, 20], [80, 20],
+    [20, 50], [50, 50], [80, 50],
+    [20, 80], [50, 80], [80, 80]
+];
 function pipsHTML(value) {
     if (!value) return '<span class="pip-empty">?</span>';
     const active = DIE_PATTERNS[value] || [];
-    let html = '<div class="pips-grid">';
-    for (let i = 0; i < 9; i++) html += `<span class="pip${active.includes(i) ? ' active' : ''}"></span>`;
-    html += '</div>';
-    return html;
+    let dots = '';
+    active.forEach(i => {
+        const [cx, cy] = PIP_POS[i];
+        dots += `<circle class="pip-dot" cx="${cx}" cy="${cy}" r="13"/><circle class="pip-shine" cx="${cx - 4}" cy="${cy - 4}" r="4"/>`;
+    });
+    return `<svg class="dice-svg" viewBox="0 0 100 100">${dots}</svg>`;
 }
 const HOUSE_SVG = '<svg class="cat-icon-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M9.5 19.5V14h5v5.5"/></svg>';
 const CARDS_SVG = '<svg class="cat-icon-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="12" height="15" rx="2" transform="rotate(-12 8.5 14.5)"/><rect x="8" y="3" width="12" height="15" rx="2"/></svg>';
