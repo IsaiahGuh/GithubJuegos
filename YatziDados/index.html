@@ -86,26 +86,14 @@
         <div class="modal-box dice-picker-box">
             <h3>¿Que cara salio?</h3>
             <div class="dice-face-grid">
-                <button class="dice-face-btn" onclick="setDiceValue(1)">⚀</button>
-                <button class="dice-face-btn" onclick="setDiceValue(2)">⚁</button>
-                <button class="dice-face-btn" onclick="setDiceValue(3)">⚂</button>
-                <button class="dice-face-btn" onclick="setDiceValue(4)">⚃</button>
-                <button class="dice-face-btn" onclick="setDiceValue(5)">⚄</button>
-                <button class="dice-face-btn" onclick="setDiceValue(6)">⚅</button>
+                <button class="dice-face-btn" data-value="1" onclick="setDiceValue(1)"></button>
+                <button class="dice-face-btn" data-value="2" onclick="setDiceValue(2)"></button>
+                <button class="dice-face-btn" data-value="3" onclick="setDiceValue(3)"></button>
+                <button class="dice-face-btn" data-value="4" onclick="setDiceValue(4)"></button>
+                <button class="dice-face-btn" data-value="5" onclick="setDiceValue(5)"></button>
+                <button class="dice-face-btn" data-value="6" onclick="setDiceValue(6)"></button>
             </div>
             <button class="modal-btn btn-outline" onclick="closeDiceModal()" style="margin-top:12px;">Cancelar</button>
-        </div>
-    </div>
-
-    <!-- CONFIRMAR YATZY EXTRA -->
-    <div id="yatzyExtraModal" class="modal-overlay">
-        <div class="modal-box">
-            <h3>⭐ Yatzy de nuevo!</h3>
-            <p>Tu casilla de Yatzy ya esta llena. ¿Este es un Yatzy extra? Ganarias 100 puntos de bono y luego eliges donde usar el comodin.</p>
-            <div class="modal-buttons row-btns">
-                <button class="modal-btn btn-outline" onclick="declineYatzyExtra()">No</button>
-                <button class="modal-btn btn-primary" onclick="acceptYatzyExtra()">Si, es extra</button>
-            </div>
         </div>
     </div>
 
@@ -139,11 +127,28 @@
         </div>
     </div>
 
+    <!-- FIN DE LA PARTIDA -->
+    <div id="gameOverModal" class="modal-overlay">
+        <div class="modal-box game-over-box">
+            <h2>🏁 Fin de la partida</h2>
+            <div id="finalRankList" class="final-rank-list"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-outline" onclick="closeGameOverModal()">Ver tablero</button>
+                <button id="gameOverResetBtn" class="modal-btn btn-danger" style="display:none;" onclick="closeGameOverModal(); requestGameReset();">Reiniciar partida</button>
+            </div>
+        </div>
+    </div>
+
     <!-- UI DEL JUEGO -->
     <header>
         <h1>Yatzy</h1>
         <div id="roomInfoDisplay" class="room-info" style="display:none;"></div>
     </header>
+
+    <div id="hostWarningBar" class="host-warning-bar" style="display:none;">
+        <span>⚠️ El anfitrión se desconectó</span>
+        <button class="modal-btn btn-primary" onclick="claimHost()">Ser anfitrión</button>
+    </div>
 
     <!-- SALA DE ESPERA / CONFIGURAR ORDEN -->
     <div id="preGamePanel" class="pre-game-panel" style="display:none;">
