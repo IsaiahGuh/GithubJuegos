@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yatzy</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="favicon.ico">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+
+    <!-- LOBBY PRINCIPAL -->
+    <div id="lobbyModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Yatzy</h2>
+            <p>Selecciona un modo de juego</p>
+
+            <div id="sessionBanner" class="session-banner" style="display:none;">
+                <p id="sessionBannerText" class="session-banner-text"></p>
+                <div class="modal-buttons row-btns">
+                    <button class="modal-btn btn-outline" onclick="dismissSession()">Descartar</button>
+                    <button class="modal-btn btn-primary" onclick="reconnectToSession()">Reconectar</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Tu Nombre:</label>
+                <input type="text" id="playerName" placeholder="Ej. Leo" maxlength="10">
+            </div>
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-primary" onclick="createRoom()">Crear Sala</button>
+                    <button class="modal-btn btn-secondary" onclick="showJoinModal()">Unirse</button>
+                </div>
+                <button class="modal-btn btn-outline" onclick="playSolo()" style="margin-top:10px;">Jugar Solo (Local)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UNIRSE A SALA -->
+    <div id="joinModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Unirse a Sala</h2>
+            <p>Pide el codigo al creador de la sala</p>
+            <div class="input-group">
+                <label>Codigo de la Sala (4 letras/numeros):</label>
+                <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform:uppercase;">
+            </div>
+            <div class="modal-buttons row-btns">
+                <button class="modal-btn btn-outline" onclick="backToLobby()">Volver</button>
+                <button class="modal-btn btn-secondary" onclick="joinRoom()">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARGANDO -->
+    <div id="loadingModal" class="modal-overlay">
+        <div class="modal-box" style="background:transparent; border:none; box-shadow:none;">
+            <img src="favicon.ico" alt="" class="loading-icon">
+            <h2 id="loadingText">Conectando...</h2>
+        </div>
+    </div>
+
+    <!-- RECLAMO DE NOMBRE -->
+    <div id="claimModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Jugador existente</h3>
+            <p id="claimText">Ya hay un jugador con este nombre en la sala.</p>
+            <div class="modal-buttons row-btns">
+                <button class="modal-btn btn-outline" onclick="declineClaim()">No, soy otro jugador</button>
+                <button class="modal-btn btn-primary" onclick="acceptClaim()">Si, soy yo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOOLTIP DE CATEGORIA / BONUS -->
+    <div id="tooltipModal" class="modal-overlay" onclick="closeTooltip()">
+        <div class="modal-box tooltip-box" onclick="event.stopPropagation()">
+            <h3 id="tooltipTitle">-</h3>
+            <p id="tooltipText">-</p>
+            <button class="modal-btn btn-outline" onclick="closeTooltip()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- SELECTOR DE CARA DE DADO -->
+    <div id="diceModal" class="modal-overlay">
+        <div class="modal-box dice-picker-box">
+            <h3>¿Que cara salio?</h3>
+            <div class="dice-face-grid">
+                <button class="dice-face-btn" data-value="1" onclick="setDiceValue(1)"></button>
+                <button class="dice-face-btn" data-value="2" onclick="setDiceValue(2)"></button>
+                <button class="dice-face-btn" data-value="3" onclick="setDiceValue(3)"></button>
+                <button class="dice-face-btn" data-value="4" onclick="setDiceValue(4)"></button>
+                <button class="dice-face-btn" data-value="5" onclick="setDiceValue(5)"></button>
+                <button class="dice-face-btn" data-value="6" onclick="setDiceValue(6)"></button>
+            </div>
+            <button class="modal-btn btn-outline" onclick="closeDiceModal()" style="margin-top:12px;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- VER CARTILLA DE OTRO JUGADOR -->
+    <div id="viewPlayerModal" class="modal-overlay" onclick="closeViewPlayer()">
+        <div class="modal-box view-player-box" onclick="event.stopPropagation()">
+            <h3 id="viewPlayerTitle">Jugador</h3>
+            <div id="viewPlayerSheet" class="view-player-sheet"></div>
+            <button class="modal-btn btn-outline" onclick="closeViewPlayer()" style="margin-top:10px;">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- AVISO GENERAL (reemplaza alert() nativo) -->
+    <div id="noticeModal" class="modal-overlay" onclick="closeNotice()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3 id="noticeTitle">Aviso</h3>
+            <p id="noticeText">-</p>
+            <button class="modal-btn btn-primary" onclick="closeNotice()">Entendido</button>
+        </div>
+    </div>
+
+    <!-- REINICIAR PARTIDA (SOLO ANFITRION) -->
+    <div id="resetGameModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Reiniciar partida</h3>
+            <p>Esto borrara los puntajes de TODOS los jugadores y volvera a la sala de espera para reordenar turnos.</p>
+            <div class="modal-buttons row-btns">
+                <button class="modal-btn btn-outline" onclick="closeResetGameModal()">Cancelar</button>
+                <button class="modal-btn btn-danger" onclick="confirmGameReset()">Reiniciar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIN DE LA PARTIDA -->
+    <div id="gameOverModal" class="modal-overlay">
+        <div class="modal-box game-over-box">
+            <h2>🏁 Fin de la partida</h2>
+            <div id="finalRankList" class="final-rank-list"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-outline" onclick="closeGameOverModal()">Ver tablero</button>
+                <button id="gameOverResetBtn" class="modal-btn btn-danger" style="display:none;" onclick="closeGameOverModal(); requestGameReset();">Reiniciar partida</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI DEL JUEGO -->
+    <header>
+        <h1>Yatzy</h1>
+        <div id="roomInfoDisplay" class="room-info" style="display:none;"></div>
+    </header>
+
+    <div id="hostWarningBar" class="host-warning-bar" style="display:none;">
+        <span>⚠️ El anfitrión se desconectó</span>
+        <button class="modal-btn btn-primary" onclick="claimHost()">Ser anfitrión</button>
+    </div>
+
+    <!-- SALA DE ESPERA / CONFIGURAR ORDEN -->
+    <div id="preGamePanel" class="pre-game-panel" style="display:none;">
+        <h3>Jugadores en la sala</h3>
+        <p id="preGameHint" class="pre-game-hint">Esperando a que el anfitrion inicie la partida...</p>
+        <div id="orderList" class="order-list"></div>
+        <button id="startGameBtn" class="modal-btn btn-primary" style="display:none; margin-top:10px;" onclick="startGame()">Iniciar Partida</button>
+    </div>
+
+    <!-- PANTALLA DE JUEGO -->
+    <div id="gameArea" class="app-container" style="display:none;">
+
+        <div id="turnBanner" class="turn-banner">Turno de: --</div>
+        <button id="resetGameBtn" class="modal-btn btn-outline" style="display:none; width:100%;" onclick="requestGameReset()">Reiniciar Partida (Todos)</button>
+
+        <div class="board-container">
+            <!-- FILA DE DADOS -->
+            <div id="diceRow" class="dice-row"></div>
+
+            <div id="turnActions" class="turn-actions" style="display:none;">
+                <div style="text-align:center; width:100%;">
+                    <p class="undo-hint">Toca de nuevo la casilla marcada para deshacerla</p>
+                    <button class="modal-btn btn-danger" onclick="endTurn()">Finalizar Turno</button>
+                </div>
+            </div>
+
+            <div class="board yatzy-board">
+                <div class="yatzy-col" id="upperCol"></div>
+                <div class="yatzy-col" id="lowerCol"></div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="scoreboard">
+                <div class="total-score">
+                    TU TOTAL: <span id="myTotalScore">0</span>
+                </div>
+            </div>
+
+            <div class="leaderboard" id="leaderboardPanel">
+                <h3>Posiciones</h3>
+                <div id="playersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOG COMPARTIDO -->
+    <div id="gameLogPanel" class="game-log-panel">
+        <h3>Registro de Movimientos</h3>
+        <div id="gameLogList" class="log-list">
+            <p class="log-empty">Sin movimientos todavia.</p>
+        </div>
+    </div>
+
+    <!-- TOAST DE EVENTOS (BONO / YATZY) -->
+    <div id="eventToast" class="event-toast"></div>
+
+    <script src="js/juego.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script src="sesion.js"></script>
+    <script src="mqtt.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
