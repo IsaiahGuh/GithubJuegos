@@ -22,20 +22,46 @@ function isLargeStraight(dice) {
 function isYatzy(dice) { return dice.every(d => d === dice[0]); }
 
 const CATEGORIES = [
-    { id: 'ones',   section: 'upper', label: 'Unos',    icon: '⚀', calc: d => sumOfNumber(d, 1) },
-    { id: 'twos',   section: 'upper', label: 'Doses',   icon: '⚁', calc: d => sumOfNumber(d, 2) },
-    { id: 'threes', section: 'upper', label: 'Treses',  icon: '⚂', calc: d => sumOfNumber(d, 3) },
-    { id: 'fours',  section: 'upper', label: 'Cuatros', icon: '⚃', calc: d => sumOfNumber(d, 4) },
-    { id: 'fives',  section: 'upper', label: 'Cincos',  icon: '⚄', calc: d => sumOfNumber(d, 5) },
-    { id: 'sixes',  section: 'upper', label: 'Seises',  icon: '⚅', calc: d => sumOfNumber(d, 6) },
-    { id: 'threeKind',     section: 'lower', label: '3 del mismo número',    icon: '3X',  calc: d => hasCountAtLeast(d, 3) ? sumAll(d) : 0 },
-    { id: 'fourKind',      section: 'lower', label: '4 del mismo número',    icon: '4X',  calc: d => hasCountAtLeast(d, 4) ? sumAll(d) : 0 },
-    { id: 'fullHouse',     section: 'lower', label: 'Full (3+2)',            icon: '🏠', calc: d => isFullHouse(d) ? 25 : 0 },
-    { id: 'smallStraight', section: 'lower', label: 'Secuencia de 4',        icon: '🎴', calc: d => isSmallStraight(d) ? 30 : 0 },
-    { id: 'largeStraight', section: 'lower', label: 'Secuencia de 5',        icon: '🃏', calc: d => isLargeStraight(d) ? 40 : 0 },
-    { id: 'yatzy',         section: 'lower', label: 'Yatzy (5 iguales)',     icon: '⭐', calc: d => isYatzy(d) ? 50 : 0 },
-    { id: 'chance',        section: 'lower', label: 'Probabilidad',         icon: '❓', calc: d => sumAll(d) }
+    { id: 'ones',   section: 'upper', label: 'Unos',    iconType: 'die', dieValue: 1, calc: d => sumOfNumber(d, 1) },
+    { id: 'twos',   section: 'upper', label: 'Doses',   iconType: 'die', dieValue: 2, calc: d => sumOfNumber(d, 2) },
+    { id: 'threes', section: 'upper', label: 'Treses',  iconType: 'die', dieValue: 3, calc: d => sumOfNumber(d, 3) },
+    { id: 'fours',  section: 'upper', label: 'Cuatros', iconType: 'die', dieValue: 4, calc: d => sumOfNumber(d, 4) },
+    { id: 'fives',  section: 'upper', label: 'Cincos',  iconType: 'die', dieValue: 5, calc: d => sumOfNumber(d, 5) },
+    { id: 'sixes',  section: 'upper', label: 'Seises',  iconType: 'die', dieValue: 6, calc: d => sumOfNumber(d, 6) },
+    { id: 'threeKind',     section: 'lower', label: '3 del mismo número',    iconType: 'text', icon: '3X',  calc: d => hasCountAtLeast(d, 3) ? sumAll(d) : 0 },
+    { id: 'fourKind',      section: 'lower', label: '4 del mismo número',    iconType: 'text', icon: '4X',  calc: d => hasCountAtLeast(d, 4) ? sumAll(d) : 0 },
+    { id: 'fullHouse',     section: 'lower', label: 'Full (3+2)',            iconType: 'house', calc: d => isFullHouse(d) ? 25 : 0 },
+    { id: 'smallStraight', section: 'lower', label: 'Secuencia de 4',        iconType: 'cards', sub: 'SMALL', calc: d => isSmallStraight(d) ? 30 : 0 },
+    { id: 'largeStraight', section: 'lower', label: 'Secuencia de 5',        iconType: 'cards', sub: 'LARGE', calc: d => isLargeStraight(d) ? 40 : 0 },
+    { id: 'yatzy',         section: 'lower', label: 'Yatzy (5 iguales)',     iconType: 'yatzy', calc: d => isYatzy(d) ? 50 : 0 },
+    { id: 'chance',        section: 'lower', label: 'Probabilidad',         iconType: 'text', icon: '?', calc: d => sumAll(d) }
 ];
+
+// ===== ICONOS: puntos de dado, casa y cartas =====
+const DIE_PATTERNS = {
+    1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8],
+    5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
+};
+function pipsHTML(value) {
+    if (!value) return '<span class="pip-empty">?</span>';
+    const active = DIE_PATTERNS[value] || [];
+    let html = '<div class="pips-grid">';
+    for (let i = 0; i < 9; i++) html += `<span class="pip${active.includes(i) ? ' active' : ''}"></span>`;
+    html += '</div>';
+    return html;
+}
+const HOUSE_SVG = '<svg class="cat-icon-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M9.5 19.5V14h5v5.5"/></svg>';
+const CARDS_SVG = '<svg class="cat-icon-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="12" height="15" rx="2" transform="rotate(-12 8.5 14.5)"/><rect x="8" y="3" width="12" height="15" rx="2"/></svg>';
+
+function catIconHTML(cat) {
+    switch (cat.iconType) {
+        case 'die': return pipsHTML(cat.dieValue);
+        case 'house': return HOUSE_SVG;
+        case 'cards': return CARDS_SVG + `<span class="cat-sub">${cat.sub}</span>`;
+        case 'yatzy': return '<span class="cat-yatzy">YATZY</span>';
+        default: return `<span>${cat.icon}</span>`;
+    }
+}
 
 const TOOLTIP_TEXT = {
     ones: 'Cuenta y suma solo los números uno.',
@@ -229,7 +255,7 @@ function renderBoard() {
         row.className = 'cat-row';
         const catCell = document.createElement('div');
         catCell.className = 'cat-cell';
-        catCell.textContent = cat.icon;
+        catCell.innerHTML = catIconHTML(cat);
         catCell.addEventListener('click', () => showTooltip(cat.id));
         const scoreCell = document.createElement('div');
         scoreCell.className = 'score-cell';
@@ -254,12 +280,11 @@ function renderDice() {
     const row = document.getElementById('diceRow');
     if (!row) return;
     row.innerHTML = '';
-    const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
     const interactive = isMyTurn() && !markedThisTurn;
     myDice.forEach((val, idx) => {
         const cell = document.createElement('div');
         cell.className = 'die-cell' + (val ? ' filled' : '') + (!interactive ? ' disabled' : '');
-        cell.textContent = val ? DICE_FACES[val] : '?';
+        cell.innerHTML = pipsHTML(val);
         cell.addEventListener('click', () => tapDiceCell(idx));
         row.appendChild(cell);
     });
@@ -331,8 +356,8 @@ function updateBonusCell() {
     const cell = document.getElementById('bonusCell');
     if (!cell) return;
     const sum = upperSum(myScores);
-    if (sum >= 63) { cell.textContent = '+35 ✓'; cell.classList.add('done'); }
-    else { cell.textContent = `${sum}/63`; cell.classList.remove('done'); }
+    if (sum >= 63) { cell.innerHTML = '+35<br>✓'; cell.classList.add('done'); }
+    else { cell.innerHTML = `${sum}<br>/63`; cell.classList.remove('done'); }
 }
 function updateTotalScore() {
     const el = document.getElementById('myTotalScore');
@@ -522,7 +547,7 @@ function openViewPlayer(id) {
         const val = scores[c.id];
         const has = val !== null && val !== undefined;
         return `<div style="display:flex;justify-content:space-between;padding:6px 8px;border-radius:6px;background:#2a2a2a;${has ? `border:2px solid ${colorHex};` : ''}">
-            <span>${c.icon} ${c.label}</span><b>${has ? val : '-'}</b></div>`;
+            <span>${c.label}</span><b>${has ? val : '-'}</b></div>`;
     };
     let html = '<div style="flex:1;display:flex;flex-direction:column;gap:4px;">';
     CATEGORIES.filter(c => c.section === 'upper').forEach(c => html += rowHtml(c));
