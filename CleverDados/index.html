@@ -44,9 +44,9 @@
     <div id="joinModal" class="modal-overlay" style="display: none;">
         <div class="modal-box">
             <h2>Unirse a Sala</h2>
-            <p>Pide el código al creador de la sala</p>
+            <p>Pide el codigo al creador de la sala</p>
             <div class="input-group">
-                <label>Código de la Sala (4 letras/números):</label>
+                <label>Codigo de la Sala (4 letras/numeros):</label>
                 <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform: uppercase;">
             </div>
             <div class="modal-buttons">
@@ -73,7 +73,7 @@
             <div class="modal-buttons">
                 <div class="row-btns">
                     <button class="modal-btn btn-outline" onclick="declineClaim()">No, soy otro jugador</button>
-                    <button class="modal-btn btn-primary" onclick="acceptClaim()">Sí, soy yo</button>
+                    <button class="modal-btn btn-primary" onclick="acceptClaim()">Si, soy yo</button>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
     <div id="confirmModal" class="modal-overlay">
         <div class="modal-box">
             <h3 id="confirmTitle">Reiniciar tablero</h3>
-            <p id="confirmText">Se borrarán todas tus marcas.</p>
+            <p id="confirmText">Se borraran todas tus marcas.</p>
             <div class="modal-buttons">
                 <div class="row-btns">
                     <button class="modal-btn btn-outline" onclick="cerrarModal()">Cancelar</button>
@@ -93,11 +93,10 @@
         </div>
     </div>
 
-    <!-- ZOOM DE ÁREA -->
+    <!-- ZOOM DE AREA -->
     <div id="zoomAreaModal" class="modal-overlay zoom-area-modal" style="display: none;">
         <div class="modal-box zoom-modal">
             <div class="zoom-header">
-                <!-- Título eliminado -->
             </div>
             <div class="zoom-body">
                 <div class="area-replica" id="zoomAreaContent"></div>
@@ -115,35 +114,35 @@
         <div class="board-container">
             <!-- TABLERO COMPLETO -->
             <div class="board" id="game-board">
-                <!-- ÁREA GRIS (Fila 1) - SIN ZOOM -->
+                <!-- AREA GRIS (Fila 1) - SIN ZOOM -->
                 <div class="area area-gris" id="area-gris">
                     <div id="area-gris-content"></div>
                 </div>
 
                 <!-- FILA 2: AMARILLA | AZUL -->
                 <div class="area-row">
-                    <!-- ÁREA AMARILLA -->
+                    <!-- AREA AMARILLA -->
                     <div class="area area-amarilla half area-clickable" id="area-amarilla" data-area="amarilla" onclick="abrirZoomArea('amarilla')">
                         <div id="area-amarilla-content"></div>
                     </div>
 
-                    <!-- ÁREA AZUL -->
+                    <!-- AREA AZUL -->
                     <div class="area area-azul half area-clickable" id="area-azul" data-area="azul" onclick="abrirZoomArea('azul')">
                         <div id="area-azul-content"></div>
                     </div>
                 </div>
 
-                <!-- ÁREA VERDE (Fila 3) -->
+                <!-- AREA VERDE (Fila 3) -->
                 <div class="area area-verde area-clickable" id="area-verde" data-area="verde" onclick="abrirZoomArea('verde')">
                     <div id="area-verde-content"></div>
                 </div>
 
-                <!-- ÁREA NARANJA (Fila 4) -->
+                <!-- AREA NARANJA (Fila 4) -->
                 <div class="area area-naranja area-clickable" id="area-naranja" data-area="naranja" onclick="abrirZoomArea('naranja')">
                     <div id="area-naranja-content"></div>
                 </div>
 
-                <!-- ÁREA MORADO (Fila 5) -->
+                <!-- AREA MORADO (Fila 5) -->
                 <div class="area area-morado area-clickable" id="area-morado" data-area="morado" onclick="abrirZoomArea('morado')">
                     <div id="area-morado-content"></div>
                 </div>
@@ -151,54 +150,62 @@
         </div>
 
         <div class="side-panel">
+            <!-- CONTROLES DE TURNO -->
+            <div id="game-controls" style="background: var(--bg-panel); border-radius: 12px; padding: 10px; border: 1px solid var(--border-color);">
+                <div id="turnBanner" style="text-align: center; font-weight: bold; padding: 6px 0; font-size: 1rem; color: #a09888;">Esperando inicio...</div>
+                <div class="controls-buttons" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center;">
+                    <button id="startGameBtn" class="modal-btn btn-primary" style="display:none;">Iniciar</button>
+                    <button id="endTurnBtn" class="modal-btn btn-secondary" disabled style="display:none;">Finalizar Turno</button>
+                    <button id="resetGameBtn" class="modal-btn btn-danger" style="display:none;">Reiniciar</button>
+                </div>
+            </div>
+
             <!-- TABLA DE POSICIONES -->
             <div class="leaderboard" id="leaderboardPanel">
                 <h3>Posiciones</h3>
                 <div id="playersList"></div>
-                <div class="controls">
-                    <button id="resetBtn" class="modal-btn btn-danger" onclick="mostrarModalReinicio()">Reiniciar Mi Tablero</button>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-    SCRIPTS - ORDEN DE CARGA CORRECTO
-    ============================================================ -->
-    
-        <!-- 1. UTILIDADES -->
-        <script src="js/numerico.js"></script>
+    <!-- SCRIPTS - ORDEN DE CARGA CORRECTO -->
+    <!-- 1. UTILIDADES -->
+    <script src="js/numerico.js"></script>
 
-        <!-- 2. DESHACER -->
-        <script src="js/deshacer.js"></script>
+    <!-- 2. DESHACER -->
+    <script src="js/deshacer.js"></script>
 
-        <!-- 3. ÁREAS -->
-        <script src="js/areas/area-gris.js"></script>
-        <script src="js/areas/area-amarilla.js"></script>
-        <script src="js/areas/area-azul.js"></script>
-        <script src="js/areas/area-verde.js"></script>
-        <script src="js/areas/area-naranja.js"></script>
-        <script src="js/areas/area-morado.js"></script>
+    <!-- 3. AREAS -->
+    <script src="js/areas/area-gris.js"></script>
+    <script src="js/areas/area-amarilla.js"></script>
+    <script src="js/areas/area-azul.js"></script>
+    <script src="js/areas/area-verde.js"></script>
+    <script src="js/areas/area-naranja.js"></script>
+    <script src="js/areas/area-morado.js"></script>
 
-        <!-- 4. SISTEMA DE LOBOS -->
-        <script src="js/lobos.js"></script>
+    <!-- 4. SISTEMA DE LOBOS -->
+    <script src="js/lobos.js"></script>
 
-        <!-- 5. SISTEMA DE PUNTAJES -->
-        <script src="js/puntajes.js"></script>
+    <!-- 5. SISTEMA DE PUNTAJES -->
+    <script src="js/puntajes.js"></script>
 
-        <!-- 6. LEADERBOARD -->
-        <script src="js/leaderboard.js"></script>
+    <!-- 6. LEADERBOARD -->
+    <script src="js/leaderboard.js"></script>
 
-        <!-- 7. ZOOM -->
-        <script src="js/zoom.js"></script>
+    <!-- 7. ZOOM -->
+    <script src="js/zoom.js"></script>
 
-        <!-- 8. SESION (NUEVO) -->
-        <script src="sesion.js"></script>
+    <!-- 8. SESION -->
+    <script src="sesion.js"></script>
 
-        <!-- 9. MULTIJUGADOR -->
-        <script src="multijugador.js"></script>
+    <!-- 9. MULTIJUGADOR -->
+    <script src="multijugador.js"></script>
 
-        <!-- 10. MAIN -->
-        <script src="main.js"></script>
+    <!-- 10. TURNOS (NUEVO) -->
+    <script src="js/turnos.js"></script>
+
+    <!-- 11. MAIN -->
+    <script src="main.js"></script>
+
 </body>
 </html>

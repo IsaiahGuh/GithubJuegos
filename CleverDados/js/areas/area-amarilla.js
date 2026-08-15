@@ -1,8 +1,8 @@
 // ============================================================
-// ÁREA AMARILLA - CLEVERDADOS (CON DESHACER CORREGIDO)
+// AREA AMARILLA - CLEVERDADOS (CON DESHACER CORREGIDO Y TURNOS)
 // ============================================================
 
-// Configuración del área amarilla
+// Configuracion del area amarilla
 const AMARILLA_CONFIG = {
     filas: [
         { numeros: [3, 6, 5, 'X'], bonificacion: 'XAzul', color: '#1e88e5', simbolo: '✖', habilidadGris: 'x', indiceGris: 1 },
@@ -30,14 +30,13 @@ let todoCompletado = false;
 let deshacerEnProgresoAmarilla = false;
 
 // ============================================================
-// INICIALIZACIÓN
+// INICIALIZACION
 // ============================================================
 
 function inicializarAreaAmarilla() {
     const container = document.getElementById('area-amarilla-content');
     if (!container) return;
     
-    // Asegurar que los estados estén sincronizados
     actualizarEstadosAmarilla();
     
     let html = `<div class="amarilla-grid">`;
@@ -103,13 +102,12 @@ function inicializarAreaAmarilla() {
 }
 
 // ============================================================
-// ACTUALIZAR ESTADOS DE AMARILLA - CORREGIDO CON LOBOS
+// ACTUALIZAR ESTADOS DE AMARILLA
 // ============================================================
 
 function actualizarEstadosAmarilla() {
-    console.log('🔄 Actualizando estados de Amarilla...');
+    console.log('Actualizando estados de Amarilla...');
     
-    // Recalcular filas completadas y bonificaciones
     AMARILLA_CONFIG.filas.forEach((config, filaIndex) => {
         let marcadas = 0;
         let totalNumeros = 0;
@@ -126,13 +124,11 @@ function actualizarEstadosAmarilla() {
         
         filasCompletadas[filaIndex] = (marcadas === totalNumeros && totalNumeros > 0);
         
-        // ACTUALIZAR BONIFICACIÓN basado en filasCompletadas
         const bonifKey = `fila${filaIndex}`;
         bonificacionesAmarilla[bonifKey] = filasCompletadas[filaIndex];
         
-        console.log(`  Fila ${filaIndex}: ${marcadas}/${totalNumeros} → ${filasCompletadas[filaIndex] ? 'COMPLETA ✅' : 'incompleta ❌'}, bonificación: ${bonificacionesAmarilla[bonifKey]}`);
+        console.log('  Fila ' + filaIndex + ': ' + marcadas + '/' + totalNumeros + ' -> ' + (filasCompletadas[filaIndex] ? 'COMPLETA' : 'incompleta'));
         
-        // Actualizar el círculo visual
         const circulo = document.querySelector(`.amarilla-bonificacion-circulo[data-amarilla-fila="${filaIndex}"]`);
         if (circulo) {
             if (filasCompletadas[filaIndex]) {
@@ -147,7 +143,6 @@ function actualizarEstadosAmarilla() {
         }
     });
     
-    // Recalcular columnas completadas
     for (let colIndex = 0; colIndex < 4; colIndex++) {
         let todasMarcadas = true;
         for (let fila = 0; fila < 4; fila++) {
@@ -162,9 +157,8 @@ function actualizarEstadosAmarilla() {
         }
         columnasCompletadas[colIndex] = todasMarcadas;
         
-        console.log(`  Columna ${colIndex}: ${columnasCompletadas[colIndex] ? 'COMPLETA ✅' : 'incompleta ❌'}`);
+        console.log('  Columna ' + colIndex + ': ' + (columnasCompletadas[colIndex] ? 'COMPLETA' : 'incompleta'));
         
-        // Actualizar el círculo de columna
         const circulos = document.querySelectorAll('.amarilla-puntajes .puntaje-circulo');
         if (circulos[colIndex]) {
             if (columnasCompletadas[colIndex]) {
@@ -179,12 +173,10 @@ function actualizarEstadosAmarilla() {
         }
     }
     
-    // Recalcular todo completado
     todoCompletado = filasCompletadas.every(f => f === true) && columnasCompletadas.every(c => c === true);
     
-    console.log(`  Todo completado: ${todoCompletado ? 'SÍ ✅' : 'NO ❌'}`);
+    console.log('  Todo completado: ' + (todoCompletado ? 'SI' : 'NO'));
     
-    // Actualizar círculo +1
     const circulos = document.querySelectorAll('.amarilla-puntajes .puntaje-circulo');
     const ultimoCirculo = circulos[circulos.length - 1];
     if (ultimoCirculo) {
@@ -199,9 +191,6 @@ function actualizarEstadosAmarilla() {
         }
     }
     
-    // ============================================================
-    // RECALCULAR LOBOS DESDE BONIFICACIONES
-    // ============================================================
     if (typeof window.recalcularLobosDesdeBonificaciones === 'function') {
         window.recalcularLobosDesdeBonificaciones();
     }
@@ -212,14 +201,12 @@ function actualizarEstadosAmarilla() {
 // ============================================================
 
 function desbloquearEnGris(habilidadId, indice) {
-    console.log(`🔓 Desbloqueando en Gris: ${habilidadId}-${indice}`);
+    console.log('Desbloqueando en Gris:', habilidadId + '-' + indice);
     
-    // Intentar usar el sistema unificado
     if (typeof window.desbloquearHabilidadEnGris === 'function') {
         return window.desbloquearHabilidadEnGris(habilidadId, indice);
     }
     
-    // Fallback: funciones específicas
     if (habilidadId === 'x' && typeof window.desbloquearXExterno === 'function') {
         return window.desbloquearXExterno(indice);
     }
@@ -233,7 +220,6 @@ function desbloquearEnGris(habilidadId, indice) {
         return window.desbloquearMas1Externo(indice);
     }
     
-    // Fallback final: DOM directo
     const selector = `.celda-habilidad[data-habilidad="${habilidadId}"][data-col="${indice}"]`;
     const cell = document.querySelector(selector);
     
@@ -250,7 +236,7 @@ function desbloquearEnGris(habilidadId, indice) {
 }
 
 // ============================================================
-// VERIFICAR FILAS COMPLETAS - CON SOPORTE PARA LOBOS CORREGIDO
+// VERIFICAR FILAS COMPLETAS
 // ============================================================
 
 function verificarFilaCompleta(filaIndex) {
@@ -281,18 +267,13 @@ function verificarFilaCompleta(filaIndex) {
             circulo.textContent = '✓';
         }
         
-        console.log(`✅ Fila ${filaIndex} completada! Bonificación: ${config.bonificacion}`);
+        console.log('Fila ' + filaIndex + ' completada! Bonificacion: ' + config.bonificacion);
         
         if (config.bonificacion === 'Lobo') {
-            // ============================================================
-            // REGISTRAR LOBO CON GUARDADO DE ESTADO PARA DESHACER
-            // ============================================================
             if (typeof registrarLobo === 'function') {
-                // Guardar el estado ANTES del lobo
                 const cantidadAntes = typeof lobos !== 'undefined' ? lobos.cantidad : 0;
                 registrarLobo('amarilla');
                 
-                // Actualizar la última acción para incluir la info del lobo
                 if (typeof window.actualizarUltimaAccion === 'function') {
                     window.actualizarUltimaAccion({
                         tipo: 'marcar_con_lobo',
@@ -339,7 +320,7 @@ function verificarColumnaCompleta(colIndex) {
             circulos[colIndex].textContent = '✓';
         }
         
-        console.log(`✅ Columna ${colIndex} completada! +${AMARILLA_CONFIG.columnas[colIndex]} pts`);
+        console.log('Columna ' + colIndex + ' completada! +' + AMARILLA_CONFIG.columnas[colIndex] + ' pts');
         
         if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
             PUNTAJES.calcularTotal();
@@ -371,15 +352,20 @@ function verificarTodoCompleto() {
         const indiceCorrecto = AMARILLA_CONFIG.indiceBonusTotal || 1;
         desbloquearEnGris('mas1', indiceCorrecto);
         
-        console.log(`✅ Todo completado! +1 desbloqueado en Gris`);
+        console.log('Todo completado! +1 desbloqueado en Gris');
     }
 }
 
 // ============================================================
-// MANEJAR CLICK EN CELDA
+// MANEJAR CLICK EN CELDA - CON TURNOS
 // ============================================================
 
 function manejarClickAmarilla(filaIndex, colIndex) {
+    // Verificar si se puede marcar (sistema de turnos)
+    if (typeof window.puedeMarcar === 'function' && !window.puedeMarcar()) {
+        return;
+    }
+    
     if (typeof enModoZoom === 'undefined' || !enModoZoom) {
         return;
     }
@@ -396,7 +382,7 @@ function manejarClickAmarilla(filaIndex, colIndex) {
     
     const id = `amarilla-${filaIndex}-${colIndex}`;
     
-    // SI ESTÁ MARCADA → DESHACER
+    // SI ESTA MARCADA -> DESHACER
     if (historialMovimientos.includes(id)) {
         deshacerEnProgresoAmarilla = true;
         
@@ -404,10 +390,8 @@ function manejarClickAmarilla(filaIndex, colIndex) {
             const resultado = window.intentarDeshacer(id);
             
             if (resultado && resultado.exito) {
-                // ACTUALIZAR ESTADOS (esto recalcula bonificaciones)
                 actualizarEstadosAmarilla();
                 
-                // RECONSTRUIR GRIS (esto quita los desbloqueos que ya no corresponden)
                 if (typeof window.reconstruirGrisCompleto === 'function') {
                     window.reconstruirGrisCompleto();
                 }
@@ -439,7 +423,7 @@ function manejarClickAmarilla(filaIndex, colIndex) {
         return;
     }
     
-    // SI NO ESTÁ MARCADA → MARCAR
+    // SI NO ESTA MARCADA -> MARCAR
     historialMovimientos.push(id);
     
     if (typeof window.guardarAccion === 'function') {
@@ -448,6 +432,11 @@ function manejarClickAmarilla(filaIndex, colIndex) {
             col: colIndex,
             valor: valor
         });
+    }
+    
+    // Registrar marca en el sistema de turnos
+    if (typeof window.registrarMarca === 'function') {
+        window.registrarMarca(id);
     }
     
     if (typeof actualizarVisualesZoom === 'function') {
@@ -537,4 +526,4 @@ window.actualizarEstadosAmarilla = actualizarEstadosAmarilla;
 window.bonificacionesAmarilla = bonificacionesAmarilla;
 window.filasCompletadas = filasCompletadas;
 
-console.log('🟨 Área Amarilla cargada correctamente');
+console.log('Area Amarilla cargada correctamente');

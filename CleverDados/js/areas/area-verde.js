@@ -1,8 +1,8 @@
 // ============================================================
-// ÁREA VERDE - CLEVERDADOS (CON DESHACER CORREGIDO)
+// AREA VERDE - CLEVERDADOS (CON DESHACER CORREGIDO Y TURNOS)
 // ============================================================
 
-// Puntajes visuales (siempre estáticos)
+// Puntajes visuales (siempre estaticos)
 const PUNTAJES_VERDE = [1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66];
 
 // Tabla interactiva (11 casillas) - UNA SOLA FILA
@@ -29,18 +29,17 @@ const BONUS_MAP = {
     'Espiral': { color: '#78909c', simbolo: '♻', tipo: 'espiral', indiceGris: 3 }
 };
 
-// Índices que tienen bonificación
+// Indices que tienen bonificacion
 const BONUS_INDICES = [3, 5, 6, 8, 9];
 
 // Estado
 let progresoVerde = 0;
 let bonificacionesVerde = [false, false, false, false, false];
 
-// Flag para evitar doble clic después de deshacer
 let deshacerEnProgresoVerde = false;
 
 // ============================================================
-// INICIALIZACIÓN
+// INICIALIZACION
 // ============================================================
 
 function inicializarAreaVerde() {
@@ -51,7 +50,6 @@ function inicializarAreaVerde() {
     
     let html = `<div class="verde-grid">`;
     
-    // --- FILA DE PUNTAJES (VISUAL) - SIEMPRE ESTÁTICOS ---
     html += `<div class="verde-puntajes-fila">`;
     PUNTAJES_VERDE.forEach((puntaje, index) => {
         html += `
@@ -62,7 +60,6 @@ function inicializarAreaVerde() {
     });
     html += `</div>`;
     
-    // --- TABLA INTERACTIVA ---
     html += `<div class="verde-tabla-container">`;
     html += `<div class="verde-fila">`;
     
@@ -85,7 +82,6 @@ function inicializarAreaVerde() {
     });
     html += `</div>`;
     
-    // --- BONIFICACIONES DEBAJO DE CADA CASILLA - SIEMPRE ESTÁTICAS ---
     html += `<div class="verde-bonus-fila">`;
     TABLA_VERDE.forEach((celda, index) => {
         const tieneBonus = celda.bonus !== null && BONUS_MAP[celda.bonus];
@@ -111,52 +107,44 @@ function inicializarAreaVerde() {
     
     container.innerHTML = html;
     
-    // Aplicar estado visual inicial
     actualizarVisuales();
 }
 
 // ============================================================
-// ACTUALIZAR PROGRESO - CORREGIDO
+// ACTUALIZAR PROGRESO
 // ============================================================
 
 function actualizarProgresoVerde() {
-    // El progreso es la cantidad de casillas marcadas EN ORDEN consecutivo
     let marcadasEnOrden = 0;
     
     if (typeof TABLA_VERDE !== 'undefined' && TABLA_VERDE && typeof historialMovimientos !== 'undefined') {
-        // Recorrer en orden y contar cuántas están marcadas consecutivamente
         for (let i = 0; i < TABLA_VERDE.length; i++) {
             const id = `verde-tabla-${i}`;
             if (historialMovimientos.includes(id)) {
                 marcadasEnOrden++;
             } else {
-                // Si encontramos una casilla NO marcada, nos detenemos
                 break;
             }
         }
     }
     
     progresoVerde = marcadasEnOrden;
-    console.log(`📊 progresoVerde actualizado: ${progresoVerde}`);
+    console.log('progresoVerde actualizado:', progresoVerde);
 }
 
 // ============================================================
-// ACTUALIZAR ESTADOS DE VERDE - CORREGIDO CON LOBOS
+// ACTUALIZAR ESTADOS DE VERDE
 // ============================================================
 
 function actualizarEstadosVerde() {
-    console.log('🔄 Actualizando estados de Verde...');
+    console.log('Actualizando estados de Verde...');
     
-    // Recalcular bonificaciones
     BONUS_INDICES.forEach((index, bonusIdx) => {
         const id = `verde-tabla-${index}`;
         bonificacionesVerde[bonusIdx] = historialMovimientos.includes(id);
-        console.log(`  Bonus ${bonusIdx} (índice ${index}): ${bonificacionesVerde[bonusIdx] ? 'ACTIVO ✅' : 'inactivo ❌'}`);
+        console.log('  Bonus ' + bonusIdx + ' (indice ' + index + '): ' + (bonificacionesVerde[bonusIdx] ? 'ACTIVO' : 'inactivo'));
     });
     
-    // ============================================================
-    // RECALCULAR LOBOS DESDE BONIFICACIONES
-    // ============================================================
     if (typeof window.recalcularLobosDesdeBonificaciones === 'function') {
         window.recalcularLobosDesdeBonificaciones();
     }
@@ -167,13 +155,12 @@ function actualizarEstadosVerde() {
 // ============================================================
 
 function desbloquearEnGrisVerde(habilidadId, indice) {
-    console.log(`🔓 Desbloqueando en Gris (Verde): ${habilidadId}-${indice}`);
+    console.log('Desbloqueando en Gris (Verde):', habilidadId + '-' + indice);
     
     if (typeof window.desbloquearHabilidadEnGris === 'function') {
         return window.desbloquearHabilidadEnGris(habilidadId, indice);
     }
     
-    // Fallback: funciones específicas
     if (habilidadId === 'x' && typeof window.desbloquearXExterno === 'function') {
         return window.desbloquearXExterno(indice);
     }
@@ -187,7 +174,6 @@ function desbloquearEnGrisVerde(habilidadId, indice) {
         return window.desbloquearMas1Externo(indice);
     }
     
-    // Fallback final: DOM directo
     const selector = `.celda-habilidad[data-habilidad="${habilidadId}"][data-col="${indice}"]`;
     const cell = document.querySelector(selector);
     
@@ -204,7 +190,7 @@ function desbloquearEnGrisVerde(habilidadId, indice) {
 }
 
 // ============================================================
-// VERIFICAR BONIFICACIÓN INDIVIDUAL - CON SOPORTE PARA LOBOS CORREGIDO
+// VERIFICAR BONIFICACION INDIVIDUAL
 // ============================================================
 
 function verificarBonificacionIndividual(index) {
@@ -217,13 +203,9 @@ function verificarBonificacionIndividual(index) {
     
     bonificacionesVerde[bonusIdx] = true;
     
-    console.log(`✅ Bonificación en Verde índice ${index}: ${celda.bonus}`);
+    console.log('Bonificacion en Verde indice ' + index + ': ' + celda.bonus);
     
-    // Si es Lobo, registrar en lugar de desbloquear en Gris
     if (celda.bonus === 'Lobo') {
-        // ============================================================
-        // REGISTRAR LOBO CON GUARDADO DE ESTADO PARA DESHACER
-        // ============================================================
         if (typeof registrarLobo === 'function') {
             const cantidadAntes = typeof lobos !== 'undefined' ? lobos.cantidad : 0;
             registrarLobo('verde');
@@ -244,7 +226,7 @@ function verificarBonificacionIndividual(index) {
 }
 
 // ============================================================
-// APLICAR BONIFICACIÓN - DESBLOQUEA EN GRIS
+// APLICAR BONIFICACION
 // ============================================================
 
 function aplicarBonificacionVerde(bonus) {
@@ -267,7 +249,6 @@ function aplicarBonificacionVerde(bonus) {
             desbloquearEnGrisVerde('seis', indiceGris);
             break;
         case 'lobo':
-            // Los lobos ya se manejan en verificarBonificacionIndividual
             break;
     }
     
@@ -279,30 +260,30 @@ function aplicarBonificacionVerde(bonus) {
 }
 
 // ============================================================
-// MANEJAR CLICK EN CELDA - CON DESHACER CORREGIDO
+// MANEJAR CLICK EN CELDA - CON TURNOS
 // ============================================================
 
 function manejarClickVerde(index) {
-    // SOLO permitir clicks en modo zoom
+    // Verificar si se puede marcar (sistema de turnos)
+    if (typeof window.puedeMarcar === 'function' && !window.puedeMarcar()) {
+        return;
+    }
+    
     if (typeof enModoZoom === 'undefined' || !enModoZoom) {
         return;
     }
     
-    // Si hay un deshacer en progreso, ignorar el click
     if (deshacerEnProgresoVerde) {
-        console.log('⏳ Deshacer en progreso, ignorando click');
+        console.log('Deshacer en progreso, ignorando click');
         return;
     }
     
     const id = `verde-tabla-${index}`;
     
-    console.log(`🖱️ Click en verde[${index}], id: ${id}`);
+    console.log('Click en verde[' + index + '], id: ' + id);
     
-    // ============================================================
-    // VERIFICAR SI YA ESTÁ MARCADA → INTENTAR DESHACER
-    // ============================================================
     if (historialMovimientos.includes(id)) {
-        console.log(`🔍 Intento deshacer ${id}`);
+        console.log('Intento deshacer ' + id);
         
         deshacerEnProgresoVerde = true;
         
@@ -310,13 +291,10 @@ function manejarClickVerde(index) {
             const resultado = window.intentarDeshacer(id);
             
             if (resultado && resultado.exito) {
-                console.log(`✅ Deshacer exitoso para ${id}`);
+                console.log('Deshacer exitoso para ' + id);
                 actualizarEstadosVerde();
                 actualizarProgresoVerde();
                 
-                // ================================================
-                // RECONSTRUIR GRIS - ¡ESTA ES LA LÍNEA CLAVE!
-                // ================================================
                 if (typeof window.reconstruirGrisCompleto === 'function') {
                     window.reconstruirGrisCompleto();
                 }
@@ -344,7 +322,7 @@ function manejarClickVerde(index) {
                 
                 return;
             } else {
-                console.log(`❌ No se pudo deshacer ${id}`);
+                console.log('No se pudo deshacer ' + id);
                 const cell = document.querySelector(`[data-area="verde"][data-index="${index}"]`);
                 if (typeof window.mostrarFeedbackError === 'function') {
                     window.mostrarFeedbackError(cell);
@@ -358,14 +336,11 @@ function manejarClickVerde(index) {
         return;
     }
     
-    // ============================================================
-    // SI NO ESTÁ MARCADA → VERIFICAR ORDEN Y MARCAR
-    // ============================================================
-    
-    console.log(`📋 progresoVerde: ${progresoVerde}, index: ${index}`);
+    // SI NO ESTA MARCADA -> VERIFICAR ORDEN Y MARCAR
+    console.log('progresoVerde: ' + progresoVerde + ', index: ' + index);
     
     if (index !== progresoVerde) {
-        console.log(`⚠️ Fuera de orden: esperaba ${progresoVerde}, recibí ${index}`);
+        console.log('Fuera de orden: esperaba ' + progresoVerde + ', recibio ' + index);
         const cell = document.querySelector(`[data-area="verde"][data-index="${index}"]`);
         if (cell) {
             cell.style.borderColor = '#ff4444';
@@ -376,16 +351,8 @@ function manejarClickVerde(index) {
         return;
     }
     
-    // ============================================================
-    // MARCAR CASILLA
-    // ============================================================
-    
-    // Marcar la casilla
     historialMovimientos.push(id);
     
-    // ============================================================
-    // GUARDAR ACCIÓN PARA DESHACER
-    // ============================================================
     if (typeof window.guardarAccion === 'function') {
         window.guardarAccion('marcar', id, 'verde', {
             index: index,
@@ -393,21 +360,20 @@ function manejarClickVerde(index) {
         });
     }
     
-    // Actualizar visuales
+    // Registrar marca en el sistema de turnos
+    if (typeof window.registrarMarca === 'function') {
+        window.registrarMarca(id);
+    }
+    
     actualizarVisuales();
     
-    // Actualizar visuales del zoom si está abierto
     if (typeof actualizarVisualesZoom === 'function') {
         actualizarVisualesZoom();
     }
     
-    // Actualizar progreso
     actualizarProgresoVerde();
-    
-    // Verificar bonificación individual (desbloquea en gris o registra lobo)
     verificarBonificacionIndividual(index);
     
-    // Recalcular puntajes
     if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
         PUNTAJES.calcularTotal();
     } else {
@@ -420,7 +386,7 @@ function manejarClickVerde(index) {
 }
 
 // ============================================================
-// RECALCULAR PUNTAJES (FALLBACK) - CON PUNTAJE DIRECTO
+// RECALCULAR PUNTAJES (FALLBACK)
 // ============================================================
 
 function recalcularPuntajesVerde() {
@@ -429,7 +395,6 @@ function recalcularPuntajesVerde() {
         return;
     }
     
-    // Puntaje DIRECTO
     let puntos = 0;
     if (progresoVerde > 0 && progresoVerde <= PUNTAJES_VERDE.length) {
         puntos = PUNTAJES_VERDE[progresoVerde - 1];
@@ -482,4 +447,4 @@ window.actualizarEstadosVerde = actualizarEstadosVerde;
 window.progresoVerde = progresoVerde;
 window.bonificacionesVerde = bonificacionesVerde;
 
-console.log('🟩 Área Verde cargada correctamente');
+console.log('Area Verde cargada correctamente');

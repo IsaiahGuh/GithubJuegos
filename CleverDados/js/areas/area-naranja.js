@@ -1,30 +1,19 @@
 // ============================================================
-// ÁREA NARANJA - CLEVERDADOS (CON DESHACER CORREGIDO)
+// AREA NARANJA - CLEVERDADOS (CON DESHACER CORREGIDO Y TURNOS)
 // ============================================================
 
-// Configuración del área naranja
+// Configuracion del area naranja
 const NARANJA_CONFIG = [
-    // index 0: Sin bonificación, multiplicador 1
     { index: 0, valor: '', bonus: null, requiereNumero: true, multiplicador: 1 },
-    // index 1: Sin bonificación, multiplicador 1
     { index: 1, valor: '', bonus: null, requiereNumero: true, multiplicador: 1 },
-    // index 2: Espiral, multiplicador 1
     { index: 2, valor: '', bonus: 'Espiral', color: '#78909c', simbolo: '♻', tipo: 'espiral', indiceGris: 4, requiereNumero: true, multiplicador: 1 },
-    // index 3: ×2 (sin bonificación), multiplicador 2
     { index: 3, valor: '×2', bonus: null, requiereNumero: true, multiplicador: 2 },
-    // index 4: XAmarilla, multiplicador 1
     { index: 4, valor: '', bonus: 'XAmarilla', color: '#fdd835', simbolo: '✖', tipo: 'x', indiceGris: 8, requiereNumero: true, multiplicador: 1 },
-    // index 5: +1 CON ×2, multiplicador 2
     { index: 5, valor: '×2', bonus: '+1', color: '#78909c', simbolo: '+1', tipo: 'mas1', indiceGris: 4, requiereNumero: true, multiplicador: 2 },
-    // index 6: Sin bonificación, multiplicador 1
     { index: 6, valor: '', bonus: null, requiereNumero: true, multiplicador: 1 },
-    // index 7: Lobo CON ×2, multiplicador 2
     { index: 7, valor: '×2', bonus: 'Lobo', color: '#d32f2f', simbolo: '♦', tipo: 'lobo', indiceGris: 0, requiereNumero: true, multiplicador: 2 },
-    // index 8: Sin bonificación, multiplicador 1
     { index: 8, valor: '', bonus: null, requiereNumero: true, multiplicador: 1 },
-    // index 9: 6Morado CON ×3, multiplicador 3
     { index: 9, valor: '×3', bonus: '6Morado', color: '#7b1fa2', simbolo: '6', tipo: 'seis', indiceGris: 6, requiereNumero: true, multiplicador: 3 },
-    // index 10: Sin bonificación, multiplicador 1
     { index: 10, valor: '', bonus: null, requiereNumero: true, multiplicador: 1 }
 ];
 
@@ -38,17 +27,14 @@ let bonificacionesNaranja = [
     false  // index 9: 6Morado
 ];
 
-// Índices que tienen bonificación
 const BONUS_INDICES_NARANJA = [2, 4, 5, 7, 9];
 
-// Estado de progreso para orden
 let progresoNaranja = 0;
 
-// Flag para evitar doble clic después de deshacer
 let deshacerEnProgresoNaranja = false;
 
 // ============================================================
-// INICIALIZACIÓN
+// INICIALIZACION
 // ============================================================
 
 function inicializarAreaNaranja() {
@@ -60,7 +46,6 @@ function inicializarAreaNaranja() {
     let html = `<div class="naranja-grid">`;
     html += `<div class="naranja-tabla-container">`;
     
-    // Fila de casillas
     html += `<div class="naranja-fila">`;
     NARANJA_CONFIG.forEach((celda, index) => {
         const id = `naranja-${index}`;
@@ -94,7 +79,6 @@ function inicializarAreaNaranja() {
     });
     html += `</div>`;
     
-    // Fila de bonificaciones (debajo de cada casilla) - SIEMPRE ESTÁTICAS
     html += `<div class="naranja-bonus-fila">`;
     NARANJA_CONFIG.forEach((celda, index) => {
         const tieneBonus = celda.bonus !== null;
@@ -118,33 +102,29 @@ function inicializarAreaNaranja() {
     html += `</div>`;
     container.innerHTML = html;
     
-    // Actualizar visuales
     actualizarVisuales();
 }
 
 // ============================================================
-// ACTUALIZAR PROGRESO - CORREGIDO
+// ACTUALIZAR PROGRESO
 // ============================================================
 
 function actualizarProgresoNaranja() {
-    // El progreso es la cantidad de casillas marcadas EN ORDEN consecutivo
     let marcadasEnOrden = 0;
     
     if (typeof NARANJA_CONFIG !== 'undefined' && NARANJA_CONFIG && typeof historialMovimientos !== 'undefined') {
-        // Recorrer en orden y contar cuántas están marcadas consecutivamente
         for (let i = 0; i < NARANJA_CONFIG.length; i++) {
             const id = `naranja-${i}`;
             if (historialMovimientos.includes(id)) {
                 marcadasEnOrden++;
             } else {
-                // Si encontramos una casilla NO marcada, nos detenemos
                 break;
             }
         }
     }
     
     progresoNaranja = marcadasEnOrden;
-    console.log(`📊 progresoNaranja actualizado: ${progresoNaranja}`);
+    console.log('progresoNaranja actualizado:', progresoNaranja);
 }
 
 // ============================================================
@@ -152,7 +132,6 @@ function actualizarProgresoNaranja() {
 // ============================================================
 
 function actualizarVisualesNaranja() {
-    // Actualizar celdas en el tablero principal
     document.querySelectorAll('.cell[data-area="naranja"]').forEach(cell => {
         const index = parseInt(cell.dataset.index);
         if (isNaN(index)) return;
@@ -169,7 +148,6 @@ function actualizarVisualesNaranja() {
             cell.dataset.marcada = 'true';
         } else {
             cell.classList.remove('marcada');
-            // Restaurar valor original
             if (NARANJA_CONFIG[index]) {
                 cell.textContent = NARANJA_CONFIG[index].valor || '';
             }
@@ -179,29 +157,24 @@ function actualizarVisualesNaranja() {
         }
     });
     
-    // Actualizar visuales del zoom si está abierto
     if (typeof actualizarVisualesZoom === 'function') {
         actualizarVisualesZoom();
     }
 }
 
 // ============================================================
-// ACTUALIZAR ESTADOS DE NARANJA - CORREGIDO CON LOBOS
+// ACTUALIZAR ESTADOS DE NARANJA
 // ============================================================
 
 function actualizarEstadosNaranja() {
-    console.log('🔄 Actualizando estados de Naranja...');
+    console.log('Actualizando estados de Naranja...');
     
-    // Recalcular bonificaciones
     BONUS_INDICES_NARANJA.forEach((index, bonusIdx) => {
         const id = `naranja-${index}`;
         bonificacionesNaranja[bonusIdx] = historialMovimientos.includes(id);
-        console.log(`  Bonus ${bonusIdx} (índice ${index}): ${bonificacionesNaranja[bonusIdx] ? 'ACTIVO ✅' : 'inactivo ❌'}`);
+        console.log('  Bonus ' + bonusIdx + ' (indice ' + index + '): ' + (bonificacionesNaranja[bonusIdx] ? 'ACTIVO' : 'inactivo'));
     });
     
-    // ============================================================
-    // RECALCULAR LOBOS DESDE BONIFICACIONES
-    // ============================================================
     if (typeof window.recalcularLobosDesdeBonificaciones === 'function') {
         window.recalcularLobosDesdeBonificaciones();
     }
@@ -212,13 +185,12 @@ function actualizarEstadosNaranja() {
 // ============================================================
 
 function desbloquearEnGrisNaranja(habilidadId, indice) {
-    console.log(`🔓 Desbloqueando en Gris (Naranja): ${habilidadId}-${indice}`);
+    console.log('Desbloqueando en Gris (Naranja):', habilidadId + '-' + indice);
     
     if (typeof window.desbloquearHabilidadEnGris === 'function') {
         return window.desbloquearHabilidadEnGris(habilidadId, indice);
     }
     
-    // Fallback: funciones específicas
     if (habilidadId === 'x' && typeof window.desbloquearXExterno === 'function') {
         return window.desbloquearXExterno(indice);
     }
@@ -232,7 +204,6 @@ function desbloquearEnGrisNaranja(habilidadId, indice) {
         return window.desbloquearMas1Externo(indice);
     }
     
-    // Fallback final: DOM directo
     const selector = `.celda-habilidad[data-habilidad="${habilidadId}"][data-col="${indice}"]`;
     const cell = document.querySelector(selector);
     
@@ -249,7 +220,7 @@ function desbloquearEnGrisNaranja(habilidadId, indice) {
 }
 
 // ============================================================
-// VERIFICAR BONIFICACIÓN - CON SOPORTE PARA LOBOS CORREGIDO
+// VERIFICAR BONIFICACION
 // ============================================================
 
 function verificarBonificacionNaranja(index) {
@@ -262,13 +233,9 @@ function verificarBonificacionNaranja(index) {
     
     bonificacionesNaranja[bonusIdx] = true;
     
-    console.log(`✅ Bonificación en Naranja índice ${index}: ${celda.bonus}`);
+    console.log('Bonificacion en Naranja indice ' + index + ': ' + celda.bonus);
     
-    // Si es Lobo, registrar en lugar de desbloquear en Gris
     if (celda.bonus === 'Lobo') {
-        // ============================================================
-        // REGISTRAR LOBO CON GUARDADO DE ESTADO PARA DESHACER
-        // ============================================================
         if (typeof registrarLobo === 'function') {
             const cantidadAntes = typeof lobos !== 'undefined' ? lobos.cantidad : 0;
             registrarLobo('naranja');
@@ -289,7 +256,7 @@ function verificarBonificacionNaranja(index) {
 }
 
 // ============================================================
-// APLICAR BONIFICACIÓN - DESBLOQUEA EN GRIS
+// APLICAR BONIFICACION
 // ============================================================
 
 function aplicarBonificacionNaranja(celda) {
@@ -309,7 +276,6 @@ function aplicarBonificacionNaranja(celda) {
             desbloquearEnGrisNaranja('seis', celda.indiceGris);
             break;
         case 'lobo':
-            // Los lobos ya se manejan en verificarBonificacionNaranja
             break;
     }
     
@@ -321,31 +287,31 @@ function aplicarBonificacionNaranja(celda) {
 }
 
 // ============================================================
-// MANEJAR CLICK EN CELDA - CON DESHACER CORREGIDO
+// MANEJAR CLICK EN CELDA - CON TURNOS
 // ============================================================
 
 function manejarClickNaranja(index) {
-    // SOLO permitir clicks en modo zoom
+    // Verificar si se puede marcar (sistema de turnos)
+    if (typeof window.puedeMarcar === 'function' && !window.puedeMarcar()) {
+        return;
+    }
+    
     if (typeof enModoZoom === 'undefined' || !enModoZoom) {
         return;
     }
     
-    // Si hay un deshacer en progreso, ignorar el click
     if (deshacerEnProgresoNaranja) {
-        console.log('⏳ Deshacer en progreso, ignorando click');
+        console.log('Deshacer en progreso, ignorando click');
         return;
     }
     
     const celda = NARANJA_CONFIG[index];
     const id = `naranja-${index}`;
     
-    console.log(`🖱️ Click en naranja[${index}], id: ${id}`);
+    console.log('Click en naranja[' + index + '], id: ' + id);
     
-    // ============================================================
-    // VERIFICAR SI YA ESTÁ MARCADA → INTENTAR DESHACER
-    // ============================================================
     if (historialMovimientos.includes(id)) {
-        console.log(`🔍 Intento deshacer ${id}`);
+        console.log('Intento deshacer ' + id);
         
         deshacerEnProgresoNaranja = true;
         
@@ -353,14 +319,11 @@ function manejarClickNaranja(index) {
             const resultado = window.intentarDeshacer(id);
             
             if (resultado && resultado.exito) {
-                console.log(`✅ Deshacer exitoso para ${id}`);
+                console.log('Deshacer exitoso para ' + id);
                 actualizarEstadosNaranja();
                 actualizarProgresoNaranja();
                 actualizarVisualesNaranja();
                 
-                // ================================================
-                // RECONSTRUIR GRIS - ¡ESTA ES LA LÍNEA CLAVE!
-                // ================================================
                 if (typeof window.reconstruirGrisCompleto === 'function') {
                     window.reconstruirGrisCompleto();
                 }
@@ -385,7 +348,7 @@ function manejarClickNaranja(index) {
                 
                 return;
             } else {
-                console.log(`❌ No se pudo deshacer ${id}`);
+                console.log('No se pudo deshacer ' + id);
                 const cell = document.querySelector(`[data-area="naranja"][data-index="${index}"]`);
                 if (typeof window.mostrarFeedbackError === 'function') {
                     window.mostrarFeedbackError(cell);
@@ -399,15 +362,10 @@ function manejarClickNaranja(index) {
         return;
     }
     
-    // ============================================================
-    // SI NO ESTÁ MARCADA → VERIFICAR ORDEN Y MARCAR
-    // ============================================================
+    console.log('progresoNaranja: ' + progresoNaranja + ', index: ' + index);
     
-    console.log(`📋 progresoNaranja: ${progresoNaranja}, index: ${index}`);
-    
-    // Verificar si se puede marcar (solo en orden)
     if (index !== progresoNaranja) {
-        console.log(`⚠️ Fuera de orden: esperaba ${progresoNaranja}, recibí ${index}`);
+        console.log('Fuera de orden: esperaba ' + progresoNaranja + ', recibio ' + index);
         const cell = document.querySelector(`[data-area="naranja"][data-index="${index}"]`);
         if (cell) {
             cell.style.borderColor = '#ff4444';
@@ -418,22 +376,21 @@ function manejarClickNaranja(index) {
         return;
     }
     
-    // Si requiere número, mostrar modal
     if (celda.requiereNumero) {
-        console.log(`📱 Mostrando modal numérico para ${id}`);
-        const titulo = celda.bonus ? `Marcar ${celda.bonus}` : 'Ingresa el dado';
-        const subtitulo = celda.bonus ? `Selecciona el número para obtener ${celda.bonus}` : '¿Qué número obtuviste?';
+        console.log('Mostrando modal numerico para ' + id);
+        const titulo = celda.bonus ? 'Marcar ' + celda.bonus : 'Ingresa el dado';
+        const subtitulo = celda.bonus ? 'Selecciona el numero para obtener ' + celda.bonus : 'Que numero obtuviste?';
         
         if (typeof mostrarModalNumerico === 'function') {
             mostrarModalNumerico(function(numero) {
-                console.log(`🔢 Número seleccionado: ${numero}`);
+                console.log('Numero seleccionado: ' + numero);
                 let valorFinal = numero * celda.multiplicador;
                 const valorAnterior = valoresNaranja[index];
                 valoresNaranja[index] = valorFinal;
                 marcarNaranja(index, valorFinal, valorAnterior);
             }, titulo, subtitulo);
         } else {
-            const numero = prompt('Ingresa un número del 1 al 6:');
+            const numero = prompt('Ingresa un numero del 1 al 6:');
             if (numero !== null) {
                 const num = parseInt(numero);
                 if (num >= 1 && num <= 6) {
@@ -449,7 +406,7 @@ function manejarClickNaranja(index) {
 }
 
 // ============================================================
-// MARCAR CASILLA - CON DESHACER
+// MARCAR CASILLA - CON TURNOS
 // ============================================================
 
 function marcarNaranja(index, numero, valorAnterior) {
@@ -458,12 +415,8 @@ function marcarNaranja(index, numero, valorAnterior) {
     
     if (historialMovimientos.includes(id)) return;
     
-    // Marcar la casilla en el historial
     historialMovimientos.push(id);
     
-    // ============================================================
-    // GUARDAR ACCIÓN PARA DESHACER (con el valor anterior)
-    // ============================================================
     if (typeof window.guardarAccion === 'function') {
         window.guardarAccion('numero', id, 'naranja', {
             index: index,
@@ -472,26 +425,23 @@ function marcarNaranja(index, numero, valorAnterior) {
         });
     }
     
-    // Actualizar visuales
+    // Registrar marca en el sistema de turnos
+    if (typeof window.registrarMarca === 'function') {
+        window.registrarMarca(id);
+    }
+    
     actualizarVisualesNaranja();
-    
-    // Actualizar progreso
     actualizarProgresoNaranja();
-    
-    // Verificar bonificación (desbloquea en gris o registra lobo)
     verificarBonificacionNaranja(index);
     
-    // Recalcular puntajes
     if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
         PUNTAJES.calcularTotal();
     } else {
         recalcularPuntajesNaranja();
     }
     
-    // Actualizar visuales del tablero principal
     actualizarVisuales();
     
-    // Sincronizar
     if (typeof broadcastPuntaje === 'function') {
         broadcastPuntaje('sync');
     }
@@ -582,4 +532,4 @@ window.actualizarEstadosNaranja = actualizarEstadosNaranja;
 window.progresoNaranja = progresoNaranja;
 window.bonificacionesNaranja = bonificacionesNaranja;
 
-console.log('🟧 Área Naranja cargada correctamente');
+console.log('Area Naranja cargada correctamente');

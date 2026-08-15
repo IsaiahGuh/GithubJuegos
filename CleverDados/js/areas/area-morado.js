@@ -1,28 +1,19 @@
 // ============================================================
-// ÁREA MORADO - CLEVERDADOS (CON DESHACER CORREGIDO - VERSIÓN FINAL)
+// AREA MORADO - CLEVERDADOS (CON DESHACER CORREGIDO Y TURNOS)
 // ============================================================
 
-// Configuración del área morado
+// Configuracion del area morado
 const MORADO_CONFIG = [
     { index: 0, valor: '', bonus: null, requiereNumero: true },
     { index: 1, valor: '', bonus: null, requiereNumero: true },
-    // index 2: Espiral
     { index: 2, valor: '', bonus: 'Espiral', color: '#78909c', simbolo: '♻', tipo: 'espiral', indiceGris: 5, requiereNumero: true },
-    // index 3: XAzul
     { index: 3, valor: '', bonus: 'XAzul', color: '#1e88e5', simbolo: '✖', tipo: 'x', indiceGris: 3, requiereNumero: true },
-    // index 4: +1
     { index: 4, valor: '', bonus: '+1', color: '#78909c', simbolo: '+1', tipo: 'mas1', indiceGris: 5, requiereNumero: true },
-    // index 5: XAmarillo → AMARILLO (índice 9 en gris - el que funcionaba)
     { index: 5, valor: '', bonus: 'XAmarillo', color: '#fdd835', simbolo: '✖', tipo: 'x', indiceGris: 9, requiereNumero: true },
-    // index 6: Lobo
     { index: 6, valor: '', bonus: 'Lobo', color: '#d32f2f', simbolo: '♦', tipo: 'lobo', indiceGris: 0, requiereNumero: true },
-    // index 7: Espiral
     { index: 7, valor: '', bonus: 'Espiral', color: '#78909c', simbolo: '♻', tipo: 'espiral', indiceGris: 6, requiereNumero: true },
-    // index 8: XVerde → VERDE (índice 6 en gris)
     { index: 8, valor: '', bonus: 'XVerde', color: '#43a047', simbolo: '✖', tipo: 'x', indiceGris: 6, requiereNumero: true },
-    // index 9: 6Naranja
     { index: 9, valor: '', bonus: '6Naranja', color: '#ff6f00', simbolo: '6', tipo: 'seis', indiceGris: 3, requiereNumero: true },
-    // index 10: +1
     { index: 10, valor: '', bonus: '+1', color: '#78909c', simbolo: '+1', tipo: 'mas1', indiceGris: 6, requiereNumero: true }
 ];
 
@@ -40,18 +31,15 @@ let bonificacionesMorado = [
     false  // index 10: +1
 ];
 
-// Índices que tienen bonificación
 const BONUS_INDICES_MORADO = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-// Estado de progreso para orden
 let progresoMorado = 0;
 let ultimoNumeroMorado = null;
 
-// Flag para evitar doble clic después de deshacer
 let deshacerEnProgresoMorado = false;
 
 // ============================================================
-// INICIALIZACIÓN
+// INICIALIZACION
 // ============================================================
 
 function inicializarAreaMorado() {
@@ -63,7 +51,6 @@ function inicializarAreaMorado() {
     let html = `<div class="morado-grid">`;
     html += `<div class="morado-tabla-container">`;
     
-    // Fila de casillas
     html += `<div class="morado-fila">`;
     MORADO_CONFIG.forEach((celda, index) => {
         const id = `morado-${index}`;
@@ -96,7 +83,6 @@ function inicializarAreaMorado() {
     });
     html += `</div>`;
     
-    // Fila de bonificaciones (debajo de cada casilla) - SIEMPRE ESTÁTICAS
     html += `<div class="morado-bonus-fila">`;
     MORADO_CONFIG.forEach((celda, index) => {
         const tieneBonus = celda.bonus !== null;
@@ -120,26 +106,22 @@ function inicializarAreaMorado() {
     html += `</div>`;
     container.innerHTML = html;
     
-    // Aplicar estado visual inicial
     actualizarVisualesMorado();
 }
 
 // ============================================================
-// ACTUALIZAR PROGRESO - CORREGIDO
+// ACTUALIZAR PROGRESO
 // ============================================================
 
 function actualizarProgresoMorado() {
-    // El progreso es la cantidad de casillas marcadas EN ORDEN consecutivo
     let marcadasEnOrden = 0;
     
     if (typeof MORADO_CONFIG !== 'undefined' && MORADO_CONFIG && typeof historialMovimientos !== 'undefined') {
-        // Recorrer en orden y contar cuántas están marcadas consecutivamente
         for (let i = 0; i < MORADO_CONFIG.length; i++) {
             const id = `morado-${i}`;
             if (historialMovimientos.includes(id)) {
                 marcadasEnOrden++;
             } else {
-                // Si encontramos una casilla NO marcada, nos detenemos
                 break;
             }
         }
@@ -147,7 +129,6 @@ function actualizarProgresoMorado() {
     
     progresoMorado = marcadasEnOrden;
     
-    // Actualizar último número
     if (progresoMorado > 0) {
         const ultimoIndex = progresoMorado - 1;
         ultimoNumeroMorado = valoresMorado[ultimoIndex];
@@ -155,7 +136,7 @@ function actualizarProgresoMorado() {
         ultimoNumeroMorado = null;
     }
     
-    console.log(`📊 progresoMorado actualizado: ${progresoMorado}, último número: ${ultimoNumeroMorado}`);
+    console.log('progresoMorado actualizado:', progresoMorado, 'ultimo numero:', ultimoNumeroMorado);
 }
 
 // ============================================================
@@ -163,7 +144,6 @@ function actualizarProgresoMorado() {
 // ============================================================
 
 function actualizarVisualesMorado() {
-    // Actualizar celdas en el tablero principal
     document.querySelectorAll('.cell[data-area="morado"]').forEach(cell => {
         const index = parseInt(cell.dataset.index);
         if (isNaN(index)) return;
@@ -180,7 +160,6 @@ function actualizarVisualesMorado() {
             cell.dataset.marcada = 'true';
         } else {
             cell.classList.remove('marcada');
-            // Restaurar valor original
             if (MORADO_CONFIG[index]) {
                 cell.textContent = MORADO_CONFIG[index].valor || '';
             }
@@ -190,29 +169,24 @@ function actualizarVisualesMorado() {
         }
     });
     
-    // Actualizar visuales del zoom si está abierto
     if (typeof actualizarVisualesZoom === 'function') {
         actualizarVisualesZoom();
     }
 }
 
 // ============================================================
-// ACTUALIZAR ESTADOS DE MORADO - CORREGIDO CON LOBOS
+// ACTUALIZAR ESTADOS DE MORADO
 // ============================================================
 
 function actualizarEstadosMorado() {
-    console.log('🔄 Actualizando estados de Morado...');
+    console.log('Actualizando estados de Morado...');
     
-    // Recalcular bonificaciones
     BONUS_INDICES_MORADO.forEach((index, bonusIdx) => {
         const id = `morado-${index}`;
         bonificacionesMorado[bonusIdx] = historialMovimientos.includes(id);
-        console.log(`  Bonus ${bonusIdx} (índice ${index}): ${bonificacionesMorado[bonusIdx] ? 'ACTIVO ✅' : 'inactivo ❌'}`);
+        console.log('  Bonus ' + bonusIdx + ' (indice ' + index + '): ' + (bonificacionesMorado[bonusIdx] ? 'ACTIVO' : 'inactivo'));
     });
     
-    // ============================================================
-    // RECALCULAR LOBOS DESDE BONIFICACIONES
-    // ============================================================
     if (typeof window.recalcularLobosDesdeBonificaciones === 'function') {
         window.recalcularLobosDesdeBonificaciones();
     }
@@ -223,13 +197,12 @@ function actualizarEstadosMorado() {
 // ============================================================
 
 function desbloquearEnGrisMorado(habilidadId, indice) {
-    console.log(`🔓 Desbloqueando en Gris (Morado): ${habilidadId}-${indice}`);
+    console.log('Desbloqueando en Gris (Morado):', habilidadId + '-' + indice);
     
     if (typeof window.desbloquearHabilidadEnGris === 'function') {
         return window.desbloquearHabilidadEnGris(habilidadId, indice);
     }
     
-    // Fallback: funciones específicas
     if (habilidadId === 'x' && typeof window.desbloquearXExterno === 'function') {
         return window.desbloquearXExterno(indice);
     }
@@ -243,7 +216,6 @@ function desbloquearEnGrisMorado(habilidadId, indice) {
         return window.desbloquearMas1Externo(indice);
     }
     
-    // Fallback final: DOM directo
     const selector = `.celda-habilidad[data-habilidad="${habilidadId}"][data-col="${indice}"]`;
     const cell = document.querySelector(selector);
     
@@ -260,7 +232,7 @@ function desbloquearEnGrisMorado(habilidadId, indice) {
 }
 
 // ============================================================
-// VERIFICAR BONIFICACIÓN - CON SOPORTE PARA LOBOS CORREGIDO
+// VERIFICAR BONIFICACION
 // ============================================================
 
 function verificarBonificacionMorado(index) {
@@ -273,13 +245,9 @@ function verificarBonificacionMorado(index) {
     
     bonificacionesMorado[bonusIdx] = true;
     
-    console.log(`✅ Bonificación en Morado índice ${index}: ${celda.bonus}`);
+    console.log('Bonificacion en Morado indice ' + index + ': ' + celda.bonus);
     
-    // Si es Lobo, registrar en lugar de desbloquear en Gris
     if (celda.bonus === 'Lobo') {
-        // ============================================================
-        // REGISTRAR LOBO CON GUARDADO DE ESTADO PARA DESHACER
-        // ============================================================
         if (typeof registrarLobo === 'function') {
             const cantidadAntes = typeof lobos !== 'undefined' ? lobos.cantidad : 0;
             registrarLobo('morado');
@@ -300,7 +268,7 @@ function verificarBonificacionMorado(index) {
 }
 
 // ============================================================
-// APLICAR BONIFICACIÓN - DESBLOQUEA EN GRIS
+// APLICAR BONIFICACION
 // ============================================================
 
 function aplicarBonificacionMorado(celda) {
@@ -320,7 +288,6 @@ function aplicarBonificacionMorado(celda) {
             desbloquearEnGrisMorado('seis', celda.indiceGris);
             break;
         case 'lobo':
-            // Los lobos ya se manejan en verificarBonificacionMorado
             break;
     }
     
@@ -332,31 +299,31 @@ function aplicarBonificacionMorado(celda) {
 }
 
 // ============================================================
-// MANEJAR CLICK EN CELDA - CON DESHACER CORREGIDO
+// MANEJAR CLICK EN CELDA - CON TURNOS
 // ============================================================
 
 function manejarClickMorado(index) {
-    // SOLO permitir clicks en modo zoom
+    // Verificar si se puede marcar (sistema de turnos)
+    if (typeof window.puedeMarcar === 'function' && !window.puedeMarcar()) {
+        return;
+    }
+    
     if (typeof enModoZoom === 'undefined' || !enModoZoom) {
         return;
     }
     
-    // Si hay un deshacer en progreso, ignorar el click
     if (deshacerEnProgresoMorado) {
-        console.log('⏳ Deshacer en progreso, ignorando click');
+        console.log('Deshacer en progreso, ignorando click');
         return;
     }
     
     const celda = MORADO_CONFIG[index];
     const id = `morado-${index}`;
     
-    console.log(`🖱️ Click en morado[${index}], id: ${id}`);
+    console.log('Click en morado[' + index + '], id: ' + id);
     
-    // ============================================================
-    // VERIFICAR SI YA ESTÁ MARCADA → INTENTAR DESHACER
-    // ============================================================
     if (historialMovimientos.includes(id)) {
-        console.log(`🔍 Intento deshacer ${id}`);
+        console.log('Intento deshacer ' + id);
         
         deshacerEnProgresoMorado = true;
         
@@ -364,14 +331,11 @@ function manejarClickMorado(index) {
             const resultado = window.intentarDeshacer(id);
             
             if (resultado && resultado.exito) {
-                console.log(`✅ Deshacer exitoso para ${id}`);
+                console.log('Deshacer exitoso para ' + id);
                 actualizarEstadosMorado();
                 actualizarProgresoMorado();
                 actualizarVisualesMorado();
                 
-                // ================================================
-                // RECONSTRUIR GRIS - ¡ESTA ES LA LÍNEA CLAVE!
-                // ================================================
                 if (typeof window.reconstruirGrisCompleto === 'function') {
                     window.reconstruirGrisCompleto();
                 }
@@ -396,7 +360,7 @@ function manejarClickMorado(index) {
                 
                 return;
             } else {
-                console.log(`❌ No se pudo deshacer ${id}`);
+                console.log('No se pudo deshacer ' + id);
                 const cell = document.querySelector(`[data-area="morado"][data-index="${index}"]`);
                 if (typeof window.mostrarFeedbackError === 'function') {
                     window.mostrarFeedbackError(cell);
@@ -410,15 +374,10 @@ function manejarClickMorado(index) {
         return;
     }
     
-    // ============================================================
-    // SI NO ESTÁ MARCADA → VERIFICAR ORDEN Y MARCAR
-    // ============================================================
+    console.log('progresoMorado: ' + progresoMorado + ', index: ' + index);
     
-    console.log(`📋 progresoMorado: ${progresoMorado}, index: ${index}`);
-    
-    // Verificar si se puede marcar (solo en orden)
     if (index !== progresoMorado) {
-        console.log(`⚠️ Fuera de orden: esperaba ${progresoMorado}, recibí ${index}`);
+        console.log('Fuera de orden: esperaba ' + progresoMorado + ', recibio ' + index);
         const cell = document.querySelector(`[data-area="morado"][data-index="${index}"]`);
         if (cell) {
             cell.style.borderColor = '#ff4444';
@@ -429,16 +388,14 @@ function manejarClickMorado(index) {
         return;
     }
     
-    // Si requiere número, mostrar modal
     if (celda.requiereNumero) {
-        console.log(`📱 Mostrando modal numérico para ${id}`);
-        const titulo = celda.bonus ? `Marcar ${celda.bonus}` : 'Ingresa el dado';
-        const subtitulo = celda.bonus ? `Selecciona el número para obtener ${celda.bonus}` : '¿Qué número obtuviste?';
+        console.log('Mostrando modal numerico para ' + id);
+        const titulo = celda.bonus ? 'Marcar ' + celda.bonus : 'Ingresa el dado';
+        const subtitulo = celda.bonus ? 'Selecciona el numero para obtener ' + celda.bonus : 'Que numero obtuviste?';
         
         if (typeof mostrarModalNumerico === 'function') {
             mostrarModalNumerico(function(numero) {
-                console.log(`🔢 Número seleccionado: ${numero}`);
-                // Verificar regla de números crecientes
+                console.log('Numero seleccionado: ' + numero);
                 if (ultimoNumeroMorado !== null && ultimoNumeroMorado !== 6) {
                     if (numero <= ultimoNumeroMorado) {
                         const cell = document.querySelector(`[data-area="morado"][data-index="${index}"]`);
@@ -448,24 +405,23 @@ function manejarClickMorado(index) {
                                 cell.style.borderColor = '';
                             }, 1000);
                         }
-                        alert(`El número debe ser mayor que ${ultimoNumeroMorado}. Si pones 6, se reinicia.`);
+                        alert('El numero debe ser mayor que ' + ultimoNumeroMorado + '. Si pones 6, se reinicia.');
                         return;
                     }
                 }
                 
-                // Guardar el valor anterior antes de modificarlo
                 const valorAnterior = valoresMorado[index];
                 valoresMorado[index] = numero;
                 marcarMorado(index, numero, valorAnterior);
             }, titulo, subtitulo);
         } else {
-            const numero = prompt('Ingresa un número del 1 al 6:');
+            const numero = prompt('Ingresa un numero del 1 al 6:');
             if (numero !== null) {
                 const num = parseInt(numero);
                 if (num >= 1 && num <= 6) {
                     if (ultimoNumeroMorado !== null && ultimoNumeroMorado !== 6) {
                         if (num <= ultimoNumeroMorado) {
-                            alert(`El número debe ser mayor que ${ultimoNumeroMorado}. Si pones 6, se reinicia.`);
+                            alert('El numero debe ser mayor que ' + ultimoNumeroMorado + '. Si pones 6, se reinicia.');
                             return;
                         }
                     }
@@ -480,7 +436,7 @@ function manejarClickMorado(index) {
 }
 
 // ============================================================
-// MARCAR CASILLA - CON DESHACER
+// MARCAR CASILLA - CON TURNOS
 // ============================================================
 
 function marcarMorado(index, numero, valorAnterior) {
@@ -492,9 +448,6 @@ function marcarMorado(index, numero, valorAnterior) {
     historialMovimientos.push(id);
     valoresMorado[index] = numero;
     
-    // ============================================================
-    // GUARDAR ACCIÓN PARA DESHACER (con el valor anterior)
-    // ============================================================
     if (typeof window.guardarAccion === 'function') {
         window.guardarAccion('numero', id, 'morado', {
             index: index,
@@ -503,9 +456,12 @@ function marcarMorado(index, numero, valorAnterior) {
         });
     }
     
-    // Actualizar visuales
-    actualizarVisualesMorado();
+    // Registrar marca en el sistema de turnos
+    if (typeof window.registrarMarca === 'function') {
+        window.registrarMarca(id);
+    }
     
+    actualizarVisualesMorado();
     actualizarProgresoMorado();
     verificarBonificacionMorado(index);
     
@@ -597,4 +553,4 @@ window.progresoMorado = progresoMorado;
 window.ultimoNumeroMorado = ultimoNumeroMorado;
 window.bonificacionesMorado = bonificacionesMorado;
 
-console.log('🟪 Área Morado cargada correctamente');
+console.log('Area Morado cargada correctamente');

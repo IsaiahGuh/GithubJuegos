@@ -65,6 +65,14 @@ function conectarSala(codigo, isReconnect) {
             puntajesPorArea: null
         };
         
+        // Inicializar sistema de turnos: anfitrión y lista de turnos
+        if (typeof window.establecerAnfitrion === 'function') {
+            window.establecerAnfitrion();
+        }
+        if (typeof window.agregarJugadorTurno === 'function') {
+            window.agregarJugadorTurno(miId);
+        }
+        
         unirseExitoso(codigo);
         broadcastPuntaje('join');
     });
@@ -73,6 +81,7 @@ function conectarSala(codigo, isReconnect) {
         try {
             var data = JSON.parse(message.toString());
             
+            // Manejar mensajes de reclamo (action)
             if (data.action === 'claim_offer') {
                 if (data.targetId === miId && !claimResolved && historialMovimientos.length === 0 && (data.moves || []).length > 0) {
                     claimResolved = true;
@@ -114,58 +123,57 @@ function conectarSala(codigo, isReconnect) {
                 return;
             }
 
-            if (data.id === miId) return;
+            // Mensajes con 'accion' (join, sync) - evitar duplicado con turnos
+            if (data.accion === 'join' || data.accion === 'sync') {
+                // Hay otro jugador en la sala: si todavía no sabemos quién
+                // es el anfitrión, démosle tiempo a que llegue esa
+                // información (su state_sync) antes de autodeclararnos.
+                if (typeof window.notificarPresenciaOtroJugador === 'function') {
+                    window.notificarPresenciaOtroJugador();
+                }
 
-            if (!claimResolved && data.nombre === miNombre && historialMovimientos.length === 0 && (data.moves || []).length > 0) {
-                claimResolved = true;
-                pendingClaim = { 
-                    oldId: data.id, 
-                    name: data.nombre, 
-                    score: data.puntaje || 0, 
-                    moves: data.moves || [],
+                // Actualizar datos del jugador remitente
+                datosJugadores[data.id] = { 
+                    nombre: data.nombre, 
+                    puntaje: data.puntaje || 0,
+                    movimientos: data.moves || [],
                     valoresNaranja: data.valoresNaranja || null,
-                    valoresMorado: data.valoresMorado || null
+                    valoresMorado: data.valoresMorado || null,
+                    puntajesPorArea: data.puntajesPorArea || null
                 };
-                if (typeof showClaimModal === 'function') {
-                    showClaimModal(pendingClaim);
+                
+                if (typeof renderizarLeaderboard === 'function') {
+                    renderizarLeaderboard();
                 }
-                return;
-            }
 
-            datosJugadores[data.id] = { 
-                nombre: data.nombre, 
-                puntaje: data.puntaje || 0,
-                movimientos: data.moves || [],
-                valoresNaranja: data.valoresNaranja || null,
-                valoresMorado: data.valoresMorado || null,
-                puntajesPorArea: data.puntajesPorArea || null
-            };
-            
-            if (typeof renderizarLeaderboard === 'function') {
-                renderizarLeaderboard();
-            }
-
-            // NOTA: broadcastPuntaje() publica la acción en el campo "accion"
-            // (no "action"), así que hay que comprobar ese campo aquí.
-            if (data.accion === 'join') {
-                var cachedMatch = null;
-                for (var id in datosJugadores) {
-                    if (id !== data.id && datosJugadores[id].nombre === data.nombre && (datosJugadores[id].movimientos || []).length > 0) {
-                        cachedMatch = id;
-                        break;
+                if (data.accion === 'join') {
+                    // Si es un join, agregar al orden de turnos
+                    if (typeof window.agregarJugadorTurno === 'function') {
+                        window.agregarJugadorTurno(data.id);
                     }
-                }
-                if (cachedMatch) {
-                    broadcastClaimOffer(data.id, cachedMatch);
-                }
+                    
+                    // Reclamar si hay conflicto de nombre
+                    var cachedMatch = null;
+                    for (var id in datosJugadores) {
+                        if (id !== data.id && datosJugadores[id].nombre === data.nombre && (datosJugadores[id].movimientos || []).length > 0) {
+                            cachedMatch = id;
+                            break;
+                        }
+                    }
+                    if (cachedMatch) {
+                        broadcastClaimOffer(data.id, cachedMatch);
+                    }
 
-                // Un jugador nuevo solo recibe mensajes publicados DESPUES de
-                // suscribirse: nunca ve el estado de quienes ya estaban en la
-                // sala, porque MQTT no reenvía mensajes pasados. Por eso, al
-                // detectar un "join" ajeno, respondemos reenviando nuestro
-                // propio estado para que el recién llegado nos vea también.
-                broadcastPuntaje('sync');
+                    // Responder con nuestro estado para que el recién llegado nos vea
+                    broadcastPuntaje('sync');
+                }
             }
+
+            // Pasar el mensaje al sistema de turnos (maneja state_sync, game_start, turn_advance, game_reset)
+            if (typeof window.manejarMensajeTurno === 'function') {
+                window.manejarMensajeTurno(data);
+            }
+
         } catch(e) { 
             console.error('Mensaje invalido', e); 
         }
@@ -292,10 +300,7 @@ function broadcastPuntaje(accion) {
         renderizarLeaderboard();
     }
     
-    // Mantener la sesión guardada al día con cada acción, no solo al
-    // entrar a la sala. Sin esto, reconnectToSession()/el reclamo
-    // siempre recuperan el historial vacío del momento en que te
-    // uniste, en vez de tu progreso real.
+    // Mantener la sesion guardada al dia con cada accion
     if (salaActual && typeof saveSession === 'function') {
         saveSession();
     }
@@ -354,7 +359,7 @@ function broadcastClaimOffer(targetId, offeredId) {
 function unirseExitoso(codigo) {
     ocultarCargando();
     
-    // Asegurar que ambas variables estén sincronizadas
+    // Asegurar que ambas variables esten sincronizadas
     salaActual = codigo;
     window.currentRoom = codigo;
     
@@ -370,6 +375,14 @@ function unirseExitoso(codigo) {
     var leaderboardPanel = document.getElementById('leaderboardPanel');
     if (leaderboardPanel) {
         leaderboardPanel.style.display = 'flex';
+    }
+    
+    // Inicializar UI de turnos
+    if (typeof window.initTurnUI === 'function') {
+        window.initTurnUI();
+    }
+    if (typeof window.actualizarUIEstado === 'function') {
+        window.actualizarUIEstado();
     }
     
     // Guardar sesion despues de tener todos los datos

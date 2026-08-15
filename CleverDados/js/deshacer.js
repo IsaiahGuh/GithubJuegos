@@ -1,11 +1,11 @@
 // ============================================================
-// DESHACER.JS - SISTEMA DE DESHACER (VERSIÓN COMPLETA CON LOBOS)
+// DESHACER.JS - SISTEMA DE DESHACER (VERSION COMPLETA CON LOBOS Y TURNOS)
 // ============================================================
 
 let pilaMovimientos = [];
 
 // ============================================================
-// GUARDAR ACCIÓN
+// GUARDAR ACCION
 // ============================================================
 
 function guardarAccion(tipo, id, area, datosExtra = {}) {
@@ -24,9 +24,6 @@ function guardarAccion(tipo, id, area, datosExtra = {}) {
 
 // ============================================================
 // RECONSTRUIR PILA DE MOVIMIENTOS DESDE EL HISTORIAL
-// (necesario tras restaurar historialMovimientos "de golpe" -por
-//  reclamo de identidad o reconexión- ya que pilaMovimientos solo
-//  se llena normalmente a través de guardarAccion() en cada click)
 // ============================================================
 
 function inferirMovimientoDesdeId(id) {
@@ -41,8 +38,6 @@ function inferirMovimientoDesdeId(id) {
         return { tipo: 'marcar', area: 'verde', datos: {} };
     }
     if (id.startsWith('naranja-')) {
-        // valorAnterior es null porque una celda solo se marca una vez
-        // (no hay flujo normal de re-marcar tras desmarcar salvo deshacer)
         return { tipo: 'numero', area: 'naranja', datos: { valorAnterior: null } };
     }
     if (id.startsWith('morado-')) {
@@ -70,7 +65,7 @@ function reconstruirPilaMovimientos() {
     historialMovimientos.forEach(id => {
         const info = inferirMovimientoDesdeId(id);
         if (!info) {
-            console.warn(`⚠️ No se pudo inferir el tipo de movimiento para: ${id}`);
+            console.warn('No se pudo inferir el tipo de movimiento para:', id);
             return;
         }
         pilaMovimientos.push({
@@ -82,13 +77,13 @@ function reconstruirPilaMovimientos() {
         });
     });
 
-    console.log(`↩️ Pila de movimientos reconstruida: ${pilaMovimientos.length} movimiento(s)`);
+    console.log('Pila de movimientos reconstruida:', pilaMovimientos.length, 'movimiento(s)');
 }
 
 window.reconstruirPilaMovimientos = reconstruirPilaMovimientos;
 
 // ============================================================
-// ACTUALIZAR ÚLTIMA ACCIÓN (para lobos)
+// ACTUALIZAR ULTIMA ACCION (para lobos)
 // ============================================================
 
 function actualizarUltimaAccion(extraData) {
@@ -98,7 +93,7 @@ function actualizarUltimaAccion(extraData) {
 }
 
 // ============================================================
-// VERIFICAR SI ES EL ÚLTIMO MOVIMIENTO
+// VERIFICAR SI ES EL ULTIMO MOVIMIENTO
 // ============================================================
 
 function esUltimoMovimiento(id) {
@@ -117,7 +112,7 @@ function intentarDeshacer(id) {
     }
     
     if (!esUltimoMovimiento(id)) {
-        return { exito: false, mensaje: 'Solo puedes deshacer el último movimiento' };
+        return { exito: false, mensaje: 'Solo puedes deshacer el ultimo movimiento' };
     }
     
     const movimiento = pilaMovimientos.pop();
@@ -131,13 +126,13 @@ function intentarDeshacer(id) {
 }
 
 // ============================================================
-// EJECUTAR DESHACER - CON SOPORTE PARA LOBO
+// EJECUTAR DESHACER - CON SOPORTE PARA LOBO Y TURNOS
 // ============================================================
 
 function ejecutarDeshacer(movimiento) {
     const { tipo, id, area, datos } = movimiento;
     
-    console.log(`↩️ Deshaciendo: ${tipo} - ${id} en ${area}`);
+    console.log('Deshaciendo:', tipo, '-', id, 'en', area);
     
     try {
         // 1. Siempre remover del historial primero
@@ -145,14 +140,19 @@ function ejecutarDeshacer(movimiento) {
             const index = historialMovimientos.indexOf(id);
             if (index !== -1) {
                 historialMovimientos.splice(index, 1);
-                console.log(`✅ Eliminado ${id} del historial`);
+                console.log('Eliminado', id, 'del historial');
             } else {
-                console.warn(`⚠️ No se encontró ${id} en historial`);
+                console.warn('No se encontro', id, 'en historial');
                 return false;
             }
         }
         
-        // 2. Restaurar datos específicos según el tipo
+        // 2. Notificar al sistema de turnos que se deshizo una marca
+        if (typeof window.marcaDeshecha === 'function') {
+            window.marcaDeshecha(id);
+        }
+        
+        // 3. Restaurar datos especificos segun el tipo
         switch (tipo) {
             case 'numero':
                 restaurarNumero(id, area, datos);
@@ -164,24 +164,22 @@ function ejecutarDeshacer(movimiento) {
                 restaurarLobo(datos);
                 break;
             case 'marcar':
-                // Verificar si esta acción otorgó un lobo que debe ser revertido
                 if (datos && datos.otorgoLobo) {
                     restaurarLobo({ cantidadAntes: datos.lobosAntes });
                 }
                 break;
             case 'habilidad':
-                // No requieren restauración adicional
                 break;
             default:
-                console.warn(`⚠️ Tipo desconocido: ${tipo}`);
+                console.warn('Tipo desconocido:', tipo);
         }
         
-        // 3. RECONSTRUIR GRIS COMPLETO
+        // 4. RECONSTRUIR GRIS COMPLETO
         if (typeof window.reconstruirGrisCompleto === 'function') {
             window.reconstruirGrisCompleto();
         }
         
-        // 4. Actualizar progresos de áreas específicas
+        // 5. Actualizar progresos de areas especificas
         if (area === 'amarilla' && typeof actualizarEstadosAmarilla === 'function') {
             actualizarEstadosAmarilla();
         } else if (area === 'azul' && typeof actualizarEstadosAzul === 'function') {
@@ -194,12 +192,12 @@ function ejecutarDeshacer(movimiento) {
             actualizarProgresoMorado();
         }
         
-        // 5. Recalcular lobos desde bonificaciones (esto asegura consistencia)
+        // 6. Recalcular lobos desde bonificaciones
         if (typeof window.recalcularLobosDesdeBonificaciones === 'function') {
             window.recalcularLobosDesdeBonificaciones();
         }
         
-        // 6. Actualizar visuales
+        // 7. Actualizar visuales
         if (typeof actualizarVisuales === 'function') {
             actualizarVisuales();
         }
@@ -207,19 +205,19 @@ function ejecutarDeshacer(movimiento) {
             actualizarVisualesZoom();
         }
         
-        // 7. Recalcular puntajes
+        // 8. Recalcular puntajes
         if (typeof PUNTAJES !== 'undefined' && PUNTAJES) {
             PUNTAJES.calcularTotal();
         } else if (typeof calcularPuntajes === 'function') {
             calcularPuntajes();
         }
         
-        // 8. Actualizar leaderboard
+        // 9. Actualizar leaderboard
         if (typeof renderizarLeaderboard === 'function') {
             renderizarLeaderboard();
         }
         
-        // 9. Sincronizar
+        // 10. Sincronizar
         if (typeof broadcastPuntaje === 'function') {
             broadcastPuntaje('sync');
         }
@@ -232,7 +230,7 @@ function ejecutarDeshacer(movimiento) {
 }
 
 // ============================================================
-// RESTAURAR NÚMERO (naranja, morado)
+// RESTAURAR NUMERO (naranja, morado)
 // ============================================================
 
 function restaurarNumero(id, area, datos) {
@@ -246,13 +244,13 @@ function restaurarNumero(id, area, datos) {
     
     if (area === 'naranja' && typeof valoresNaranja !== 'undefined') {
         valoresNaranja[index] = valorAnterior;
-        console.log(`✅ Restaurado valoresNaranja[${index}] = ${valorAnterior}`);
+        console.log('Restaurado valoresNaranja[' + index + '] = ' + valorAnterior);
         if (typeof actualizarVisualesNaranja === 'function') {
             actualizarVisualesNaranja();
         }
     } else if (area === 'morado' && typeof valoresMorado !== 'undefined') {
         valoresMorado[index] = valorAnterior;
-        console.log(`✅ Restaurado valoresMorado[${index}] = ${valorAnterior}`);
+        console.log('Restaurado valoresMorado[' + index + '] = ' + valorAnterior);
         if (typeof actualizarVisualesMorado === 'function') {
             actualizarVisualesMorado();
         }
@@ -275,37 +273,32 @@ function restaurarTurno(id) {
         const idx = turnosCompletados.indexOf(turnoNumero);
         if (idx !== -1) {
             turnosCompletados.splice(idx, 1);
-            console.log(`✅ Turno ${turnoNumero} restaurado`);
+            console.log('Turno', turnoNumero, 'restaurado');
         }
     }
 }
 
 // ============================================================
-// RESTAURAR LOBO - CORREGIDO
+// RESTAURAR LOBO
 // ============================================================
 
 function restaurarLobo(datos) {
     if (typeof lobos === 'undefined') return;
     
-    // Si tenemos el valor exacto de antes, restaurarlo
     if (datos && datos.cantidadAntes !== undefined && datos.cantidadAntes !== null) {
         lobos.cantidad = datos.cantidadAntes;
-        console.log(`✅ Lobo restaurado a: ${lobos.cantidad} (desde ${datos.cantidadAntes})`);
+        console.log('Lobo restaurado a:', lobos.cantidad);
     } else if (lobos.cantidad > 0) {
-        // Fallback: decrementar en 1
         lobos.cantidad--;
-        console.log(`✅ Lobo decrementado a: ${lobos.cantidad}`);
+        console.log('Lobo decrementado a:', lobos.cantidad);
     }
     
-    // Recalcular el valor del lobo
     if (typeof actualizarValorLobo === 'function') {
         actualizarValorLobo(false);
     }
     if (typeof actualizarUI === 'function') {
         actualizarUI();
     }
-    
-    // Actualizar el líderboard
     if (typeof renderizarLeaderboard === 'function') {
         renderizarLeaderboard();
     }
@@ -313,52 +306,43 @@ function restaurarLobo(datos) {
 
 // ============================================================
 // RECONSTRUIR TODO EL ESTADO DESDE historialMovimientos
-// (usado por reclamo de identidad / reconexión, donde el
-//  historial se restaura de golpe en vez de movimiento a
-//  movimiento como hace intentarDeshacer/manejarClick*)
 // ============================================================
 
 function reconstruirTodoDesdeHistorial() {
-    console.log('🔁 Reconstruyendo todo el estado desde el historial...');
+    console.log('Reconstruyendo todo el estado desde el historial...');
 
     if (typeof window.historialMovimientos === 'undefined' || !window.historialMovimientos) {
         window.historialMovimientos = [];
     }
 
-    // 0. Reconstruir la pila de deshacer a partir del historial, para
-    //    que "deshacer" vuelva a funcionar sobre el último movimiento
+    // 0. Reconstruir la pila de deshacer
     if (typeof window.reconstruirPilaMovimientos === 'function') {
         window.reconstruirPilaMovimientos();
     }
 
-    // 1. Recalcular bonificaciones/filas/columnas completadas de cada área
-    //    (esto es lo que faltaba: sin esto, bonificacionesAmarilla, 
-    //    filasCompletadasAzul, bonificacionesVerde/Naranja/Morado quedan
-    //    en false aunque historialMovimientos ya tenga las marcas)
+    // 1. Recalcular bonificaciones/filas/columnas completadas de cada area
     if (typeof actualizarEstadosAmarilla === 'function') actualizarEstadosAmarilla();
     if (typeof actualizarEstadosAzul === 'function') actualizarEstadosAzul();
     if (typeof actualizarEstadosVerde === 'function') actualizarEstadosVerde();
     if (typeof actualizarEstadosNaranja === 'function') actualizarEstadosNaranja();
     if (typeof actualizarEstadosMorado === 'function') actualizarEstadosMorado();
 
-    // 2. Reconstruir turnos y desbloqueos del área GRIS a partir de las
-    //    bonificaciones ya recalculadas arriba
+    // 2. Reconstruir turnos y desbloqueos del area GRIS
     if (typeof window.reconstruirGrisCompleto === 'function') {
         window.reconstruirGrisCompleto();
     }
 
-    // 3. Recalcular puntosBonificacion (espiral/+1/X/#) desde el historial,
-    //    ya que es un acumulador que no se deriva solo por marcar casillas
+    // 3. Recalcular puntosBonificacion desde el historial
     if (typeof window.recalcularBonificacionGrisDesdeHistorial === 'function') {
         window.recalcularBonificacionGrisDesdeHistorial();
     }
 
-    // 4. Recalcular lobos desde las bonificaciones ya actualizadas
+    // 4. Recalcular lobos desde las bonificaciones
     if (typeof window.recalcularLobosDesdeBonificaciones === 'function') {
         window.recalcularLobosDesdeBonificaciones();
     }
 
-    // 5. Refrescar visuales de todas las áreas (marcar casillas)
+    // 5. Refrescar visuales de todas las areas
     if (typeof actualizarVisuales === 'function') actualizarVisuales();
     if (typeof actualizarVisualesNaranja === 'function') actualizarVisualesNaranja();
     if (typeof actualizarVisualesMorado === 'function') actualizarVisualesMorado();
@@ -375,7 +359,7 @@ function reconstruirTodoDesdeHistorial() {
     if (typeof actualizarUI === 'function') actualizarUI();
     if (typeof renderizarLeaderboard === 'function') renderizarLeaderboard();
 
-    console.log('✅ Estado reconstruido completamente desde el historial');
+    console.log('Estado reconstruido completamente desde el historial');
 }
 
 window.reconstruirTodoDesdeHistorial = reconstruirTodoDesdeHistorial;
@@ -388,12 +372,12 @@ function limpiarPilaMovimientos() {
     const cantidad = pilaMovimientos.length;
     pilaMovimientos = [];
     if (cantidad > 0) {
-        console.log(`🗑️ Pila de movimientos limpiada (${cantidad})`);
+        console.log('Pila de movimientos limpiada (' + cantidad + ')');
     }
 }
 
 // ============================================================
-// FUNCIONES DE DEPURACIÓN
+// FUNCIONES DE DEPURACION
 // ============================================================
 
 function getPilaMovimientos() {
@@ -422,4 +406,4 @@ window.getUltimoMovimiento = getUltimoMovimiento;
 window.contarMovimientos = contarMovimientos;
 window.restaurarLobo = restaurarLobo;
 
-console.log('↩️ Sistema de deshacer (completo con lobos) cargado correctamente');
+console.log('Sistema de deshacer (completo con lobos y turnos) cargado correctamente');

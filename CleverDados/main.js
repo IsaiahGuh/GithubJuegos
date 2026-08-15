@@ -146,7 +146,7 @@ function reiniciarTablero() {
 }
 
 // ============================================================
-// FUNCIONES DE UI
+// FUNCIONES DE UI (mantenidas para compatibilidad)
 // ============================================================
 
 function mostrarModalReinicio() {
@@ -208,6 +208,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof inicializarAreaVerde === 'function') inicializarAreaVerde();
     if (typeof inicializarAreaNaranja === 'function') inicializarAreaNaranja();
     if (typeof inicializarAreaMorado === 'function') inicializarAreaMorado();
+    
+    // Inicializar sistema de turnos
+    if (typeof window.initTurnUI === 'function') {
+        window.initTurnUI();
+    }
     
     document.addEventListener('click', function(e) {
         var cell = e.target.closest('.cell');

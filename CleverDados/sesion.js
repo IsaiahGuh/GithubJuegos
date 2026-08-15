@@ -6,7 +6,7 @@ var SESSION_KEY = 'cleverdados_session_v1';
 var REGISTRY_KEY = 'cleverdados_players_v1';
 
 // ============================================================
-// DETECCIÓN DE PARÁMETROS URL
+// DETECCION DE PARAMETROS URL
 // ============================================================
 
 (function detectarYGuardarParamsURL() {
@@ -14,7 +14,7 @@ var REGISTRY_KEY = 'cleverdados_players_v1';
     const nombre = urlParams.get('nombre');
     const sala = urlParams.get('sala');
     
-    console.log('📥 CleverDados - Parámetros URL:', { nombre, sala });
+    console.log('CleverDados - Parametros URL:', { nombre, sala });
     
     if (nombre) {
         localStorage.setItem('cleverdados_nombre_prefill', nombre);
@@ -47,7 +47,7 @@ function getPrefilledRoom() {
 }
 
 // ============================================================
-// GUARDAR Y CARGAR SESIÓN
+// GUARDAR Y CARGAR SESION (CON ESTADO DE TURNOS)
 // ============================================================
 
 function saveSession() {
@@ -64,6 +64,25 @@ function saveSession() {
         return;
     }
     try {
+        // Obtener estado de turnos desde el sistema de turnos si existe
+        var gameStateValue = 'waiting';
+        var turnOrderValue = [];
+        var currentTurnIndexValue = 0;
+        var hostIdValue = null;
+        
+        if (typeof window.gameState !== 'undefined') {
+            gameStateValue = window.gameState;
+        }
+        if (typeof window.turnOrder !== 'undefined' && Array.isArray(window.turnOrder)) {
+            turnOrderValue = window.turnOrder;
+        }
+        if (typeof window.currentTurnIndex !== 'undefined') {
+            currentTurnIndexValue = window.currentTurnIndex;
+        }
+        if (typeof window.hostId !== 'undefined') {
+            hostIdValue = window.hostId;
+        }
+        
         localStorage.setItem(SESSION_KEY, JSON.stringify({
             roomCode: currentRoom,
             myId: miId,
@@ -71,6 +90,10 @@ function saveSession() {
             moveHistory: historialMovimientos.slice(),
             valoresNaranja: typeof valoresNaranja !== 'undefined' ? valoresNaranja.slice() : null,
             valoresMorado: typeof valoresMorado !== 'undefined' ? valoresMorado.slice() : null,
+            gameState: gameStateValue,
+            turnOrder: turnOrderValue,
+            currentTurnIndex: currentTurnIndexValue,
+            hostId: hostIdValue,
             updatedAt: Date.now()
         }));
         console.log('Sesion guardada correctamente:', { roomCode: currentRoom, myName: miNombre });
@@ -95,7 +118,7 @@ function clearSession() {
 }
 
 // ============================================================
-// REGISTRO DE JUGADORES (para reconexión)
+// REGISTRO DE JUGADORES (para reconexion)
 // ============================================================
 
 function registryKey(room, name) { 
@@ -162,7 +185,7 @@ function entrarSala() {
 }
 
 // ============================================================
-// RECONECTAR A SESIÓN GUARDADA
+// RECONECTAR A SESION GUARDADA (CON RESTAURACION DE ESTADO DE TURNOS)
 // ============================================================
 
 function reconnectToSession() {
@@ -187,7 +210,7 @@ function reconnectToSession() {
     salaActual = session.roomCode;
     historialMovimientos = window.historialMovimientos;
     
-    // Restaurar valores elegidos en naranja/morado (números de dado)
+    // Restaurar valores elegidos en naranja/morado
     if (typeof valoresNaranja !== 'undefined' && session.valoresNaranja) {
         valoresNaranja = session.valoresNaranja.slice();
         window.valoresNaranja = valoresNaranja;
@@ -197,15 +220,25 @@ function reconnectToSession() {
         window.valoresMorado = valoresMorado;
     }
 
-    // Reconstruir TODO el estado derivado (bonificaciones por área, 
+    // Reconstruir TODO el estado derivado (bonificaciones por area, 
     // desbloqueos y turnos de gris, puntosBonificacion, lobos, puntajes)
     if (typeof window.reconstruirTodoDesdeHistorial === 'function') {
         window.reconstruirTodoDesdeHistorial();
     } else {
-        // Fallback por si el archivo no está cargado
         if (typeof actualizarVisuales === 'function') actualizarVisuales();
         if (typeof PUNTAJES !== 'undefined' && PUNTAJES) PUNTAJES.calcularTotal();
         if (typeof renderizarLeaderboard === 'function') renderizarLeaderboard();
+    }
+
+    // Restaurar estado del sistema de turnos si existe
+    if (typeof window.restaurarEstadoDesdeSesion === 'function') {
+        var turnState = {
+            gameState: session.gameState || 'waiting',
+            turnOrder: session.turnOrder || [],
+            currentTurnIndex: session.currentTurnIndex || 0,
+            hostId: session.hostId || null
+        };
+        window.restaurarEstadoDesdeSesion(turnState);
     }
 
     conectarSala(session.roomCode, true);
@@ -289,7 +322,7 @@ function showClaimModal(claim) {
     var modal = document.getElementById('claimModal');
     var text = document.getElementById('claimText');
     if (text) {
-        text.textContent = 'Ya hay un jugador "' + claim.name + '" en la sala con ' + claim.score + ' pts. ¿Eres tú (te desconectaste antes)?';
+        text.textContent = 'Ya hay un jugador "' + claim.name + '" en la sala con ' + claim.score + ' pts. ¿Eres tu (te desconectaste antes)?';
     }
     if (modal) modal.style.display = 'flex';
 }
@@ -312,9 +345,7 @@ function acceptClaim() {
     window.historialMovimientos = pendingClaim.moves.slice();
     historialMovimientos = window.historialMovimientos;
     
-    // Restaurar valores elegidos en naranja/morado (números de dado),
-    // sin esto el puntaje de esas áreas queda en 0 aunque las casillas
-    // aparezcan marcadas
+    // Restaurar valores elegidos en naranja/morado
     if (typeof valoresNaranja !== 'undefined' && pendingClaim.valoresNaranja) {
         valoresNaranja = pendingClaim.valoresNaranja.slice();
         window.valoresNaranja = valoresNaranja;
@@ -324,11 +355,7 @@ function acceptClaim() {
         window.valoresMorado = valoresMorado;
     }
     
-    // Reconstruir TODO el estado derivado: bonificaciones desbloqueadas
-    // por área, turnos y habilidades de gris, puntosBonificacion, lobos
-    // y puntajes. Esto es lo que faltaba: antes solo se restauraba
-    // historialMovimientos y se recalculaba el total, pero el área gris
-    // y los acumuladores (bonificación, lobos) nunca se reconstruían.
+    // Reconstruir TODO el estado derivado
     if (typeof window.reconstruirTodoDesdeHistorial === 'function') {
         window.reconstruirTodoDesdeHistorial();
     } else {
@@ -371,4 +398,4 @@ window.getPrefilledRoom = getPrefilledRoom;
 window.saveRegistryEntry = saveRegistryEntry;
 window.getRegistryEntry = getRegistryEntry;
 
-console.log('💾 Sistema de sesión cargado correctamente');
+console.log('Sistema de sesion cargado correctamente');
