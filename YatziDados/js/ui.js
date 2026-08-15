@@ -252,7 +252,7 @@ function renderScores() {
 
     updateBonusCell();
     updateTotalScore();
-    renderTurnActions();
+    updateEndTurnButton(); // <-- actualiza el estado del botón Finalizar Turno
     checkGameFinished();
     applyBoardTheme();
 }
@@ -268,10 +268,7 @@ function updateTotalScore() {
     const el = document.getElementById('myTotalScore');
     if (el) el.textContent = totalScore(myScores, myExtraYatzys);
 }
-function renderTurnActions() {
-    const el = document.getElementById('turnActions');
-    if (el) el.style.display = (isMyTurn() && markedThisTurn) ? 'flex' : 'none';
-}
+
 function renderTurnBanner() {
     const banner = document.getElementById('turnBanner');
     const resetBtn = document.getElementById('resetGameBtn');
@@ -283,6 +280,15 @@ function renderTurnBanner() {
     const currentName = (playersData[currentId] && playersData[currentId].name) || (currentId === myId ? myName : '??');
     if (currentId === myId) { banner.textContent = 'Tu turno — lanza los dados y anota'; banner.classList.add('my-turn'); }
     else { banner.textContent = `Turno de: ${currentName}`; banner.classList.remove('my-turn'); }
+    updateEndTurnButton(); // para sincronizar el botón al cambiar de turno
+}
+
+// ===== NUEVA FUNCIÓN PARA HABILITAR/DESHABILITAR EL BOTÓN FINALIZAR TURNO =====
+function updateEndTurnButton() {
+    const btn = document.getElementById('endTurnBtn');
+    if (!btn) return;
+    const enabled = isMyTurn() && markedThisTurn;
+    btn.disabled = !enabled;
 }
 
 // ===== TOOLTIPS =====

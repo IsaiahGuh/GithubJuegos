@@ -86,6 +86,25 @@ body {
 .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
 .btn-danger { background: var(--color-red); color: #ECE5DB; }
 
+/* Estilo para botones deshabilitados (especialmente Finalizar Turno) */
+.modal-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
+    pointer-events: none;
+    transform: scale(0.98);
+    box-shadow: none;
+}
+/* Para que no pierda el color de fondo pero se vea apagado */
+.btn-primary:disabled {
+    background: #5a6a8a;
+    color: #a0a0a0;
+}
+.btn-danger:disabled {
+    background: #8a4a4a;
+    color: #c0b0b0;
+}
+
 #joinModal, #claimModal, #tooltipModal, #diceModal, #viewPlayerModal, #resetGameModal, #noticeModal, #gameOverModal { display: none; }
 #loadingModal { display: none; z-index: 3000; }
 .loading-icon {
@@ -157,8 +176,10 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 /* --- JUEGO --- */
 .app-container { display: flex; flex-direction: column; width: 100%; max-width: 600px; gap: 12px; align-items: center; }
+
+/* Banner de turno ahora dentro del scoreboard, pero mantenemos estilos */
 .turn-banner {
-    width: 100%; text-align: center; font-weight: bold; padding: 10px; border-radius: 10px;
+    width: 100%; text-align: center; font-weight: bold; padding: 8px 10px; border-radius: 10px;
     background: #2a2a2a; border: 1px solid var(--border-color); font-size: 0.95rem;
     transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease;
 }
@@ -179,9 +200,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .die-cell .pip-empty { font-size: 1.8rem; font-weight: 900; color: var(--sheet-ink); opacity: 0.35; }
 .die-cell.filled { border-color: var(--sheet-gold); background: var(--sheet-cell-alt); }
 .die-cell.disabled { opacity: 0.4; cursor: not-allowed; }
-
-.turn-actions { display: flex; justify-content: center; margin-bottom: 12px; }
-.undo-hint { color: var(--sheet-ink); opacity: 0.65; font-size: 0.75rem; margin-bottom: 6px; }
 
 /* --- Puntos de dado (SVG) reutilizados para dados reales e iconos de categoria --- */
 .dice-svg { width: 84%; height: 84%; overflow: visible; }
@@ -270,10 +288,34 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 /* --- SIDE PANEL / LEADERBOARD --- */
 .side-panel { width: 100%; display: flex; flex-direction: column; gap: 10px; }
-.scoreboard { background: #1a1a1a; padding: 12px; border-radius: 16px; width: 100%; border: 1px solid var(--border-color); }
-.total-score { text-align: center; font-size: 1.4rem; font-weight: 900; background: #0f0f0f; color: var(--text-main); padding: 8px; border-radius: 10px; border: 1px solid var(--border-color); }
 
-.leaderboard { display: flex; background: #1a1a1a; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); flex-direction: column; gap: 10px; }
+.scoreboard {
+    background: #1a1a1a; padding: 12px; border-radius: 16px; width: 100%;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.total-score {
+    text-align: center; font-size: 1.4rem; font-weight: 900;
+    background: #0f0f0f; color: var(--text-main); padding: 8px; border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+.action-buttons .modal-btn {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    flex: 1;
+}
+
+.leaderboard {
+    display: flex; background: #1a1a1a; padding: 12px; border-radius: 12px;
+    border: 1px solid var(--border-color); flex-direction: column; gap: 10px;
+}
 .leaderboard h3 { font-size: 0.85rem; color: var(--text-muted); text-align: center; text-transform: uppercase; letter-spacing: 1px; }
 .player-card {
     background: #2a2a2a; border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between;

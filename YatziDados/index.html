@@ -149,19 +149,9 @@
     <!-- PANTALLA DE JUEGO -->
     <div id="gameArea" class="app-container" style="display:none;">
 
-        <div id="turnBanner" class="turn-banner">Turno de: --</div>
-        <button id="resetGameBtn" class="modal-btn btn-outline" style="display:none; width:100%;" onclick="requestGameReset()">Reiniciar Partida (Todos)</button>
-
         <div class="board-container">
             <!-- FILA DE DADOS -->
             <div id="diceRow" class="dice-row"></div>
-
-            <div id="turnActions" class="turn-actions" style="display:none;">
-                <div style="text-align:center; width:100%;">
-                    <p class="undo-hint">Toca de nuevo la casilla marcada para deshacerla</p>
-                    <button class="modal-btn btn-danger" onclick="endTurn()">Finalizar Turno</button>
-                </div>
-            </div>
 
             <div class="board yatzy-board">
                 <div class="yatzy-col" id="upperCol"></div>
@@ -173,6 +163,13 @@
             <div class="scoreboard">
                 <div class="total-score">
                     TU TOTAL: <span id="myTotalScore">0</span>
+                </div>
+                <!-- BANNER DE TURNO -->
+                <div id="turnBanner" class="turn-banner" style="margin-top:8px;">Turno de: --</div>
+                <!-- BOTONES DE ACCIÓN (Reiniciar + Finalizar Turno) -->
+                <div class="action-buttons" style="display:flex; gap:8px; margin-top:10px;">
+                    <button id="endTurnBtn" class="modal-btn btn-primary" style="flex:1;" onclick="endTurn()" disabled>Finalizar Turno</button>
+                    <button id="resetGameBtn" class="modal-btn btn-danger" style="flex:1; display:none;" onclick="requestGameReset()">Reiniciar</button>
                 </div>
             </div>
 
