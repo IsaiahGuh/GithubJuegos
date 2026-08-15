@@ -115,7 +115,7 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     display: flex; 
     flex-direction: column; 
     width: 100%; 
-    max-width: 1200px;  /* Aumentado de 900px a 1200px para más espacio */
+    max-width: 1200px;
     gap: 12px; 
     align-items: center;
 }
@@ -231,29 +231,29 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 /* --- PANEL LATERAL --- */
 .side-panel { 
     width: 100%; 
-    max-width: 100%;  /* Cambiado de 350px a 100% para ocupar todo el ancho */
+    max-width: 100%;
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
-    align-items: stretch;  /* Cambiado de center a stretch */
+    align-items: stretch;
 }
 
 .game-controls {
     background: var(--bg-panel);
-    padding: 20px;  /* Aumentado de 15px a 20px */
+    padding: 20px;
     border-radius: 16px;
     width: 100%;
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    gap: 12px;  /* Aumentado de 10px a 12px */
-    align-items: stretch;  /* Cambiado de center a stretch */
+    gap: 12px;
+    align-items: stretch;
 }
 
 .game-controls #startGameBtn {
     width: 100%;
-    padding: 18px;  /* Aumentado de 15px a 18px */
-    font-size: 1.2rem;  /* Aumentado de 1.1rem a 1.2rem */
+    padding: 18px;
+    font-size: 1.2rem;
     background: var(--color-primary);
     color: white;
 }
@@ -265,10 +265,10 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 
 .total-score {
     text-align: center;
-    font-size: 1.3rem;  /* Aumentado de 1.2rem a 1.3rem */
+    font-size: 1.3rem;
     font-weight: 700;
     color: var(--text-main);
-    padding: 12px;  /* Aumentado de 8px a 12px */
+    padding: 12px;
     border-radius: 10px;
     border: 1px solid var(--border-color);
     background: var(--bg-box);
@@ -279,47 +279,47 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .my-cards-section {
     background: var(--bg-box);
     border-radius: 10px;
-    padding: 15px;  /* Aumentado de 10px a 15px */
+    padding: 15px;
     border: 1px solid var(--border-color);
     width: 100%;
 }
 
 .my-cards-section h4 {
-    font-size: 1rem;  /* Aumentado de 0.9rem a 1rem */
+    font-size: 1rem;
     color: var(--text-muted);
-    margin-bottom: 10px;  /* Aumentado de 8px a 10px */
+    margin-bottom: 10px;
     text-align: center;
     letter-spacing: 1px;
 }
 
-/* --- Mis corredores en UNA SOLA FILA --- */
+/* --- Mis corredores en UNA SOLA FILA (Desktop) --- */
 .my-cards-container {
     display: flex;
     flex-wrap: nowrap;
-    gap: 10px;  /* Aumentado de 8px a 10px */
+    gap: 10px;
     justify-content: center;
-    min-height: 70px;  /* Aumentado de 60px a 70px */
+    min-height: 70px;
     align-items: center;
     overflow-x: auto;
-    padding: 6px 0;  /* Aumentado de 4px a 6px */
+    padding: 6px 0;
 }
 
 .my-card-wrapper {
     background: var(--bg-panel);
     border-radius: 10px;
-    padding: 8px;  /* Aumentado de 6px a 8px */
+    padding: 8px;
     border: 2px solid var(--border-color);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;  /* Aumentado de 4px a 5px */
-    width: 110px;  /* Aumentado de 100px a 110px */
+    gap: 5px;
+    width: 110px;
     flex-shrink: 0;
 }
 
 .my-cards-container .empty-message {
     color: var(--text-muted);
-    font-size: 0.9rem;  /* Aumentado de 0.8rem a 0.9rem */
+    font-size: 0.9rem;
     font-style: italic;
 }
 
@@ -352,24 +352,24 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
     color: white;
     padding: 1px 4px;
     border-radius: 3px;
-    font-size: 0.55rem;  /* Aumentado de 0.5rem a 0.55rem */
+    font-size: 0.55rem;
     font-weight: bold;
 }
 .puntos-display {
-    font-size: 0.9rem;  /* Aumentado de 0.85rem a 0.9rem */
+    font-size: 0.9rem;
     font-weight: bold;
     color: var(--text-main);
     background: #1a1a2e;
-    padding: 3px 10px;  /* Aumentado */
+    padding: 3px 10px;
     border-radius: 12px;
     width: 100%;
     text-align: center;
 }
 .btn-usar {
-    padding: 4px 8px;  /* Aumentado */
+    padding: 4px 8px;
     border: none;
     border-radius: 4px;
-    font-size: 0.7rem;  /* Aumentado de 0.6rem a 0.7rem */
+    font-size: 0.7rem;
     font-weight: bold;
     cursor: pointer;
     transition: background 0.2s, opacity 0.2s;
@@ -386,307 +386,6 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 
 /* Botones globales de puntuacion */
-.puntaje-botones {
-    display: flex;
-    gap: 12px;  /* Aumentado de 10px a 12px */
-    justify-content: center;
-    margin-top: 12px;  /* Aumentado de 10px a 12px */
-    padding-top: 12px;  /* Aumentado de 10px a 12px */
-    border-top: 1px solid var(--border-color);
-    width: 100%;
-}
-.btn-puntaje {
-    padding: 10px 20px;  /* Aumentado de 8px 16px a 10px 20px */
-    border: none;
-    border-radius: 8px;  /* Aumentado de 6px a 8px */
-    font-weight: bold;
-    font-size: 1.1rem;  /* Aumentado de 1rem a 1.1rem */
-    cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
-    min-width: 60px;  /* Aumentado de 50px a 60px */
-    flex: 1;  /* Añadido para que ocupen el espacio disponible */
-}
-.btn-puntaje:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-.btn-puntaje.btn-3 {
-    background: var(--color-accent);
-    color: #0A0B08;
-}
-.btn-puntaje.btn-3:not(:disabled):hover {
-    background: #fce14a;
-}
-.btn-puntaje.btn-2 {
-    background: var(--color-primary);
-    color: white;
-}
-.btn-puntaje.btn-2:not(:disabled):hover {
-    background: #8a5d9e;
-}
-.btn-puntaje.btn-menos {
-    background: var(--color-danger);
-    color: white;
-}
-.btn-puntaje.btn-menos:not(:disabled):hover {
-    background: #f54a3a;
-}
-.btn-puntaje.btn-mas {
-    background: var(--color-success);
-    color: white;
-}
-.btn-puntaje.btn-mas:not(:disabled):hover {
-    background: #14a84a;
-}
-
-/* --- LEADERBOARD --- */
-.leaderboard { 
-    background: var(--bg-panel); 
-    padding: 15px;  /* Aumentado de 12px a 15px */
-    border-radius: 12px; 
-    border: 1px solid var(--border-color); 
-    display: flex;
-    flex-direction: column; 
-    gap: 10px; 
-    width: 100%;
-}
-
-.leaderboard h3 { 
-    font-size: 1rem;  /* Aumentado de 0.85rem a 1rem */
-    color: var(--text-muted); 
-    text-align: center; 
-    margin-bottom: 5px;  /* Aumentado de 2px a 5px */
-    text-transform: uppercase; 
-    letter-spacing: 1px; 
-}
-
-.player-card { 
-    background: #1a1a2e; 
-    border-radius: 10px; 
-    padding: 12px;  /* Aumentado de 10px a 12px */
-    display: flex; 
-    flex-direction: column; 
-    gap: 6px; 
-    border: 1px solid var(--border-color); 
-}
-
-.player-card.me { 
-    border-left: 4px solid var(--color-secondary); 
-}
-
-.player-card-header { 
-    display: flex; 
-    justify-content: space-between; 
-    font-weight: bold; 
-    font-size: 1.05rem;  /* Aumentado de 0.95rem a 1.05rem */
-    color: var(--text-main); 
-}
-
-.player-cards {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding: 5px 0;
-}
-
-.player-card-mini {
-    width: 55px;  /* Aumentado de 50px a 55px */
-    height: 75px;  /* Aumentado de 70px a 75px */
-    border-radius: 6px;
-    border: 2px solid var(--border-color);
-    overflow: hidden;
-    background: var(--bg-panel);
-    position: relative;
-}
-
-.player-card-mini img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.player-card-mini .mini-number {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    background: rgba(0,0,0,0.7);
-    color: white;
-    padding: 1px 4px;
-    border-radius: 3px;
-    font-size: 0.55rem;  /* Aumentado de 0.5rem a 0.55rem */
-    font-weight: bold;
-}
-.mini-puntos {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    background: rgba(0,0,0,0.7);
-    color: white;
-    font-size: 0.55rem;  /* Aumentado de 0.5rem a 0.55rem */
-    padding: 1px 4px;
-    border-radius: 3px;
-}
-
-.no-cards {
-    color: var(--text-muted);
-    font-size: 0.9rem;  /* Aumentado de 0.8rem a 0.9rem */
-    font-style: italic;
-}
-
-/* --- MODAL DE ZOOM --- */
-.zoom-box {
-    max-width: 500px;
-    background: var(--bg-box);
-    border: 2px solid var(--color-secondary);
-}
-
-.zoom-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-.zoom-content img {
-    width: 100%;
-    max-width: 300px;
-    border-radius: 12px;
-    border: 2px solid var(--border-color);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-}
-
-.zoom-content .zoom-info {
-    color: var(--text-main);
-    font-size: 1rem;
-}
-
-.zoom-content .zoom-info span {
-    font-weight: bold;
-    color: var(--color-accent);
-}
-
-.zoom-content .btn-choose {
-    padding: 14px 35px;  /* Aumentado de 12px 30px a 14px 35px */
-    background: var(--color-success);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.3rem;  /* Aumentado de 1.2rem a 1.3rem */
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.1s;
-}
-
-.zoom-content .btn-choose:active {
-    transform: scale(0.95);
-}
-
-/* --- MODAL DE INTERCAMBIO --- */
-#intercambioContenido .carta-opcion {
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    padding: 5px;
-    border-radius: 8px;
-    border: 2px solid transparent;
-    transition: border-color 0.2s, transform 0.1s;
-}
-#intercambioContenido .carta-opcion:hover {
-    border-color: var(--color-accent);
-    transform: scale(1.02);
-}
-#intercambioContenido .carta-opcion img {
-    width: 90px;  /* Aumentado de 80px a 90px */
-    height: auto;
-    border-radius: 8px;
-}
-#intercambioContenido .carta-opcion span {
-    color: var(--text-main);
-    font-size: 0.9rem;  /* Aumentado de 0.8rem a 0.9rem */
-    font-weight: bold;
-}
-
-/* --- RESPONSIVE --- */
-@media (max-width: 768px) {
-    .card-grid {
-        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-        gap: 10px;
-    }
-    
-    .card {
-        border-radius: 8px;
-    }
-    
-    .side-panel {
-        max-width: 100%;
-    }
-    
-    .my-card-wrapper {
-        width: 90px;  /* Aumentado de 80px a 90px */
-        padding: 6px;  /* Aumentado de 4px a 6px */
-    }
-    
-    .my-card-wrapper .btn-usar {
-        font-size: 0.6rem;  /* Aumentado de 0.5rem a 0.6rem */
-        padding: 3px 6px;  /* Aumentado */
-    }
-    
-    .btn-puntaje {
-        padding: 8px 14px;  /* Ajustado */
-        font-size: 0.95rem;  /* Ajustado */
-        min-width: 50px;
-    }
-}
-
-@media (orientation: landscape) and (max-height: 600px) {
-    body { padding: 6px; justify-content: flex-start; }
-    header { display: none; } 
-    .app-container { flex-direction: row; max-width: 100%; height: 98vh; align-items: stretch; gap: 8px; }
-    .board-container { flex: 1.4; padding: 10px; display: flex; align-items: center; }
-    .card-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
-    .side-panel { flex: 1; max-width: 300px; justify-content: flex-start; overflow-y: auto; padding-right: 4px; }
-    .game-controls { padding: 10px; }
-    .game-controls #startGameBtn { padding: 12px; font-size: 1rem; }
-    .total-score { font-size: 1rem; padding: 8px; }
-    .leaderboard { padding: 10px; max-height: 300px; overflow-y: auto; }
-    .player-card { padding: 8px; }
-    .player-card-mini { width: 40px; height: 55px; }
-    .my-card-wrapper { width: 80px; padding: 5px; }
-    .my-card-wrapper .btn-usar { font-size: 0.55rem; padding: 3px 5px; }
-    .btn-puntaje { padding: 6px 12px; font-size: 0.85rem; min-width: 40px; }
-}
-
-.ganadora-badge {
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--color-accent);
-    color: #0A0B08;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.6rem;  /* Aumentado de 0.5rem a 0.6rem */
-    font-weight: bold;
-    white-space: nowrap;
-    z-index: 2;
-}
-.my-card-wrapper.ganadora {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 15px rgba(242, 207, 29, 0.6);
-}
-#misPuntosDisplay {
-    text-align: center;
-    font-size: 1.4rem;  /* Aumentado de 1.2rem a 1.4rem */
-    font-weight: bold;
-    margin: 10px 0;  /* Aumentado de 8px a 10px */
-    color: var(--text-main);
-    background: #1a1a2e;
-    padding: 10px;  /* Aumentado de 6px a 10px */
-    border-radius: 8px;
-    width: 100%;
-}
 .puntaje-botones {
     display: flex;
     gap: 12px;
@@ -738,4 +437,306 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 }
 .btn-puntaje.btn-mas:not(:disabled):hover {
     background: #14a84a;
+}
+
+/* --- LEADERBOARD --- */
+.leaderboard { 
+    background: var(--bg-panel); 
+    padding: 15px;
+    border-radius: 12px; 
+    border: 1px solid var(--border-color); 
+    display: flex;
+    flex-direction: column; 
+    gap: 10px; 
+    width: 100%;
+}
+
+.leaderboard h3 { 
+    font-size: 1rem;
+    color: var(--text-muted); 
+    text-align: center; 
+    margin-bottom: 5px;
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+}
+
+.player-card { 
+    background: #1a1a2e; 
+    border-radius: 10px; 
+    padding: 12px;
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px; 
+    border: 1px solid var(--border-color); 
+}
+
+.player-card.me { 
+    border-left: 4px solid var(--color-secondary); 
+}
+
+.player-card-header { 
+    display: flex; 
+    justify-content: space-between; 
+    font-weight: bold; 
+    font-size: 1.05rem;
+    color: var(--text-main); 
+}
+
+.player-cards {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 5px 0;
+}
+
+.player-card-mini {
+    width: 55px;
+    height: 75px;
+    border-radius: 6px;
+    border: 2px solid var(--border-color);
+    overflow: hidden;
+    background: var(--bg-panel);
+    position: relative;
+}
+
+.player-card-mini img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.player-card-mini .mini-number {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.55rem;
+    font-weight: bold;
+}
+.mini-puntos {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-size: 0.55rem;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.no-cards {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* --- MODAL DE ZOOM --- */
+.zoom-box {
+    max-width: 500px;
+    background: var(--bg-box);
+    border: 2px solid var(--color-secondary);
+}
+
+.zoom-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.zoom-content img {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+
+.zoom-content .zoom-info {
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.zoom-content .zoom-info span {
+    font-weight: bold;
+    color: var(--color-accent);
+}
+
+.zoom-content .btn-choose {
+    padding: 14px 35px;
+    background: var(--color-success);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.zoom-content .btn-choose:active {
+    transform: scale(0.95);
+}
+
+/* --- MODAL DE INTERCAMBIO --- */
+#intercambioContenido .carta-opcion {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 5px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.1s;
+}
+#intercambioContenido .carta-opcion:hover {
+    border-color: var(--color-accent);
+    transform: scale(1.02);
+}
+#intercambioContenido .carta-opcion img {
+    width: 90px;
+    height: auto;
+    border-radius: 8px;
+}
+#intercambioContenido .carta-opcion span {
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.ganadora-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-accent);
+    color: #0A0B08;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 2;
+}
+.my-card-wrapper.ganadora {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 15px rgba(242, 207, 29, 0.6);
+}
+#misPuntosDisplay {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin: 10px 0;
+    color: var(--text-main);
+    background: #1a1a2e;
+    padding: 10px;
+    border-radius: 8px;
+    width: 100%;
+}
+
+/* ============================================ */
+/* ========== RESPONSIVE - MÓVIL ============== */
+/* ============================================ */
+
+/* Pantallas pequeñas (móviles) */
+@media (max-width: 768px) {
+    .card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
+    }
+    
+    .card {
+        border-radius: 8px;
+    }
+    
+    .side-panel {
+        max-width: 100%;
+    }
+    
+    .btn-puntaje {
+        padding: 8px 14px;
+        font-size: 0.95rem;
+        min-width: 50px;
+    }
+
+    /* ===== FIX: Mis corredores en 2 filas de 2 en móvil ===== */
+    .my-cards-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        justify-content: center;
+        overflow-x: visible;
+        padding: 6px 4px;
+        min-height: auto;
+        flex-wrap: wrap; /* fallback */
+    }
+
+    .my-card-wrapper {
+        width: 100%;
+        max-width: 160px;
+        justify-self: center;
+        padding: 6px;
+        flex-shrink: 1;
+    }
+
+    .my-card-wrapper .btn-usar {
+        font-size: 0.6rem;
+        padding: 3px 6px;
+    }
+
+    /* Ajustar el contenedor de la sección para que no se desborde */
+    .my-cards-section {
+        padding: 12px 10px;
+    }
+}
+
+/* Para móviles muy pequeños (menos de 400px) */
+@media (max-width: 400px) {
+    .my-card-wrapper {
+        max-width: 130px;
+    }
+    
+    .my-card-wrapper .btn-usar {
+        font-size: 0.55rem;
+        padding: 2px 4px;
+    }
+    
+    .my-card-img .mini-number {
+        font-size: 0.5rem;
+    }
+}
+
+/* Para tablets y móviles en landscape */
+@media (orientation: landscape) and (max-height: 600px) {
+    body { padding: 6px; justify-content: flex-start; }
+    header { display: none; } 
+    .app-container { flex-direction: row; max-width: 100%; height: 98vh; align-items: stretch; gap: 8px; }
+    .board-container { flex: 1.4; padding: 10px; display: flex; align-items: center; }
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+    .side-panel { flex: 1; max-width: 300px; justify-content: flex-start; overflow-y: auto; padding-right: 4px; }
+    .game-controls { padding: 10px; }
+    .game-controls #startGameBtn { padding: 12px; font-size: 1rem; }
+    .total-score { font-size: 1rem; padding: 8px; }
+    .leaderboard { padding: 10px; max-height: 300px; overflow-y: auto; }
+    .player-card { padding: 8px; }
+    .player-card-mini { width: 40px; height: 55px; }
+    .btn-puntaje { padding: 6px 12px; font-size: 0.85rem; min-width: 40px; }
+    
+    /* Landscape - mis corredores en 2 filas también */
+    .my-cards-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        overflow-x: visible;
+    }
+    .my-card-wrapper {
+        width: 100%;
+        max-width: 100px;
+        padding: 4px;
+    }
+    .my-card-wrapper .btn-usar { font-size: 0.5rem; padding: 2px 4px; }
 }
