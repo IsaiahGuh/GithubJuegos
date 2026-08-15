@@ -39,7 +39,6 @@ function hexToRgba(hex, alpha) {
     return `rgba(${r},${g},${b},${alpha})`;
 }
 function blendHex(hex, baseHex, ratio) {
-    // ratio = proporción del color del jugador mezclado sobre el fondo base (0 = fondo puro, 1 = color puro)
     const h1 = hex.replace('#', ''), h2 = baseHex.replace('#', '');
     const r1 = parseInt(h1.substr(0, 2), 16), g1 = parseInt(h1.substr(2, 2), 16), b1 = parseInt(h1.substr(4, 2), 16);
     const r2 = parseInt(h2.substr(0, 2), 16), g2 = parseInt(h2.substr(2, 2), 16), b2 = parseInt(h2.substr(4, 2), 16);
@@ -234,13 +233,11 @@ function renderScores() {
         }
     });
 
-    // Casilla de Yatzy ya llena + dados actuales tambien Yatzy -> ofrecer extra
     const yatzyCell = document.getElementById('score-yatzy');
     if (yatzyCell && myScores.yatzy !== null && myTurn && !markedThisTurn && !jokerModeActive && diceReady && isYatzy(myDice)) {
         yatzyCell.classList.add('yatzy-again');
     }
 
-    // Insignia de Yatzys extra (en la casilla de categoria "YATZY", no en el puntaje)
     const catYatzyCell = document.getElementById('cat-yatzy');
     if (catYatzyCell) {
         const existing = catYatzyCell.querySelector('.yatzy-checks');
@@ -248,7 +245,7 @@ function renderScores() {
         if (myExtraYatzys > 0) {
             const checks = document.createElement('div');
             checks.className = 'yatzy-checks';
-            checks.textContent = `×${myExtraYatzys}`;
+            checks.textContent = `x${myExtraYatzys}`;
             catYatzyCell.appendChild(checks);
         }
     }
@@ -264,8 +261,8 @@ function updateBonusCell() {
     const cell = document.getElementById('bonusCell');
     if (!cell) return;
     const sum = upperSum(myScores);
-    if (sum >= 63) { cell.innerHTML = '+35<br>✓'; cell.classList.add('done'); }
-    else { cell.innerHTML = `${sum}<br>/63`; cell.classList.remove('done'); }
+    if (sum >= 63) { cell.innerHTML = '+35\n✓'; cell.classList.add('done'); }
+    else { cell.innerHTML = `${sum}\n/63`; cell.classList.remove('done'); }
 }
 function updateTotalScore() {
     const el = document.getElementById('myTotalScore');
@@ -470,3 +467,15 @@ function showNotice(text, title = 'Aviso') {
     document.getElementById('noticeModal').style.display = 'flex';
 }
 function closeNotice() { document.getElementById('noticeModal').style.display = 'none'; }
+
+// ===== FUNCIONES FALTANTES (eran de mqtt.js / juego.js) =====
+function updateHostWarning() {
+    const bar = document.getElementById('hostWarningBar');
+    if (!bar) return;
+    const shouldShow = !!currentRoom && hostId !== null && !hostIsPresent() && !isRoomCreator;
+    bar.style.display = shouldShow ? 'flex' : 'none';
+}
+
+function closeResetGameModal() {
+    document.getElementById('resetGameModal').style.display = 'none';
+}

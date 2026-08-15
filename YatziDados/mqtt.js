@@ -2,28 +2,6 @@
 let mqttClient = null;
 let currentRoom = null;
 let playersData = {};
-let isRoomCreator = false;
-let hostId = null;
-function refreshHostStatus() {
-    isRoomCreator = (hostId !== null && hostId === myId);
-}
-function hostIsPresent() {
-    return hostId !== null && !!playersData[hostId];
-}
-function claimHost() {
-    hostId = myId;
-    isRoomCreator = true;
-    broadcastSync();
-    if (gameStarted) broadcastGameStateSync();
-    updateHostWarning();
-    renderPreGame(); renderTurnBanner(); renderLeaderboard();
-}
-function updateHostWarning() {
-    const bar = document.getElementById('hostWarningBar');
-    if (!bar) return;
-    const shouldShow = !!currentRoom && hostId !== null && !hostIsPresent() && !isRoomCreator;
-    bar.style.display = shouldShow ? 'flex' : 'none';
-}
 
 let claimResolved = false;
 let pendingClaim = null;

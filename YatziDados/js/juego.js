@@ -28,8 +28,8 @@ const CATEGORIES = [
     { id: 'fours',  section: 'upper', label: 'Cuatros', iconType: 'die', dieValue: 4, calc: d => sumOfNumber(d, 4) },
     { id: 'fives',  section: 'upper', label: 'Cincos',  iconType: 'die', dieValue: 5, calc: d => sumOfNumber(d, 5) },
     { id: 'sixes',  section: 'upper', label: 'Seises',  iconType: 'die', dieValue: 6, calc: d => sumOfNumber(d, 6) },
-    { id: 'threeKind',     section: 'lower', label: '3 del mismo número',    iconType: 'text', icon: '3X',  calc: d => hasCountAtLeast(d, 3) ? sumAll(d) : 0 },
-    { id: 'fourKind',      section: 'lower', label: '4 del mismo número',    iconType: 'text', icon: '4X',  calc: d => hasCountAtLeast(d, 4) ? sumAll(d) : 0 },
+    { id: 'threeKind',     section: 'lower', label: '3 del mismo numero',    iconType: 'text', icon: '3X',  calc: d => hasCountAtLeast(d, 3) ? sumAll(d) : 0 },
+    { id: 'fourKind',      section: 'lower', label: '4 del mismo numero',    iconType: 'text', icon: '4X',  calc: d => hasCountAtLeast(d, 4) ? sumAll(d) : 0 },
     { id: 'fullHouse',     section: 'lower', label: 'Full (3+2)',            iconType: 'house', calc: d => isFullHouse(d) ? 25 : 0 },
     { id: 'smallStraight', section: 'lower', label: 'Secuencia de 4',        iconType: 'cards', sub: 'SMALL', calc: d => isSmallStraight(d) ? 30 : 0 },
     { id: 'largeStraight', section: 'lower', label: 'Secuencia de 5',        iconType: 'cards', sub: 'LARGE', calc: d => isLargeStraight(d) ? 40 : 0 },
@@ -38,20 +38,20 @@ const CATEGORIES = [
 ];
 
 const TOOLTIP_TEXT = {
-    ones: 'Cuenta y suma solo los números uno.',
-    twos: 'Cuenta y suma solo los números dos.',
-    threes: 'Cuenta y suma solo los números tres.',
-    fours: 'Cuenta y suma solo los números cuatro.',
-    fives: 'Cuenta y suma solo los números cinco.',
-    sixes: 'Cuenta y suma solo los números seis.',
+    ones: 'Cuenta y suma solo los numeros uno.',
+    twos: 'Cuenta y suma solo los numeros dos.',
+    threes: 'Cuenta y suma solo los numeros tres.',
+    fours: 'Cuenta y suma solo los numeros cuatro.',
+    fives: 'Cuenta y suma solo los numeros cinco.',
+    sixes: 'Cuenta y suma solo los numeros seis.',
     threeKind: 'Suma el total de todos los dados.',
     fourKind: 'Suma el total de todos los dados.',
-    fullHouse: 'Puntuación fija: 25 (3 del mismo número y 2 del mismo número).',
-    smallStraight: 'Puntuación fija: 30 (secuencia de 4 números consecutivos).',
-    largeStraight: 'Puntuación fija: 40 (secuencia de 5 números consecutivos).',
-    yatzy: 'Puntuación fija: 50 (5 dados con el mismo número).',
-    chance: 'Suma cualquier combinación de los 5 dados.',
-    bonus: 'Anota al menos 63 puntos en tu lado superior y obtén 35 puntos extra.'
+    fullHouse: 'Puntuacion fija: 25 (3 del mismo numero y 2 del mismo numero).',
+    smallStraight: 'Puntuacion fija: 30 (secuencia de 4 numeros consecutivos).',
+    largeStraight: 'Puntuacion fija: 40 (secuencia de 5 numeros consecutivos).',
+    yatzy: 'Puntuacion fija: 50 (5 dados con el mismo numero).',
+    chance: 'Suma cualquier combinacion de los 5 dados.',
+    bonus: 'Anota al menos 63 puntos en tu lado superior y obten 35 puntos extra.'
 };
 
 const PLAYER_COLORS = [
@@ -102,18 +102,6 @@ let jokerModeActive = false;
 let lastMarkedCatId = null;
 let lastMarkedWasJoker = false;
 
-// ===== ESTADO DE TURNOS =====
-let pendingOrder = [];
-let turnOrder = [];
-let playerColors = {};
-let currentTurnIndex = 0;
-let gameStarted = false;
-let gameFinished = false;
-
-function isMyTurn() {
-    return gameStarted && turnOrder.length > 0 && turnOrder[currentTurnIndex] === myId;
-}
-
 // ===== LOG COMPARTIDO =====
 let gameLog = [];
 let seenLogIds = new Set();
@@ -146,19 +134,19 @@ function renderLog() {
         if (e.kind === 'score') {
             const cat = CATEGORIES.find(c => c.id === e.catId);
             if (e.action === 'unmark') {
-                verb = 'deshizo su anotación en';
+                verb = 'deshizo su anotacion en';
                 targetHtml = `<span class="log-target">${cat ? cat.label : e.catId}</span>`;
             } else {
-                verb = e.auto ? 'anotó (comodín)' : 'anotó';
+                verb = e.auto ? 'anoto (comodin)' : 'anoto';
                 targetHtml = `<span class="log-target">${cat ? cat.label : e.catId}: ${e.value}</span>`;
             }
         } else if (e.kind === 'yatzy_extra') {
             if (e.action === 'undo') { verb = 'deshizo su Yatzy extra (-100)'; }
-            else { verb = 'logró un YATZY EXTRA'; targetHtml = '<span class="log-target">+100</span>'; }
+            else { verb = 'logro un YATZY EXTRA'; targetHtml = '<span class="log-target">+100</span>'; }
         } else if (e.kind === 'end_turn') {
-            verb = 'finalizó su turno';
+            verb = 'finalizo su turno';
         } else if (e.kind === 'reset') {
-            verb = 'reinició la partida para todos';
+            verb = 'reinicio la partida para todos';
         } else return '';
         return `<div class="log-entry"><span class="log-time">${time}</span><span class="log-player">${e.playerName}</span><span class="log-verb">${verb}</span>${targetHtml}</div>`;
     }).join('');
@@ -186,7 +174,7 @@ function applyJokerScore(catId) {
 function grantExtraYatzy() {
     myExtraYatzys++;
     logMove('yatzy_extra', {});
-    const msg = `⭐⭐ ${myName} logró otro YATZY! +100 bono`;
+    const msg = `${myName} logro otro YATZY! +100 bono`;
     queueEvent('extra_yatzy', msg);
     jokerModeActive = true;
     saveState();
@@ -263,7 +251,7 @@ function lockCategory(catId, value, opts = {}) {
 
     const isYatzyScore = (catId === 'yatzy' && value === 50);
     if (isYatzyScore) {
-        const msg = `⭐ ${myName} hizo YATZY! (+50)`;
+        const msg = `${myName} hizo YATZY! (+50)`;
         queueEvent('yatzy', msg);
     }
     saveState();
@@ -275,7 +263,7 @@ function lockCategory(catId, value, opts = {}) {
 
 function checkBonusJustCompleted() {
     if (!myBonusAnnounced && upperBonus(myScores) === 35) {
-        queueEvent('bonus', `🎉 ${myName} consiguió el BONO +35!`);
+        queueEvent('bonus', `${myName} consiguio el BONO +35!`);
         sfxBonus();
         triggerPop('bonusCell');
     } else if (upperBonus(myScores) !== 35) {
@@ -301,124 +289,6 @@ function broadcastSync(action = 'sync') {
             scores: myScores, extraYatzys: myExtraYatzys, score: totalScore(myScores, myExtraYatzys),
             hostId
         }));
-    }
-}
-
-// ===== FIN DE LA PARTIDA =====
-function checkGameFinished() {
-    if (!gameStarted || gameFinished || turnOrder.length === 0) return;
-    const allDone = turnOrder.every(id => {
-        const p = playersData[id];
-        return p && p.scores && Object.values(p.scores).every(v => v !== null);
-    });
-    if (allDone) {
-        gameFinished = true;
-        showGameOverModal();
-    }
-}
-
-// ===== SALA DE ESPERA / ORDEN DE TURNOS =====
-function moveOrder(idx, dir) {
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= pendingOrder.length) return;
-    [pendingOrder[idx], pendingOrder[newIdx]] = [pendingOrder[newIdx], pendingOrder[idx]];
-    renderPreGame();
-}
-
-function startGame() {
-    if (!isRoomCreator || pendingOrder.length === 0) return;
-    turnOrder = [...pendingOrder];
-    const colors = {};
-    turnOrder.forEach((id, idx) => { colors[id] = PLAYER_COLORS[idx % PLAYER_COLORS.length].id; });
-    playerColors = colors;
-    Object.keys(playersData).forEach(id => { if (playersData[id]) playersData[id].color = colors[id]; });
-    currentTurnIndex = 0;
-    gameStarted = true;
-    gameFinished = false;
-    broadcastGameStart();
-    afterTurnBecameMine();
-    renderPreGame(); renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard();
-    saveState();
-}
-function broadcastGameStart() {
-    if (mqttClient && currentRoom) {
-        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'game_start', id: myId, turnOrder, colors: playerColors, hostId }));
-    }
-}
-function broadcastGameStateSync() {
-    if (mqttClient && currentRoom) {
-        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'game_state_sync', id: myId, turnOrder, colors: playerColors, currentTurnIndex, hostId }));
-    }
-}
-
-function afterTurnBecameMine() {
-    if (isMyTurn()) {
-        myDice = [null, null, null, null, null];
-        markedThisTurn = false;
-        jokerModeActive = false;
-        lastMarkedCatId = null;
-        lastMarkedWasJoker = false;
-    }
-}
-function endTurn() {
-    if (!isMyTurn() || !markedThisTurn) return;
-    logMove('end_turn', {});
-    if (upperBonus(myScores) === 35) myBonusAnnounced = true;
-    flushPendingEvents();
-    sfxTurnEnd();
-    const nextIndex = (currentTurnIndex + 1) % turnOrder.length;
-    broadcastTurnAdvance(nextIndex);
-    applyTurnAdvance(nextIndex);
-}
-
-// ===== REINICIAR PARTIDA (SOLO ANFITRION) =====
-function requestGameReset() {
-    if (!isRoomCreator) return;
-    document.getElementById('resetGameModal').style.display = 'flex';
-}
-function closeResetGameModal() { document.getElementById('resetGameModal').style.display = 'none'; }
-function confirmGameReset() {
-    closeResetGameModal();
-    broadcastGameReset();
-    applyGameReset();
-}
-function applyGameReset() {
-    myScores = emptyScores();
-    myExtraYatzys = 0;
-    myBonusAnnounced = false;
-    markedThisTurn = false;
-    jokerModeActive = false;
-    lastMarkedCatId = null;
-    lastMarkedWasJoker = false;
-    gameStarted = false;
-    gameFinished = false;
-    turnOrder = [];
-    currentTurnIndex = 0;
-    pendingEvents = [];
-
-    Object.keys(playersData).forEach(id => {
-        playersData[id].scores = emptyScores();
-        playersData[id].extraYatzys = 0;
-        playersData[id].score = 0;
-        playersData[id].color = null;
-    });
-
-    logMove('reset', {});
-    document.getElementById('gameOverModal').style.display = 'none';
-    renderPreGame(); renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard();
-    saveState();
-}
-function broadcastGameReset() {
-    if (mqttClient && currentRoom) mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'game_reset', id: myId }));
-}
-function applyTurnAdvance(nextIndex) {
-    currentTurnIndex = nextIndex;
-    afterTurnBecameMine();
-    renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard();
-}
-function broadcastTurnAdvance(nextIndex) {
-    if (mqttClient && currentRoom) {
-        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'turn_advance', id: myId, nextIndex }));
     }
 }
 
