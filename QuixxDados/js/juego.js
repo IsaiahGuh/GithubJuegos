@@ -45,22 +45,15 @@ function joinSuccess(code) {
     
     document.getElementById('leaderboardPanel').style.display = 'flex';
     renderLeaderboard();
-
-    var resetBtn = document.getElementById('resetBtn');
-    if (resetBtn) resetBtn.textContent = 'Reiniciar Partida (Todos)';
+    // Mostrar controles de turno (los botones ya están visibles, se actualizan con updateUI)
+    updateUI();
 }
 
-// ===== REINICIAR =====
+// ===== REINICIAR (solo anfitrion) =====
 function showModal() {
-    var title = document.getElementById('confirmTitle');
-    var text = document.getElementById('confirmText');
-    if (currentRoom) {
-        title.textContent = 'Reiniciar partida para todos';
-        text.textContent = 'Esto borrara los tableros de TODOS los jugadores en la sala, no solo el tuyo.';
-    } else {
-        title.textContent = 'Reiniciar tablero';
-        text.textContent = 'Se borraran tus marcas actuales.';
-    }
+    if (!isRoomCreator) return;
+    document.getElementById('confirmTitle').textContent = 'Reiniciar partida para todos';
+    document.getElementById('confirmText').textContent = 'Esto borrara los tableros de TODOS los jugadores en la sala.';
     document.getElementById('confirmModal').style.display = 'flex';
 }
 
@@ -69,25 +62,55 @@ function closeModal() {
 }
 
 function confirmReset() {
-    if (currentRoom) {
-        broadcastReset();
-    }
-    moveHistory = [];
-    updateVisuals();
-    calculateScores();
+    if (!isRoomCreator) return;
+    broadcastReset();
+    applyReset();
     closeModal();
 }
 
-// ===== MANEJO DE CLICKS =====
+function applyReset() {
+    moveHistory = [];
+    gameStarted = false;
+    turnOrder = [];
+    currentTurnIndex = 0;
+    // Limpiar datos de jugadores (pero no los nombres)
+    for (var id in playersData) {
+        playersData[id].moves = [];
+        playersData[id].score = 0;
+    }
+    updateVisuals();
+    calculateScores();
+    renderLeaderboard();
+    updateUI();
+    saveSession();
+}
+
+// ===== MANEJO DE CLICKS EN CELDAS =====
 function handleBoxClick(color, index) {
+    // Solo se permite marcar si es tu turno y la partida ha empezado
+    if (!isMyTurn()) {
+        alert('No es tu turno.');
+        return;
+    }
+    // No se puede marcar si ya se marcó algo en este turno (como en Yatzy, una acción por turno)
+    if (turnLocked) {
+        alert('Ya has marcado en este turno. Finaliza el turno o deshaz tu ultima accion.');
+        return;
+    }
+
     var moveId = color + '-' + index;
     var posInHistory = moveHistory.indexOf(moveId);
     
     if (posInHistory !== -1) {
+        // Si ya está marcado y es el último movimiento, se puede deshacer (opcional)
         if (posInHistory >= moveHistory.length - 1) { 
             moveHistory.splice(posInHistory, 1);
             updateVisuals();
             calculateScores();
+            broadcastSync();
+            // Desbloquear turno para permitir otra acción (como en Yatzy, deshacer)
+            turnLocked = false;
+            updateUI();
         }
     } else {
         var max = -1;
@@ -102,11 +125,25 @@ function handleBoxClick(color, index) {
             moveHistory.push(moveId);
             updateVisuals();
             calculateScores();
+            broadcastSync();
+            // Bloquear turno (ya marcó)
+            turnLocked = true;
+            updateUI();
+        } else {
+            alert('No puedes marcar un numero menor o igual al ultimo marcado en esa fila.');
         }
     }
 }
 
 function handlePenaltyClick(index) {
+    if (!isMyTurn()) {
+        alert('No es tu turno.');
+        return;
+    }
+    if (turnLocked) {
+        alert('Ya has marcado en este turno.');
+        return;
+    }
     var moveId = 'penalty-' + index;
     var posInHistory = moveHistory.indexOf(moveId);
     if (posInHistory !== -1) {
@@ -114,11 +151,17 @@ function handlePenaltyClick(index) {
             moveHistory.splice(posInHistory, 1);
             updateVisuals();
             calculateScores();
+            broadcastSync();
+            turnLocked = false;
+            updateUI();
         }
     } else {
         moveHistory.push(moveId);
         updateVisuals();
         calculateScores();
+        broadcastSync();
+        turnLocked = true;
+        updateUI();
     }
 }
 
@@ -155,10 +198,11 @@ function calculateScores() {
             moves: moveHistory.slice()
         };
         renderLeaderboard();
-        broadcastScore('sync');
+        broadcastSync();
         saveSession();
         saveRegistryEntry(currentRoom, myName, myId, moveHistory);
     }
+    // Podríamos verificar fin de partida aquí, pero lo dejamos opcional
 }
 
 function showLoading(text) {

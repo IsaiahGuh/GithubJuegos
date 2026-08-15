@@ -28,8 +28,12 @@ function connectToRoom(code, isReconnect) {
         };
         
         joinSuccess(code);
-        broadcastScore('join');
+        broadcastSync();
         saveSession();
+        // Si no hay host, reclamar tras breve retraso
+        setTimeout(function() {
+            if (!hostId) claimHost();
+        }, 1500);
     });
 
     mqttClient.on('message', function(topic, message) {
@@ -37,16 +41,28 @@ function connectToRoom(code, isReconnect) {
             var data = JSON.parse(message.toString());
             if (data.id === myId) return;
 
+            // Manejo de host
+            if (data.hostId && (!hostId || !hostIsPresent())) {
+                hostId = data.hostId;
+                refreshHostStatus();
+            }
+
             if (data.action === 'reset_all') {
-                moveHistory = [];
-                updateVisuals();
-                calculateScores();
+                applyReset();
                 return;
             }
 
             if (data.action === 'remove') {
                 delete playersData[data.id];
                 renderLeaderboard();
+                // Actualizar orden de turnos si el jugador removido estaba en la lista
+                if (gameStarted) {
+                    turnOrder = turnOrder.filter(id => id !== data.id);
+                    if (turnOrder.length === 0) {
+                        gameStarted = false;
+                        updateUI();
+                    }
+                }
                 return;
             }
 
@@ -66,15 +82,39 @@ function connectToRoom(code, isReconnect) {
                 return;
             }
 
+            // Actualizar datos del jugador
             playersData[data.id] = { 
                 name: data.name, 
-                score: data.score,
+                score: data.score || 0,
                 moves: data.moves || []
             };
             renderLeaderboard();
 
-            if (data.action === 'join') {
-                broadcastScore('sync');
+            // Acciones de turno
+            if (data.action === 'game_start') {
+                turnOrder = data.turnOrder;
+                hostId = data.hostId || hostId;
+                currentTurnIndex = 0;
+                gameStarted = true;
+                turnLocked = false;
+                afterTurnBecameMine();
+                updateUI();
+                saveSession();
+            }
+            else if (data.action === 'turn_advance') {
+                applyTurnAdvance(data.nextIndex);
+            }
+
+            // Sincronizacion de puntajes
+            if (data.action === 'sync' || data.action === 'join') {
+                // Ya se actualizó playersData
+                // Si el que se une tiene partida iniciada, reenviar estado
+                if (data.action === 'join' && gameStarted) {
+                    // Reenviar el estado actual al recién llegado
+                    broadcastGameStart();
+                    broadcastTurnAdvance(currentTurnIndex);
+                }
+                // Buscar posible reclamo de nombre
                 var cachedMatch = null;
                 for (var id in playersData) {
                     if (id !== data.id && playersData[id].name === data.name && (playersData[id].moves || []).length > 0) {
@@ -97,16 +137,16 @@ function connectToRoom(code, isReconnect) {
     });
 }
 
-function broadcastScore(action) {
-    if (action === undefined) action = 'sync';
+function broadcastSync() {
     if (mqttClient && currentRoom) {
         var topic = 'quixx_app_xyz/room/' + currentRoom;
         var payload = JSON.stringify({
-            action: action,
+            action: 'sync',
             id: myId,
             name: myName,
             score: myTotalScore,
-            moves: moveHistory.slice()
+            moves: moveHistory.slice(),
+            hostId: hostId
         });
         mqttClient.publish(topic, payload);
     }
@@ -117,8 +157,7 @@ function broadcastReset() {
         var topic = 'quixx_app_xyz/room/' + currentRoom;
         var payload = JSON.stringify({
             action: 'reset_all',
-            id: myId,
-            name: myName
+            id: myId
         });
         mqttClient.publish(topic, payload);
     }
@@ -174,6 +213,7 @@ function acceptClaim() {
     calculateScores();
     document.getElementById('claimModal').style.display = 'none';
     pendingClaim = null;
+    updateUI();
 }
 
 function declineClaim() {

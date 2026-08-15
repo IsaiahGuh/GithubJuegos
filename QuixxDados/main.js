@@ -53,3 +53,5 @@ window.reconnectToSession = reconnectToSession;
 window.dismissSession = dismissSession;
 window.acceptClaim = acceptClaim;
 window.declineClaim = declineClaim;
+window.startGame = startGame;
+window.endTurn = endTurn;

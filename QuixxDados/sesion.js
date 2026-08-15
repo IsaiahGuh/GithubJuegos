@@ -8,7 +8,7 @@ var REGISTRY_KEY = 'quixx_players_v1';
     const nombre = urlParams.get('nombre');
     const sala = urlParams.get('sala');
     
-    console.log('QuixxDados - Parametros URL:', { nombre, sala });
+    console.log('Quixx - Parametros URL:', { nombre, sala });
     
     if (nombre) {
         localStorage.setItem('quixx_nombre_prefill', nombre);
@@ -44,6 +44,10 @@ function saveSession() {
             myId: myId,
             myName: myName,
             moveHistory: moveHistory,
+            gameStarted: gameStarted,
+            turnOrder: turnOrder,
+            currentTurnIndex: currentTurnIndex,
+            hostId: hostId,
             updatedAt: Date.now()
         }));
     } catch (e) { 
@@ -106,6 +110,12 @@ function reconnectToSession() {
     myId = session.myId;
     myName = session.myName;
     moveHistory = session.moveHistory || [];
+    gameStarted = session.gameStarted || false;
+    turnOrder = session.turnOrder || [];
+    currentTurnIndex = session.currentTurnIndex || 0;
+    hostId = session.hostId || null;
+    turnLocked = false;
+    
     updateVisuals();
     calculateScores();
 

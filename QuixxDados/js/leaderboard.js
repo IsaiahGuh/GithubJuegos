@@ -10,7 +10,7 @@ function renderLeaderboard() {
         playersArr.push({
             id: id,
             name: playersData[id].name,
-            score: playersData[id].score,
+            score: playersData[id].score || 0,
             moves: playersData[id].moves || []
         });
     }
@@ -69,7 +69,7 @@ function renderLeaderboard() {
 
         card.innerHTML = 
             '<div class="player-card-header">' +
-                '<span>' + player.name + (isMe ? ' (Tu)' : '') + '</span>' +
+                '<span>' + player.name + (isMe ? ' (Tu)' : '') + (player.id === hostId ? ' [Anfitrion]' : '') + '</span>' +
                 '<span>' + player.score + ' pts</span>' +
             '</div>' +
             boardHtml +

@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuixxDados</title>
+    <title>Quixx - Turnos</title>
     
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="favicon.ico">
     
@@ -18,7 +17,7 @@
     <div id="lobbyModal" class="modal-overlay">
         <div class="modal-box">
             <h2>Quixx</h2>
-            <p>Multijugador</p>
+            <p>Multijugador por turnos</p>
 
             <div id="sessionBanner" class="session-banner" style="display: none;">
                 <p id="sessionBannerText" class="session-banner-text"></p>
@@ -47,7 +46,7 @@
         </div>
     </div>
 
-    <!-- RECLAMO DE NOMBRE (RECONEXION DESDE OTRO DISPOSITIVO) -->
+    <!-- RECLAMO DE NOMBRE -->
     <div id="claimModal" class="modal-overlay">
         <div class="modal-box">
             <h3>Jugador existente</h3>
@@ -61,11 +60,11 @@
         </div>
     </div>
 
-    <!-- REINICIAR -->
+    <!-- REINICIAR (solo anfitrion) -->
     <div id="confirmModal" class="modal-overlay">
         <div class="modal-box">
-            <h3 id="confirmTitle">Reiniciar tablero</h3>
-            <p id="confirmText">Se borraran tus marcas actuales.</p>
+            <h3 id="confirmTitle">Reiniciar partida</h3>
+            <p id="confirmText">Esto borrara los tableros de todos los jugadores.</p>
             <div class="modal-buttons">
                 <div class="row-btns">
                     <button class="modal-btn btn-outline" onclick="closeModal()">Cancelar</button>
@@ -106,13 +105,19 @@
                 <div class="total-score">
                     TOTAL: <span id="score-total">0</span>
                 </div>
-                
-                <div class="controls">
-                    <button id="resetBtn" class="modal-btn btn-danger" onclick="showModal()">Reiniciar Mi Tablero</button>
+
+                <!-- CONTROLES DE TURNO (igual que Yatzy) -->
+                <div id="turnControls" style="margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                    <div id="turnBanner" class="turn-banner">Turno de: --</div>
+                    <div class="action-buttons" style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button id="startGameBtn" class="modal-btn btn-primary" onclick="startGame()" disabled>Iniciar partida</button>
+                        <button id="endTurnBtn" class="modal-btn btn-primary" onclick="endTurn()" disabled>Finalizar turno</button>
+                        <button id="resetGameBtn" class="modal-btn btn-danger" onclick="showModal()" style="display: none;">Reiniciar</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tabla de posiciones con mini tableros completos -->
+            <!-- Tabla de posiciones con mini tableros -->
             <div class="leaderboard" id="leaderboardPanel">
                 <h3>Posiciones y Tableros</h3>
                 <div id="playersList"></div>
@@ -122,6 +127,7 @@
 
     <script src="js/juego.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/turnos.js"></script>
     <script src="js/leaderboard.js"></script>
     <script src="sesion.js"></script>
     <script src="mqtt.js"></script>
