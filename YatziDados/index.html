@@ -138,15 +138,7 @@
         <button class="modal-btn btn-primary" onclick="claimHost()">Ser anfitrion</button>
     </div>
 
-    <!-- SALA DE ESPERA / CONFIGURAR ORDEN -->
-    <div id="preGamePanel" class="pre-game-panel" style="display:none;">
-        <h3>Jugadores en la sala</h3>
-        <p id="preGameHint" class="pre-game-hint">Esperando a que el anfitrion inicie la partida...</p>
-        <div id="orderList" class="order-list"></div>
-        <button id="startGameBtn" class="modal-btn btn-primary" style="display:none; margin-top:10px;" onclick="startGame()">Iniciar Partida</button>
-    </div>
-
-    <!-- PANTALLA DE JUEGO -->
+    <!-- PANTALLA DE JUEGO (siempre visible tras unirse) -->
     <div id="gameArea" class="app-container" style="display:none;">
 
         <div class="board-container">
@@ -166,8 +158,9 @@
                 </div>
                 <!-- BANNER DE TURNO -->
                 <div id="turnBanner" class="turn-banner" style="margin-top:8px;">Turno de: --</div>
-                <!-- BOTONES DE ACCIÓN (Reiniciar + Finalizar Turno) -->
+                <!-- BOTONES DE ACCIÓN (Iniciar, Finalizar Turno, Reiniciar) -->
                 <div class="action-buttons" style="display:flex; gap:8px; margin-top:10px;">
+                    <button id="startGameBtn" class="modal-btn btn-primary" style="flex:1;" onclick="startGame()" disabled>Iniciar partida</button>
                     <button id="endTurnBtn" class="modal-btn btn-primary" style="flex:1;" onclick="endTurn()" disabled>Finalizar Turno</button>
                     <button id="resetGameBtn" class="modal-btn btn-danger" style="flex:1; display:none;" onclick="requestGameReset()">Reiniciar</button>
                 </div>

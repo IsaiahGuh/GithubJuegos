@@ -323,16 +323,25 @@ function entrarSala() {
     connectToRoom(sala.toUpperCase());
 }
 
-// ===== EXITO AL UNIRSE =====
+// ===== EXITO AL UNIRSE (CORREGIDO) =====
 function joinSuccess(code) {
     hideLoading();
     document.getElementById('lobbyModal').style.display = 'none';
     var info = document.getElementById('roomInfoDisplay');
     info.style.display = 'inline-block';
     info.textContent = 'SALA: ' + code;
+    document.getElementById('gameArea').style.display = 'flex';
     document.getElementById('leaderboardPanel').style.display = 'flex';
     document.getElementById('gameLogPanel').style.display = 'flex';
-    renderPreGame(); renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard(); renderLog();
+    // Renderizar todo el estado inicial
+    renderBoard();
+    renderDice();
+    renderScores();
+    renderLeaderboard();
+    renderLog();
+    renderTurnBanner(); // mostrará "Esperando inicio..." si gameStarted es false
+    updateStartButton(); // mostrar/ocultar botón de inicio según rol y estado
+    updateEndTurnButton(); // deshabilitar Finalizar Turno
 }
 
 // ===== UTILIDADES =====

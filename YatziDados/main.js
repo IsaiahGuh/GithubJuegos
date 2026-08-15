@@ -30,14 +30,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Desbloquear audio con el primer toque (requisito de navegadores moviles)
     document.addEventListener('pointerdown', primeAudio, { once: true });
 
-    // Sonido de clic generico para botones de menus/modales (no pisa los sonidos especificos del juego)
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('.modal-btn');
         if (btn && !btn.closest('#turnActions')) sfxButton();
     }, true);
+
+    // Ocultar el panel de pre-juego si existe (por si acaso)
+    const preGame = document.getElementById('preGamePanel');
+    if (preGame) preGame.style.display = 'none';
+    // Asegurar que el área de juego se muestra al unirse (joinSuccess se encarga)
 });
 
 // ===== MOSTRAR DATOS DESDE URL =====

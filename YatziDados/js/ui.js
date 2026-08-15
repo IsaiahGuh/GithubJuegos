@@ -215,7 +215,9 @@ function renderScores() {
             if (markedThisTurn && cat.id === lastMarkedCatId) cell.classList.add('undoable');
             if (jokerModeActive && cat.id === 'yatzy') cell.classList.add('undoable');
         } else {
-            if (jokerModeActive) {
+            if (!gameStarted) {
+                cell.classList.add('disabled-turn');
+            } else if (jokerModeActive) {
                 if (eligible.includes(cat.id)) {
                     cell.classList.add('joker-eligible');
                     const jokerFixed = { fullHouse: 25, smallStraight: 30, largeStraight: 40 };
@@ -252,9 +254,10 @@ function renderScores() {
 
     updateBonusCell();
     updateTotalScore();
-    updateEndTurnButton(); // <-- actualiza el estado del botón Finalizar Turno
+    updateEndTurnButton();
     checkGameFinished();
     applyBoardTheme();
+    updateStartButton();
 }
 
 function updateBonusCell() {
@@ -274,16 +277,30 @@ function renderTurnBanner() {
     const resetBtn = document.getElementById('resetGameBtn');
     if (resetBtn) resetBtn.style.display = (isRoomCreator && gameStarted && currentRoom) ? 'block' : 'none';
     updateHostWarning();
+    updateStartButton();
     if (!banner) return;
-    if (!gameStarted || turnOrder.length === 0) { banner.textContent = ''; banner.classList.remove('my-turn'); return; }
+    if (!gameStarted) {
+        banner.textContent = 'Esperando inicio...';
+        banner.classList.remove('my-turn');
+        return;
+    }
+    if (turnOrder.length === 0) { banner.textContent = ''; banner.classList.remove('my-turn'); return; }
     const currentId = turnOrder[currentTurnIndex];
     const currentName = (playersData[currentId] && playersData[currentId].name) || (currentId === myId ? myName : '??');
     if (currentId === myId) { banner.textContent = 'Tu turno — lanza los dados y anota'; banner.classList.add('my-turn'); }
     else { banner.textContent = `Turno de: ${currentName}`; banner.classList.remove('my-turn'); }
-    updateEndTurnButton(); // para sincronizar el botón al cambiar de turno
+    updateEndTurnButton();
 }
 
-// ===== NUEVA FUNCIÓN PARA HABILITAR/DESHABILITAR EL BOTÓN FINALIZAR TURNO =====
+// ===== BOTÓN DE INICIO (dinámico) =====
+function updateStartButton() {
+    const btn = document.getElementById('startGameBtn');
+    if (!btn) return;
+    const visible = isRoomCreator && !gameStarted && currentRoom;
+    btn.style.display = visible ? 'block' : 'none';
+    btn.disabled = !visible;
+}
+
 function updateEndTurnButton() {
     const btn = document.getElementById('endTurnBtn');
     if (!btn) return;
@@ -420,53 +437,7 @@ function openViewPlayer(id) {
 }
 function closeViewPlayer() { document.getElementById('viewPlayerModal').style.display = 'none'; }
 
-// ===== SALA DE ESPERA / ORDEN DE TURNOS =====
-function renderPreGame() {
-    const panel = document.getElementById('preGamePanel');
-    const gameArea = document.getElementById('gameArea');
-    if (!panel || !gameArea) return;
-    updateHostWarning();
-
-    if (gameStarted) { panel.style.display = 'none'; gameArea.style.display = 'flex'; return; }
-    panel.style.display = 'block'; gameArea.style.display = 'none';
-
-    const currentIds = Object.keys(playersData);
-    currentIds.forEach(id => { if (!pendingOrder.includes(id)) pendingOrder.push(id); });
-    pendingOrder = pendingOrder.filter(id => currentIds.includes(id));
-
-    const list = document.getElementById('orderList');
-    list.innerHTML = '';
-    pendingOrder.forEach((id, idx) => {
-        const p = playersData[id];
-        if (!p) return;
-        const hex = PLAYER_COLORS[idx % PLAYER_COLORS.length].hex;
-        const row = document.createElement('div');
-        row.className = 'order-row';
-        row.style.borderLeftColor = hex;
-        row.innerHTML = `<span class="order-color-dot" style="background:${hex}"></span>
-            <span class="order-name">${idx + 1}. ${p.name}${id === myId ? ' (Tu)' : ''}</span>`;
-        if (isRoomCreator) {
-            const arrows = document.createElement('div');
-            arrows.className = 'order-arrows';
-            const up = document.createElement('button');
-            up.className = 'order-arrow-btn'; up.textContent = '▲'; up.disabled = idx === 0;
-            up.addEventListener('click', () => moveOrder(idx, -1));
-            const down = document.createElement('button');
-            down.className = 'order-arrow-btn'; down.textContent = '▼'; down.disabled = idx === pendingOrder.length - 1;
-            down.addEventListener('click', () => moveOrder(idx, 1));
-            arrows.appendChild(up); arrows.appendChild(down);
-            row.appendChild(arrows);
-        }
-        list.appendChild(row);
-    });
-
-    document.getElementById('preGameHint').textContent = isRoomCreator
-        ? 'Ordena a los jugadores (▲▼) y presiona Iniciar cuando esten todos.'
-        : 'Esperando a que el anfitrion inicie la partida...';
-    document.getElementById('startGameBtn').style.display = isRoomCreator ? 'block' : 'none';
-}
-
-// ===== AVISO GENERAL (reemplaza alert() nativo) =====
+// ===== AVISO GENERAL =====
 function showNotice(text, title = 'Aviso') {
     document.getElementById('noticeTitle').textContent = title;
     document.getElementById('noticeText').textContent = text;
@@ -474,7 +445,7 @@ function showNotice(text, title = 'Aviso') {
 }
 function closeNotice() { document.getElementById('noticeModal').style.display = 'none'; }
 
-// ===== FUNCIONES FALTANTES (eran de mqtt.js / juego.js) =====
+// ===== FUNCIONES FALTANTES =====
 function updateHostWarning() {
     const bar = document.getElementById('hostWarningBar');
     if (!bar) return;

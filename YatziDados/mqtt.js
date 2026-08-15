@@ -24,10 +24,7 @@ function connectToRoom(code, isReconnect = false) {
         broadcastSync('join');
         persistSession();
 
-        // Si nadie responde con un anfitrion dentro de este margen (sala vacia
-        // o todos llegaron por link sin pasar por "Crear Sala"), me reclamo host.
-        // El jitter evita que dos personas que entran al mismo tiempo se
-        // autoreclamen host en el mismo instante.
+        // Si nadie responde con un anfitrion dentro de este margen, me reclamo host.
         const claimDelay = 1400 + Math.random() * 900;
         setTimeout(() => {
             if (currentRoom === code && !hostId) claimHost();
@@ -44,7 +41,14 @@ function connectToRoom(code, isReconnect = false) {
                 refreshHostStatus();
             }
 
-            if (data.action === 'remove') { delete playersData[data.id]; renderLeaderboard(); renderPreGame(); updateHostWarning(); return; }
+            if (data.action === 'remove') {
+                delete playersData[data.id];
+                updatePendingOrder();
+                renderLeaderboard();
+                updateHostWarning();
+                updateStartButton();
+                return;
+            }
 
             if (data.action === 'claim_offer') {
                 if (data.targetId === myId && !claimResolved && Object.values(myScores).every(v => v === null) && (data.scores)) {
@@ -70,7 +74,11 @@ function connectToRoom(code, isReconnect = false) {
                 currentTurnIndex = 0;
                 gameStarted = true;
                 afterTurnBecameMine();
-                renderPreGame(); renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard();
+                renderTurnBanner();
+                renderDice();
+                renderScores();
+                renderLeaderboard();
+                updateStartButton();
                 saveState();
                 return;
             }
@@ -84,7 +92,11 @@ function connectToRoom(code, isReconnect = false) {
                     Object.keys(playerColors).forEach(id => { if (playersData[id]) playersData[id].color = playerColors[id]; });
                     if (playersData[myId]) playersData[myId].color = playerColors[myId];
                     afterTurnBecameMine();
-                    renderPreGame(); renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard();
+                    renderTurnBanner();
+                    renderDice();
+                    renderScores();
+                    renderLeaderboard();
+                    updateStartButton();
                 }
                 return;
             }
@@ -95,8 +107,8 @@ function connectToRoom(code, isReconnect = false) {
             if (data.action === 'event_toast') { showEventToast(data.text); return; }
 
             playersData[data.id] = { name: data.name, color: data.color, scores: data.scores, extraYatzys: data.extraYatzys || 0, score: data.score };
+            updatePendingOrder();
             renderLeaderboard();
-            renderPreGame();
             updateHostWarning();
 
             if (data.action === 'join') {
@@ -130,8 +142,9 @@ function acceptClaim() {
     refreshHostStatus();
     saveState();
     renderScores();
-    renderPreGame();
+    updatePendingOrder();
     updateHostWarning();
+    updateStartButton();
     document.getElementById('claimModal').style.display = 'none';
     pendingClaim = null;
 }

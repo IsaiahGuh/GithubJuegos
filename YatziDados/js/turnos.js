@@ -1,8 +1,5 @@
 // ===== GESTIÓN DE TURNOS Y ESTADO DE LA PARTIDA =====
-// Este archivo agrupa toda la lógica relacionada con turnos, orden de jugadores,
-// inicio de partida, reinicio y sincronización.
 
-// Variables globales de turnos (se comparten con el resto de la aplicación)
 let turnOrder = [];
 let playerColors = {};
 let currentTurnIndex = 0;
@@ -10,7 +7,6 @@ let gameStarted = false;
 let gameFinished = false;
 let pendingOrder = [];
 
-// Variables de anfitrión (también utilizadas en mqtt.js)
 let isRoomCreator = false;
 let hostId = null;
 
@@ -18,12 +14,10 @@ let hostId = null;
 // Funciones de estado de turnos
 // ----------------------------------------------------------------------
 
-/** Indica si el jugador actual es el que tiene el turno */
 function isMyTurn() {
     return gameStarted && turnOrder.length > 0 && turnOrder[currentTurnIndex] === myId;
 }
 
-/** Prepara el estado del jugador para su turno (reinicia dados, marca, etc.) */
 function afterTurnBecameMine() {
     if (isMyTurn()) {
         myDice = [null, null, null, null, null];
@@ -34,7 +28,6 @@ function afterTurnBecameMine() {
     }
 }
 
-/** Finaliza el turno actual y pasa al siguiente */
 function endTurn() {
     if (!isMyTurn() || !markedThisTurn) return;
     logMove('end_turn', {});
@@ -46,7 +39,6 @@ function endTurn() {
     applyTurnAdvance(nextIndex);
 }
 
-/** Aplica el avance de turno en el cliente (sin broadcast) */
 function applyTurnAdvance(nextIndex) {
     currentTurnIndex = nextIndex;
     afterTurnBecameMine();
@@ -54,9 +46,9 @@ function applyTurnAdvance(nextIndex) {
     renderDice();
     renderScores();
     renderLeaderboard();
+    updateStartButton();
 }
 
-/** Emite por MQTT el avance de turno */
 function broadcastTurnAdvance(nextIndex) {
     if (mqttClient && currentRoom) {
         mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({
@@ -71,9 +63,8 @@ function broadcastTurnAdvance(nextIndex) {
 // Inicio de partida
 // ----------------------------------------------------------------------
 
-/** Inicia la partida (solo el anfitrión) */
 function startGame() {
-    if (!isRoomCreator || pendingOrder.length === 0) return;
+    if (!isRoomCreator || gameStarted || pendingOrder.length === 0) return;
     turnOrder = [...pendingOrder];
     const colors = {};
     turnOrder.forEach((id, idx) => {
@@ -88,15 +79,14 @@ function startGame() {
     gameFinished = false;
     broadcastGameStart();
     afterTurnBecameMine();
-    renderPreGame();
     renderTurnBanner();
     renderDice();
     renderScores();
     renderLeaderboard();
+    updateStartButton();
     saveState();
 }
 
-/** Emite el inicio de partida a todos los jugadores */
 function broadcastGameStart() {
     if (mqttClient && currentRoom) {
         mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({
@@ -109,7 +99,6 @@ function broadcastGameStart() {
     }
 }
 
-/** Emite una sincronización completa del estado del juego (para reconexiones) */
 function broadcastGameStateSync() {
     if (mqttClient && currentRoom) {
         mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({
@@ -124,35 +113,38 @@ function broadcastGameStateSync() {
 }
 
 // ----------------------------------------------------------------------
-// Orden de jugadores en la sala (pre‑game)
+// Orden de jugadores (solo actualización, sin UI)
 // ----------------------------------------------------------------------
 
-/** Mueve un jugador en el orden de la sala (solo anfitrión) */
-function moveOrder(idx, dir) {
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= pendingOrder.length) return;
-    [pendingOrder[idx], pendingOrder[newIdx]] = [pendingOrder[newIdx], pendingOrder[idx]];
-    renderPreGame();
+function updatePendingOrder() {
+    // Mantiene el orden de llegada: los que ya estaban conservan su posición,
+    // los nuevos se añaden al final.
+    const currentIds = Object.keys(playersData);
+    // Eliminar los que ya no están
+    pendingOrder = pendingOrder.filter(id => currentIds.includes(id));
+    // Añadir los nuevos al final
+    currentIds.forEach(id => {
+        if (!pendingOrder.includes(id)) pendingOrder.push(id);
+    });
+    // Notificar cambios en el botón de inicio
+    updateStartButton();
 }
 
 // ----------------------------------------------------------------------
 // Reinicio de la partida
 // ----------------------------------------------------------------------
 
-/** Solicita reiniciar la partida (solo anfitrión) – abre el modal de confirmación */
 function requestGameReset() {
     if (!isRoomCreator) return;
     document.getElementById('resetGameModal').style.display = 'flex';
 }
 
-/** Confirma el reinicio después del modal */
 function confirmGameReset() {
     closeResetGameModal();
     broadcastGameReset();
     applyGameReset();
 }
 
-/** Aplica el reinicio en el cliente */
 function applyGameReset() {
     myScores = emptyScores();
     myExtraYatzys = 0;
@@ -176,15 +168,14 @@ function applyGameReset() {
 
     logMove('reset', {});
     document.getElementById('gameOverModal').style.display = 'none';
-    renderPreGame();
     renderTurnBanner();
     renderDice();
     renderScores();
     renderLeaderboard();
+    updateStartButton();
     saveState();
 }
 
-/** Emite el reinicio a todos los jugadores */
 function broadcastGameReset() {
     if (mqttClient && currentRoom) {
         mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({
@@ -198,7 +189,6 @@ function broadcastGameReset() {
 // Fin de la partida
 // ----------------------------------------------------------------------
 
-/** Verifica si todos los jugadores han completado su cartilla y lanza el modal de fin */
 function checkGameFinished() {
     if (!gameStarted || gameFinished || turnOrder.length === 0) return;
     const allDone = turnOrder.every(id => {
@@ -215,24 +205,21 @@ function checkGameFinished() {
 // Gestión de anfitrión (host)
 // ----------------------------------------------------------------------
 
-/** Actualiza el estado de anfitrión según el hostId actual */
 function refreshHostStatus() {
     isRoomCreator = (hostId !== null && hostId === myId);
+    updateStartButton();
 }
 
-/** Indica si el anfitrión está presente en la sala */
 function hostIsPresent() {
     return hostId !== null && !!playersData[hostId];
 }
 
-/** Reclama el rol de anfitrión (cuando el anterior se desconectó) */
 function claimHost() {
     hostId = myId;
     isRoomCreator = true;
     broadcastSync();
     if (gameStarted) broadcastGameStateSync();
     updateHostWarning();
-    renderPreGame();
-    renderTurnBanner();
     renderLeaderboard();
+    updateStartButton();
 }
