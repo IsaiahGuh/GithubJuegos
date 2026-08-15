@@ -145,7 +145,9 @@ function conectarSala(codigo, isReconnect) {
                 renderizarLeaderboard();
             }
 
-            if (data.action === 'join') {
+            // NOTA: broadcastPuntaje() publica la acción en el campo "accion"
+            // (no "action"), así que hay que comprobar ese campo aquí.
+            if (data.accion === 'join') {
                 var cachedMatch = null;
                 for (var id in datosJugadores) {
                     if (id !== data.id && datosJugadores[id].nombre === data.nombre && (datosJugadores[id].movimientos || []).length > 0) {
@@ -156,6 +158,13 @@ function conectarSala(codigo, isReconnect) {
                 if (cachedMatch) {
                     broadcastClaimOffer(data.id, cachedMatch);
                 }
+
+                // Un jugador nuevo solo recibe mensajes publicados DESPUES de
+                // suscribirse: nunca ve el estado de quienes ya estaban en la
+                // sala, porque MQTT no reenvía mensajes pasados. Por eso, al
+                // detectar un "join" ajeno, respondemos reenviando nuestro
+                // propio estado para que el recién llegado nos vea también.
+                broadcastPuntaje('sync');
             }
         } catch(e) { 
             console.error('Mensaje invalido', e); 

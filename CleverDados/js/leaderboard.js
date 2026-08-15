@@ -132,16 +132,17 @@ function generarMiniaturaMoradoZoom(marcas, valores) {
 }
 
 // ============================================================
-// MOSTRAR ZOOM DE ÁREA - CON CIERRE AL CLICAR FUERA
+// ESTADO DEL ZOOM ACTIVO (para poder refrescarlo en vivo)
 // ============================================================
-function mostrarAreaZoom(area, marcasJSON, valoresNaranjaJSON, valoresMoradoJSON) {
-    const marcas = JSON.parse(marcasJSON);
-    const valoresNaranja = valoresNaranjaJSON !== 'null' ? JSON.parse(valoresNaranjaJSON) : null;
-    const valoresMorado = valoresMoradoJSON !== 'null' ? JSON.parse(valoresMoradoJSON) : null;
-    
+let zoomActivo = null; // { playerId, area }
+
+// ============================================================
+// CONSTRUIR HTML + COLOR PARA UN ÁREA (usado al abrir y al refrescar)
+// ============================================================
+function construirHtmlZoom(area, marcas, valoresNaranja, valoresMorado) {
     let html = '';
     let color = '';
-    
+
     switch(area) {
         case 'amarilla':
             color = '#fdd835';
@@ -183,6 +184,28 @@ function mostrarAreaZoom(area, marcasJSON, valoresNaranjaJSON, valoresMoradoJSON
             `;
             break;
     }
+
+    return { html: html, color: color };
+}
+
+// ============================================================
+// MOSTRAR ZOOM DE ÁREA - CON CIERRE AL CLICAR FUERA
+// ============================================================
+function mostrarAreaZoom(playerId, area, marcasJSON, valoresNaranjaJSON, valoresMoradoJSON) {
+    // Los parámetros llegan codificados con encodeURIComponent (ver
+    // generarTagsPuntajes) para evitar que las comillas dobles del JSON
+    // rompan el atributo onclick="..." una vez que hay marcas.
+    const marcas = JSON.parse(decodeURIComponent(marcasJSON));
+    const valoresNaranja = valoresNaranjaJSON !== 'null' ? JSON.parse(decodeURIComponent(valoresNaranjaJSON)) : null;
+    const valoresMorado = valoresMoradoJSON !== 'null' ? JSON.parse(decodeURIComponent(valoresMoradoJSON)) : null;
+
+    // Guardamos qué jugador y área quedan abiertos, para poder refrescar
+    // el contenido en vivo cuando lleguen actualizaciones de ese jugador.
+    zoomActivo = { playerId: playerId, area: area };
+
+    const construido = construirHtmlZoom(area, marcas, valoresNaranja, valoresMorado);
+    const html = construido.html;
+    const color = construido.color;
     
     const overlay = document.createElement('div');
     overlay.className = 'zoom-overlay';
@@ -193,7 +216,7 @@ function mostrarAreaZoom(area, marcasJSON, valoresNaranjaJSON, valoresMoradoJSON
                 <div></div>
                 <button class="zoom-close" onclick="cerrarZoom()">✕</button>
             </div>
-            <div class="zoom-body">
+            <div class="zoom-body" id="leaderboardZoomBody">
                 ${html}
             </div>
         </div>
@@ -209,9 +232,30 @@ function mostrarAreaZoom(area, marcasJSON, valoresNaranjaJSON, valoresMoradoJSON
 }
 
 // ============================================================
+// REFRESCAR EL ZOOM ABIERTO SI CORRESPONDE A ESTE JUGADOR
+// ============================================================
+function actualizarZoomActivoSiCorresponde(playerId) {
+    if (!zoomActivo || zoomActivo.playerId !== playerId) return;
+
+    const body = document.getElementById('leaderboardZoomBody');
+    if (!body) return;
+
+    const jugador = (typeof datosJugadores !== 'undefined' && datosJugadores) ? datosJugadores[playerId] : null;
+    if (!jugador) return;
+
+    const marcas = jugador.movimientos || [];
+    const valoresNaranja = jugador.valoresNaranja || null;
+    const valoresMorado = jugador.valoresMorado || null;
+
+    const construido = construirHtmlZoom(zoomActivo.area, marcas, valoresNaranja, valoresMorado);
+    body.innerHTML = construido.html;
+}
+
+// ============================================================
 // CERRAR ZOOM
 // ============================================================
 function cerrarZoom() {
+    zoomActivo = null;
     const overlay = document.getElementById('leaderboardZoomOverlay');
     if (overlay) {
         overlay.remove();
@@ -223,7 +267,7 @@ function cerrarZoom() {
 // ============================================================
 // GENERAR TAGS DE PUNTAJES POR ÁREA (INCLUYENDO LOBOS)
 // ============================================================
-function generarTagsPuntajes(puntajesPorArea, movimientos, valoresNaranja, valoresMorado) {
+function generarTagsPuntajes(playerId, puntajesPorArea, movimientos, valoresNaranja, valoresMorado) {
     const areas = [
         { id: 'amarilla', color: '#fdd835', label: '🟨' },
         { id: 'azul', color: '#1e88e5', label: '🟦' },
@@ -246,14 +290,17 @@ function generarTagsPuntajes(puntajesPorArea, movimientos, valoresNaranja, valor
             areaId = 'rojo';
         }
         
-        const marcasJSON = JSON.stringify(movimientos || []);
-        const valoresNaranjaJSON = JSON.stringify(valoresNaranja || null);
-        const valoresMoradoJSON = JSON.stringify(valoresMorado || null);
+        // encodeURIComponent evita que las comillas dobles que produce
+        // JSON.stringify (p.ej. ["azul-tabla-0"]) rompan el atributo
+        // onclick="..." una vez que el jugador marca alguna casilla.
+        const marcasJSON = encodeURIComponent(JSON.stringify(movimientos || []));
+        const valoresNaranjaJSON = encodeURIComponent(JSON.stringify(valoresNaranja || null));
+        const valoresMoradoJSON = encodeURIComponent(JSON.stringify(valoresMorado || null));
         
         html += `
             <span class="puntaje-tag" 
                   style="border-color: ${color}; cursor: pointer;"
-                  onclick="mostrarAreaZoom('${areaId}', '${marcasJSON}', '${valoresNaranjaJSON}', '${valoresMoradoJSON}')">
+                  onclick="mostrarAreaZoom('${playerId}', '${areaId}', '${marcasJSON}', '${valoresNaranjaJSON}', '${valoresMoradoJSON}')">
                 <span class="tag-dot" style="background: ${color}"></span>
                 ${puntos}pts
             </span>
@@ -375,6 +422,7 @@ function renderizarLeaderboard() {
         else if (index === 2) medalla = '🥉';
         
         const tags = generarTagsPuntajes(
+            j.id,
             puntajesPorArea, 
             movimientos,
             j.valoresNaranja || null,
@@ -398,6 +446,14 @@ function renderizarLeaderboard() {
         
         list.appendChild(card);
     });
+
+    // Si hay un zoom de área abierto, refrescar su contenido con los
+    // datos que se acaban de renderizar (por ejemplo, cuando llega por
+    // MQTT una marca/desmarca de OTRO jugador mientras estás viendo su
+    // área). Esto no cierra ni recrea el modal, solo actualiza su HTML.
+    if (typeof zoomActivo !== 'undefined' && zoomActivo && typeof actualizarZoomActivoSiCorresponde === 'function') {
+        actualizarZoomActivoSiCorresponde(zoomActivo.playerId);
+    }
 }
 
 // ============================================================
