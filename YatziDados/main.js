@@ -7,14 +7,28 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.innerHTML = pipsHTML(parseInt(btn.dataset.value, 10));
     });
 
+    mostrarDatosURL();
+
     const session = loadSession();
     const banner = document.getElementById('sessionBanner');
-    if (session && banner) {
-        document.getElementById('sessionBannerText').textContent = `Tenias una partida abierta en la sala ${session.roomCode} como "${session.myName}".`;
-        banner.style.display = 'block';
-    }
+    const reconnectBtn = document.getElementById('reconnectBtn');
 
-    applyPrefillFromURL();
+    if (session && banner) {
+        document.getElementById('sessionBannerText').textContent =
+            'Tenías una partida abierta en la sala ' + session.roomCode + ' como "' + session.myName + '".';
+        banner.style.display = 'block';
+        if (reconnectBtn) {
+            reconnectBtn.disabled = false;
+            reconnectBtn.style.opacity = '1';
+            reconnectBtn.style.cursor = 'pointer';
+        }
+    } else {
+        if (reconnectBtn) {
+            reconnectBtn.disabled = true;
+            reconnectBtn.style.opacity = '0.5';
+            reconnectBtn.style.cursor = 'not-allowed';
+        }
+    }
 
     // Desbloquear audio con el primer toque (requisito de navegadores moviles)
     document.addEventListener('pointerdown', primeAudio, { once: true });
@@ -26,12 +40,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }, true);
 });
 
+// ===== MOSTRAR DATOS DESDE URL =====
+function mostrarDatosURL() {
+    const nombre = localStorage.getItem('yatzy_nombre_prefill');
+    const sala = localStorage.getItem('yatzy_sala_prefill');
+
+    if (nombre || sala) {
+        const display = document.getElementById('urlDataDisplay');
+        if (display) {
+            display.style.display = 'block';
+            document.getElementById('urlPlayerName').textContent = nombre || '---';
+            document.getElementById('urlRoomCode').textContent = sala || '---';
+            console.log('Datos configurados:', { nombre, sala });
+        }
+    }
+}
+
 // ===== EXPORTAR FUNCIONES GLOBALES =====
-window.createRoom = createRoom;
-window.joinRoom = joinRoom;
-window.showJoinModal = showJoinModal;
-window.backToLobby = backToLobby;
-window.playSolo = playSolo;
+window.entrarSala = entrarSala;
 window.reconnectToSession = reconnectToSession;
 window.dismissSession = dismissSession;
 window.acceptClaim = acceptClaim;

@@ -14,46 +14,28 @@
 </head>
 <body>
 
-    <!-- LOBBY PRINCIPAL -->
+    <!-- LOBBY PRINCIPAL (ESTILO QUIXX) -->
     <div id="lobbyModal" class="modal-overlay">
         <div class="modal-box">
             <h2>Yatzy</h2>
-            <p>Selecciona un modo de juego</p>
+            <p>Multijugador</p>
 
             <div id="sessionBanner" class="session-banner" style="display:none;">
                 <p id="sessionBannerText" class="session-banner-text"></p>
-                <div class="modal-buttons row-btns">
-                    <button class="modal-btn btn-outline" onclick="dismissSession()">Descartar</button>
-                    <button class="modal-btn btn-primary" onclick="reconnectToSession()">Reconectar</button>
+            </div>
+
+            <div id="urlDataDisplay" class="url-data-display" style="display:none; background:#2a2a2a; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #808BC3;">
+                <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                    <span id="urlPlayerName">---</span>
+                    <span id="urlRoomCode">---</span>
                 </div>
             </div>
 
-            <div class="input-group">
-                <label>Tu Nombre:</label>
-                <input type="text" id="playerName" placeholder="Ej. Leo" maxlength="10">
-            </div>
             <div class="modal-buttons">
                 <div class="row-btns">
-                    <button class="modal-btn btn-primary" onclick="createRoom()">Crear Sala</button>
-                    <button class="modal-btn btn-secondary" onclick="showJoinModal()">Unirse</button>
+                    <button class="modal-btn btn-primary" onclick="entrarSala()" style="flex:1;">Entrar</button>
+                    <button id="reconnectBtn" class="modal-btn btn-outline" onclick="reconnectToSession()" disabled style="flex:1;">Reconectar</button>
                 </div>
-                <button class="modal-btn btn-outline" onclick="playSolo()" style="margin-top:10px;">Jugar Solo (Local)</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- UNIRSE A SALA -->
-    <div id="joinModal" class="modal-overlay">
-        <div class="modal-box">
-            <h2>Unirse a Sala</h2>
-            <p>Pide el codigo al creador de la sala</p>
-            <div class="input-group">
-                <label>Codigo de la Sala (4 letras/numeros):</label>
-                <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform:uppercase;">
-            </div>
-            <div class="modal-buttons row-btns">
-                <button class="modal-btn btn-outline" onclick="backToLobby()">Volver</button>
-                <button class="modal-btn btn-secondary" onclick="joinRoom()">Entrar</button>
             </div>
         </div>
     </div>
@@ -136,7 +118,7 @@
     <!-- FIN DE LA PARTIDA -->
     <div id="gameOverModal" class="modal-overlay">
         <div class="modal-box game-over-box">
-            <h2>🏁 Fin de la partida</h2>
+            <h2>Fin de la partida</h2>
             <div id="finalRankList" class="final-rank-list"></div>
             <div class="modal-buttons">
                 <button class="modal-btn btn-outline" onclick="closeGameOverModal()">Ver tablero</button>
@@ -152,8 +134,8 @@
     </header>
 
     <div id="hostWarningBar" class="host-warning-bar" style="display:none;">
-        <span>⚠️ El anfitrión se desconectó</span>
-        <button class="modal-btn btn-primary" onclick="claimHost()">Ser anfitrión</button>
+        <span>El anfitrion se desconecto</span>
+        <button class="modal-btn btn-primary" onclick="claimHost()">Ser anfitrion</button>
     </div>
 
     <!-- SALA DE ESPERA / CONFIGURAR ORDEN -->

@@ -3,8 +3,6 @@ const SESSION_KEY = 'yatzy_session_v1';
 const REGISTRY_KEY = 'yatzy_players_v1';
 
 // ===== DETECCION DE PARAMETROS URL (LINKS DE INVITACION) =====
-// Permite compartir un link tipo ?nombre=Leo&sala=ABCD que precarga
-// el nombre y abre el modal de "Unirse" con el codigo ya escrito.
 (function detectarYGuardarParamsURL() {
     const urlParams = new URLSearchParams(window.location.search);
     const nombre = urlParams.get('nombre');
@@ -34,23 +32,6 @@ function getPrefilledRoom() {
         return room;
     }
     return null;
-}
-
-// Aplica los datos de la URL a los campos del lobby al cargar la pagina.
-function applyPrefillFromURL() {
-    const nombre = getPrefilledName();
-    const sala = getPrefilledRoom();
-
-    if (nombre) {
-        const nameInput = document.getElementById('playerName');
-        if (nameInput) nameInput.value = nombre;
-    }
-
-    if (sala) {
-        const codeInput = document.getElementById('roomCodeInput');
-        if (codeInput) codeInput.value = sala;
-        showJoinModal();
-    }
 }
 
 function persistSession() {

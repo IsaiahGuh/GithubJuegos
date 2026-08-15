@@ -188,7 +188,6 @@ function handleCategoryTap(catId) {
     if (!gameStarted || !isMyTurn()) return;
 
     if (jokerModeActive) {
-        // Deshacer el Yatzy extra antes de elegir donde usar el comodin (toca la casilla de Yatzy otra vez)
         if (catId === 'yatzy') { undoExtraYatzy(); return; }
         if (myScores[catId] !== null) return;
         const eligible = jokerEligibleCategories();
@@ -198,7 +197,6 @@ function handleCategoryTap(catId) {
     }
 
     if (markedThisTurn) {
-        // Deshacer: toca de nuevo la misma casilla que acabas de anotar este turno.
         if (catId === lastMarkedCatId) undoLastCategory();
         return;
     }
@@ -222,7 +220,7 @@ function undoLastCategory() {
     lastMarkedCatId = null;
     lastMarkedWasJoker = false;
     markedThisTurn = false;
-    if (wasJoker) jokerModeActive = true; // vuelve a ofrecer las casillas de comodin para elegir de nuevo
+    if (wasJoker) jokerModeActive = true;
     saveState();
     renderDice(); renderScores();
     sfxUndo();
@@ -292,79 +290,46 @@ function broadcastSync(action = 'sync') {
     }
 }
 
-// ===== LOBBY: NOMBRE / MODOS =====
-function getPlayerName() {
-    const name = document.getElementById('playerName').value.trim();
-    return name || "Jugador " + Math.floor(Math.random() * 100);
-}
-function playSolo() {
-    document.getElementById('lobbyModal').style.display = 'none';
-    myName = getPlayerName();
-    myId = Math.random().toString(36).substr(2, 9);
-    turnOrder = [myId];
-    playerColors = { [myId]: 'rojo' };
-    currentTurnIndex = 0;
-    gameStarted = true;
-    gameFinished = false;
-    myScores = emptyScores();
-    myExtraYatzys = 0;
-    playersData[myId] = { name: myName, color: 'rojo', scores: myScores, extraYatzys: 0, score: 0 };
-    document.getElementById('preGamePanel').style.display = 'none';
-    document.getElementById('gameArea').style.display = 'flex';
-    document.getElementById('leaderboardPanel').style.display = 'none';
-    afterTurnBecameMine();
-    renderTurnBanner(); renderDice(); renderScores();
-}
-function showJoinModal() {
-    document.getElementById('lobbyModal').style.display = 'none';
-    document.getElementById('joinModal').style.display = 'flex';
-}
-function backToLobby() {
-    document.getElementById('joinModal').style.display = 'none';
-    document.getElementById('lobbyModal').style.display = 'flex';
-}
+// ===== LOBBY: ENTRAR SALA (estilo Quixx) =====
+function entrarSala() {
+    var nombre = localStorage.getItem('yatzy_nombre_prefill');
+    var sala = localStorage.getItem('yatzy_sala_prefill');
 
-// ===== CREAR / UNIRSE A SALA =====
-function createRoom() {
-    myName = getPlayerName();
-    myId = Math.random().toString(36).substr(2, 9);
-    myScores = emptyScores();
-    myExtraYatzys = 0;
-    isRoomCreator = true;
-    hostId = myId;
-    pendingOrder = [];
-    const code = Math.random().toString(36).substring(2, 6).toUpperCase();
-    connectToRoom(code);
-}
-function joinRoom() {
-    myName = getPlayerName();
-    const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-    if (code.length !== 4) { showNotice("El codigo debe tener 4 letras/numeros.", "Codigo invalido"); return; }
-    isRoomCreator = false;
-
-    const known = getRegistryEntry(code, myName);
-    if (known) {
-        myId = known.id;
-        myScores = known.scores || emptyScores();
-        myExtraYatzys = known.extraYatzys || 0;
-        connectToRoom(code, true);
+    if (!nombre) {
+        showNotice('No se ha configurado un nombre. Usa ?nombre=XXX en la URL.', 'Falta nombre');
         return;
     }
 
+    if (!sala || sala.length !== 4) {
+        showNotice('No se ha configurado una sala valida. Usa ?sala=XXXX en la URL.', 'Sala invalida');
+        return;
+    }
+
+    myName = nombre;
     myId = Math.random().toString(36).substr(2, 9);
     myScores = emptyScores();
     myExtraYatzys = 0;
-    connectToRoom(code);
+    myBonusAnnounced = false;
+    markedThisTurn = false;
+    jokerModeActive = false;
+    lastMarkedCatId = null;
+    lastMarkedWasJoker = false;
+    isRoomCreator = false;
+    hostId = null;
+
+    localStorage.removeItem('yatzy_nombre_prefill');
+    localStorage.removeItem('yatzy_sala_prefill');
+
+    connectToRoom(sala.toUpperCase());
 }
 
 // ===== EXITO AL UNIRSE =====
 function joinSuccess(code) {
     hideLoading();
     document.getElementById('lobbyModal').style.display = 'none';
-    document.getElementById('joinModal').style.display = 'none';
-    const info = document.getElementById('roomInfoDisplay');
+    var info = document.getElementById('roomInfoDisplay');
     info.style.display = 'inline-block';
-    info.textContent = `SALA: ${code}`;
+    info.textContent = 'SALA: ' + code;
     document.getElementById('leaderboardPanel').style.display = 'flex';
     document.getElementById('gameLogPanel').style.display = 'flex';
     renderPreGame(); renderTurnBanner(); renderDice(); renderScores(); renderLeaderboard(); renderLog();
