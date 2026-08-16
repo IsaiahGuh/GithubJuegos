@@ -1,6 +1,7 @@
 // ===== PUNTO DE ENTRADA PRINCIPAL =====
 document.addEventListener('DOMContentLoaded', function() {
     renderBoard();
+    renderLog();
     mostrarDatosURL();
     
     var session = loadSession();
@@ -24,6 +25,16 @@ document.addEventListener('DOMContentLoaded', function() {
             reconnectBtn.style.cursor = 'not-allowed';
         }
     }
+
+    // Desbloquea el audio en la primera interaccion (requisito de los navegadores).
+    document.addEventListener('pointerdown', primeAudio, { once: true });
+
+    // Sonido generico de click para cualquier boton de modal, salvo los que ya
+    // tienen su propio sonido especifico (los de la zona de turno).
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.modal-btn');
+        if (btn && !btn.closest('#turnControls')) sfxButton();
+    }, true);
 });
 
 // ===== MOSTRAR DATOS DESDE URL =====
@@ -55,3 +66,11 @@ window.acceptClaim = acceptClaim;
 window.declineClaim = declineClaim;
 window.startGame = startGame;
 window.endTurn = endTurn;
+window.closeEndTurnReminder = closeEndTurnReminder;
+window.endTurnFromReminder = endTurnFromReminder;
+window.closeGameOverAndReset = closeGameOverAndReset;
+window.closeNotice = closeNotice;
+window.closeViewPlayer = closeViewPlayer;
+window.closeRemovePlayerModal = closeRemovePlayerModal;
+window.confirmRemovePlayer = confirmRemovePlayer;
+window.claimHost = claimHost;
