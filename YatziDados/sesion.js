@@ -38,7 +38,8 @@ function persistSession() {
     if (!currentRoom) return;
     try {
         localStorage.setItem(SESSION_KEY, JSON.stringify({
-            roomCode: currentRoom, myId, myName, scores: myScores, extraYatzys: myExtraYatzys, updatedAt: Date.now()
+            roomCode: currentRoom, myId, myName, scores: myScores, extraYatzys: myExtraYatzys,
+            color: playerColors[myId] || null, updatedAt: Date.now()
         }));
     } catch (e) { console.error("No se pudo guardar la sesion", e); }
 }
@@ -55,7 +56,7 @@ function persistRegistry() {
     if (!currentRoom) return;
     try {
         const registry = loadRegistry();
-        registry[registryKey(currentRoom, myName)] = { id: myId, scores: myScores, extraYatzys: myExtraYatzys, updatedAt: Date.now() };
+        registry[registryKey(currentRoom, myName)] = { id: myId, scores: myScores, extraYatzys: myExtraYatzys, color: playerColors[myId] || null, updatedAt: Date.now() };
         localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry));
     } catch (e) { console.error("No se pudo guardar el registro de jugador", e); }
 }
@@ -72,6 +73,9 @@ function reconnectToSession() {
     myScores = session.scores || emptyScores();
     myExtraYatzys = session.extraYatzys || 0;
     isRoomCreator = false;
+    // Restauramos el color que tenia antes de perder la conexion, para que al re-unirse
+    // se anuncie con su color original en vez de sin color.
+    if (session.color) playerColors[myId] = session.color;
     connectToRoom(session.roomCode, true);
 }
 function dismissSession() {

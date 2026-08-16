@@ -77,3 +77,7 @@ window.closeResetGameModal = closeResetGameModal;
 window.confirmGameReset = confirmGameReset;
 window.closeNotice = closeNotice;
 window.claimHost = claimHost;
+window.closeEndTurnReminder = closeEndTurnReminder;
+window.endTurnFromReminder = endTurnFromReminder;
+window.closeRemovePlayerModal = closeRemovePlayerModal;
+window.confirmRemovePlayer = confirmRemovePlayer;

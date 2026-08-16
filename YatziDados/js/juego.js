@@ -31,8 +31,8 @@ const CATEGORIES = [
     { id: 'threeKind',     section: 'lower', label: '3 del mismo numero',    iconType: 'text', icon: '3X',  calc: d => hasCountAtLeast(d, 3) ? sumAll(d) : 0 },
     { id: 'fourKind',      section: 'lower', label: '4 del mismo numero',    iconType: 'text', icon: '4X',  calc: d => hasCountAtLeast(d, 4) ? sumAll(d) : 0 },
     { id: 'fullHouse',     section: 'lower', label: 'Full (3+2)',            iconType: 'house', calc: d => isFullHouse(d) ? 25 : 0 },
-    { id: 'smallStraight', section: 'lower', label: 'Secuencia de 4',        iconType: 'cards', sub: 'SMALL', calc: d => isSmallStraight(d) ? 30 : 0 },
-    { id: 'largeStraight', section: 'lower', label: 'Secuencia de 5',        iconType: 'cards', sub: 'LARGE', calc: d => isLargeStraight(d) ? 40 : 0 },
+    { id: 'smallStraight', section: 'lower', label: 'Secuencia de 4',        iconType: 'cards', sub: 'SMALL', cardCount: 4, calc: d => isSmallStraight(d) ? 30 : 0 },
+    { id: 'largeStraight', section: 'lower', label: 'Secuencia de 5',        iconType: 'cards', sub: 'LARGE', cardCount: 5, calc: d => isLargeStraight(d) ? 40 : 0 },
     { id: 'yatzy',         section: 'lower', label: 'Yatzy (5 iguales)',     iconType: 'yatzy', calc: d => isYatzy(d) ? 50 : 0 },
     { id: 'chance',        section: 'lower', label: 'Probabilidad',         iconType: 'text', icon: '?', calc: d => sumAll(d) }
 ];
@@ -69,6 +69,33 @@ const PLAYER_COLORS = [
 function colorHexOf(colorId) {
     const found = PLAYER_COLORS.find(c => c.id === colorId);
     return found ? found.hex : '#808BC3';
+}
+
+// ===== ASIGNACION "PEGAJOSA" DE COLORES (nunca duplicados, se mantienen por jugador) =====
+// Reutiliza el color que cada jugador ya tenia (si sigue siendo valido y no esta tomado
+// por otro jugador en el mismo calculo) y solo asigna colores nuevos a quien no tiene.
+// Esto garantiza que 2 jugadores nunca compartan color y que el color de un jugador
+// se mantenga igual desde la sala de espera, durante la partida y en el resumen final.
+function computeStickyColors(order, existingColors) {
+    existingColors = existingColors || {};
+    const colors = {};
+    const used = new Set();
+    order.forEach(id => {
+        const existing = existingColors[id];
+        if (existing && PLAYER_COLORS.some(c => c.id === existing) && !used.has(existing)) {
+            colors[id] = existing;
+            used.add(existing);
+        }
+    });
+    const allIds = PLAYER_COLORS.map(c => c.id);
+    order.forEach((id, idx) => {
+        if (colors[id]) return;
+        const free = allIds.find(cid => !used.has(cid));
+        const chosen = free || allIds[idx % allIds.length];
+        colors[id] = chosen;
+        used.add(chosen);
+    });
+    return colors;
 }
 
 function emptyScores() {
@@ -121,7 +148,7 @@ function addLogEntry(entry, shouldBroadcast) {
     if (gameLog.length > LOG_MAX_ENTRIES) gameLog.splice(0, gameLog.length - LOG_MAX_ENTRIES);
     renderLog();
     if (shouldBroadcast && currentRoom && mqttClient) {
-        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'log_entry', id: myId, entry }));
+        publishRoom({ action: 'log_entry', id: myId, entry });
     }
 }
 function renderLog() {
@@ -173,7 +200,8 @@ function applyJokerScore(catId) {
 
 function grantExtraYatzy() {
     myExtraYatzys++;
-    logMove('yatzy_extra', {});
+    // No se registra aqui: si el jugador deshace este Yatzy extra antes de finalizar
+    // turno, no debe quedar rastro. Se registra al finalizar turno si se mantuvo.
     const msg = `${myName} logro otro YATZY! +100 bono`;
     queueEvent('extra_yatzy', msg);
     jokerModeActive = true;
@@ -214,12 +242,14 @@ function undoLastCategory() {
     const wasJoker = lastMarkedWasJoker;
     const catId = lastMarkedCatId;
     myScores[catId] = null;
-    logMove('score', { catId, action: 'unmark' });
+    // No se registra el deshacer: es parte de la indecision del jugador, no de su
+    // decision final (que se registra al finalizar turno).
     dequeueEvent('yatzy');
     checkBonusJustCompleted();
     lastMarkedCatId = null;
     lastMarkedWasJoker = false;
     markedThisTurn = false;
+    cancelEndTurnReminder();
     if (wasJoker) jokerModeActive = true;
     saveState();
     renderDice(); renderScores();
@@ -231,7 +261,7 @@ function undoExtraYatzy() {
     if (myExtraYatzys <= 0) return;
     myExtraYatzys--;
     jokerModeActive = false;
-    logMove('yatzy_extra', { action: 'undo' });
+    // No se registra: es parte de la indecision, no de la decision final.
     dequeueEvent('extra_yatzy');
     saveState();
     renderScores();
@@ -245,7 +275,10 @@ function lockCategory(catId, value, opts = {}) {
     jokerModeActive = false;
     lastMarkedCatId = catId;
     lastMarkedWasJoker = !!opts.joker;
-    logMove('score', { catId, value, auto: !!opts.joker });
+    // No se registra aqui en el "registro de movimientos": si el jugador esta indeciso
+    // y marca/deshace varias veces antes de finalizar turno, no queremos que se vea ese
+    // vaiven. Solo se registra la decision final al presionar "Finalizar Turno" (ver endTurn).
+    scheduleEndTurnReminder();
 
     const isYatzyScore = (catId === 'yatzy' && value === 50);
     if (isYatzyScore) {
@@ -281,13 +314,11 @@ function saveState() {
     }
 }
 function broadcastSync(action = 'sync') {
-    if (mqttClient && currentRoom) {
-        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({
-            action, id: myId, name: myName, color: playerColors[myId] || null,
-            scores: myScores, extraYatzys: myExtraYatzys, score: totalScore(myScores, myExtraYatzys),
-            hostId
-        }));
-    }
+    publishRoom({
+        action, id: myId, name: myName, color: playerColors[myId] || null,
+        scores: myScores, extraYatzys: myExtraYatzys, score: totalScore(myScores, myExtraYatzys),
+        hostId
+    });
 }
 
 // ===== LOBBY: ENTRAR SALA (estilo Quixx) =====
@@ -316,6 +347,7 @@ function entrarSala() {
     lastMarkedWasJoker = false;
     isRoomCreator = false;
     hostId = null;
+    cancelEndTurnReminder();
 
     localStorage.removeItem('yatzy_nombre_prefill');
     localStorage.removeItem('yatzy_sala_prefill');
