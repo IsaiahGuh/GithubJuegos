@@ -9,6 +9,9 @@ var claimResolved = false;
 var pendingClaim = null;
 var gameStarted = false;
 var gameInitiator = null;
+var hostId = null; // id del jugador anfitrion de la sala (unico que puede reiniciar)
+var hostClaimTimer = null;
+var hostHeartbeatInterval = null;
 
 function connectToRoom(code, isReconnect) {
     if (isReconnect === undefined) isReconnect = false;
@@ -24,8 +27,18 @@ function connectToRoom(code, isReconnect) {
         avanzando = false;
         gameStarted = false;
         gameInitiator = null;
+        hostId = null;
     }
-    
+
+    if (hostClaimTimer) {
+        clearTimeout(hostClaimTimer);
+        hostClaimTimer = null;
+    }
+    if (hostHeartbeatInterval) {
+        clearInterval(hostHeartbeatInterval);
+        hostHeartbeatInterval = null;
+    }
+
     showLoading(isReconnect ? 'Reconectando a la sala...' : 'Conectando con la sala...');
     claimResolved = isReconnect;
     pendingClaim = null;
@@ -54,11 +67,36 @@ function connectToRoom(code, isReconnect) {
         
         joinSuccess(code);
         broadcastState('join');
-        
-        if (!isReconnect) {
-            broadcastRequestState();
+
+        // Siempre pedimos el estado actual a los demas: esto es clave para que
+        // alguien que se desconecto (celular apagado, salio de la pagina, etc.)
+        // reciba el estado real y actualizado al reconectar, en vez de quedarse
+        // con su copia local desactualizada.
+        broadcastRequestState();
+
+        // Determinar anfitrion: si nadie responde con un hostId conocido en un
+        // par de segundos, este jugador se autoproclama anfitrion.
+        if (!hostId) {
+            hostClaimTimer = setTimeout(function() {
+                if (!hostId) {
+                    hostId = myId;
+                    broadcastHostClaim();
+                    actualizarUI();
+                    saveSession();
+                }
+            }, 1800);
         }
-        
+
+        // El anfitrion reenvia el estado completo cada cierto tiempo para
+        // autocorregir a cualquier cliente que haya perdido mensajes por la
+        // red (MQTT publica sin garantia de entrega).
+        if (hostHeartbeatInterval) clearInterval(hostHeartbeatInterval);
+        hostHeartbeatInterval = setInterval(function() {
+            if (hostId === myId && currentRoom) {
+                broadcastState('sync');
+            }
+        }, 15000);
+
         saveSession();
     });
 
@@ -124,6 +162,30 @@ function connectToRoom(code, isReconnect) {
                 }
                 resetLocalGame();
                 return;
+            }
+
+            if (data.action === 'host_claim') {
+                // Si no tenemos anfitrion, o el que llega tiene id "menor"
+                // (para resolver empates si dos se autoproclaman a la vez),
+                // adoptamos ese id como anfitrion.
+                if (!hostId || data.id < hostId) {
+                    hostId = data.id;
+                    if (hostClaimTimer) {
+                        clearTimeout(hostClaimTimer);
+                        hostClaimTimer = null;
+                    }
+                    actualizarUI();
+                    saveSession();
+                }
+                return;
+            }
+
+            if (data.hostId && (!hostId || data.hostId < hostId)) {
+                hostId = data.hostId;
+                if (hostClaimTimer) {
+                    clearTimeout(hostClaimTimer);
+                    hostClaimTimer = null;
+                }
             }
 
             if (data.action === 'start') {
@@ -365,9 +427,10 @@ function broadcastState(action) {
             gameInitiator: gameInitiator || null,
             playersData: playersData,
             puntosPorJugador: puntosPorJugador,
-            estadoRonda: estadoRonda
+            estadoRonda: estadoRonda,
+            hostId: hostId || null
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -378,7 +441,18 @@ function broadcastRequestState() {
             action: 'request_state',
             id: myId
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
+    }
+}
+
+function broadcastHostClaim() {
+    if (mqttClient && currentRoom) {
+        var topic = 'magical_athlete/room/' + currentRoom;
+        var payload = JSON.stringify({
+            action: 'host_claim',
+            id: myId
+        });
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -394,9 +468,10 @@ function broadcastStart(cartasArray, tanda) {
             gameStarted: true,
             playersData: playersData,
             puntosPorJugador: puntosPorJugador,
-            estadoRonda: estadoRonda
+            estadoRonda: estadoRonda,
+            hostId: hostId || null
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
         gameStarted = true;
         gameInitiator = myId;
         tandaActual = tanda !== undefined ? tanda : 0;
@@ -414,7 +489,7 @@ function broadcastSelect(cartaId) {
             selecciones: misSelecciones || [],
             tandaActual: tandaActual
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -426,7 +501,7 @@ function broadcastNextTanda(nuevaTanda) {
             id: myId,
             tandaActual: nuevaTanda
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -441,7 +516,7 @@ function broadcastPuntajeGlobal(tipo) {
             puntos: puntosPorJugador[myId],
             cartaId: estadoRonda.ganadorCartaId || null
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -453,7 +528,7 @@ function broadcastEstadoRonda() {
             id: myId,
             estado: estadoRonda
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -464,7 +539,7 @@ function broadcastRemove(idToRemove) {
             action: 'remove',
             id: idToRemove
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -476,7 +551,7 @@ function broadcastReset() {
             id: myId,
             name: myName
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -493,7 +568,7 @@ function broadcastClaimOffer(targetId, offeredId) {
             selecciones: cached.selecciones || [],
             cartasGanadoras: cached.cartasGanadoras || []
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -505,7 +580,7 @@ function broadcastSetActive(playerId, activeCardId) {
             id: playerId,
             activeCardId: activeCardId
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 window.broadcastSetActive = broadcastSetActive;

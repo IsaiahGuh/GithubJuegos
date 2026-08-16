@@ -150,77 +150,9 @@ function avanzarTanda() {
 window.avanzarTanda = avanzarTanda;
 window.verificarYAvanzarTanda = verificarYAvanzarTanda;
 
-function renderizarMisCorredores() {
-    var container = document.getElementById('my-cards-container');
-    container.innerHTML = '';
-    if (misSelecciones.length === 0) {
-        var empty = document.createElement('div');
-        empty.className = 'empty-message';
-        empty.textContent = 'Aun no has seleccionado corredores';
-        container.appendChild(empty);
-        return;
-    }
-    // Obtener cartas no descartadas de mis selecciones (incluyendo ganadoras)
-    var misCartas = [];
-    for (var i = 0; i < misSelecciones.length; i++) {
-        var cId = misSelecciones[i];
-        var carta = null;
-        for (var j = 0; j < cartas.length; j++) {
-            if (cartas[j].id === cId) {
-                carta = cartas[j];
-                break;
-            }
-        }
-        if (carta && !carta.descartada) {
-            misCartas.push(carta);
-        }
-    }
-    if (misCartas.length === 0) {
-        var empty2 = document.createElement('div');
-        empty2.className = 'empty-message';
-        empty2.textContent = 'No tienes cartas disponibles';
-        container.appendChild(empty2);
-        return;
-    }
-    var activeId = playersData[myId] ? playersData[myId].activeCardId : null;
-    for (var k = 0; k < misCartas.length; k++) {
-        var carta = misCartas[k];
-        var esActiva = (activeId === carta.id);
-        var esGanadora = carta.esGanadora || false;
-        var wrapper = document.createElement('div');
-        wrapper.className = 'my-card-wrapper' + (esActiva ? ' activa' : '') + (esGanadora ? ' ganadora' : '');
-        var imgContainer = document.createElement('div');
-        imgContainer.className = 'my-card-img';
-        var img = document.createElement('img');
-        img.src = carta.imagen;
-        img.alt = 'Corredor ' + carta.numero;
-        imgContainer.appendChild(img);
-        var num = document.createElement('div');
-        num.className = 'mini-number';
-        num.textContent = '#' + carta.numero;
-        imgContainer.appendChild(num);
-        if (esGanadora) {
-            var badge = document.createElement('div');
-            badge.className = 'ganadora-badge';
-            badge.textContent = 'GANADORA';
-            imgContainer.appendChild(badge);
-        }
-        wrapper.appendChild(imgContainer);
-        var btnUsar = document.createElement('button');
-        btnUsar.className = 'btn-sm btn-usar';
-        btnUsar.textContent = 'Usar';
-        if (carta.esGanadora || carta.descartada) {
-            btnUsar.disabled = true;
-        }
-        btnUsar.addEventListener('click', function(cId) {
-            return function() {
-                setActiveCard(cId);
-            };
-        }(carta.id));
-        wrapper.appendChild(btnUsar);
-        container.appendChild(wrapper);
-    }
-}
+// NOTA: renderizarMisCorredores() vive en ui.js (se carga despues de este
+// archivo y sobrescribe cualquier definicion aqui). Se elimino la copia
+// duplicada que existia en este archivo para evitar que quedara desactualizada.
 
 // ========== FUNCIONES PARA INTERCAMBIO ==========
 function mostrarModalSeleccion(cartasDisponibles, titulo, callback) {
@@ -263,11 +195,19 @@ function cerrarIntercambio() {
 }
 window.cerrarIntercambio = cerrarIntercambio;
 
-// --- CARTA 17: muestra 3 cartas al azar que NO sean ganadoras ni 17/33 ---
+// --- CARTA 17: muestra 3 cartas al azar que YA hayan salido (repartidas), NO sean ganadoras ni 17/33, sin repetir numero ---
 function intercambiarPor17(cartaActual) {
-    // Filtrar cartas que no sean ganadoras y no sean 17 ni 33
+    // Solo cartas de tandas ya repartidas (no cartas de tandas futuras aun no reveladas),
+    // que no sean ganadoras, no sean ella misma, no sean 17 ni 33, y sin numeros duplicados.
+    var vistos = {};
     var filtradas = cartas.filter(function(c) {
-        return !c.esGanadora && c.numero !== 17 && c.numero !== 33;
+        if (c.id === cartaActual.id) return false;
+        if (c.esGanadora) return false;
+        if (c.numero === 17 || c.numero === 33) return false;
+        if (c.tanda > tandaActual) return false; // aun no ha salido
+        if (vistos[c.numero]) return false;
+        vistos[c.numero] = true;
+        return true;
     });
     if (filtradas.length === 0) {
         alert('No hay cartas disponibles para copiar (sin ganadoras ni especiales).');
@@ -290,6 +230,9 @@ function intercambiarPor17(cartaActual) {
         // Activar la carta actual
         playersData[myId].activeCardId = cartaActual.id;
         broadcastSetActive(myId, cartaActual.id);
+        // Sincronizar de inmediato el estado completo para que todos vean la
+        // identidad copiada y el descarte funcione correctamente despues.
+        broadcastState('sync');
         renderizarCartas();
         renderizarMisCorredores();
         actualizarUI();
@@ -312,6 +255,9 @@ function intercambiarPor33(cartaActual) {
         cartaActual.imagen = cartaElegida.imagen;
         playersData[myId].activeCardId = cartaActual.id;
         broadcastSetActive(myId, cartaActual.id);
+        // Sincronizar de inmediato el estado completo para que todos vean la
+        // identidad copiada y el descarte funcione correctamente despues.
+        broadcastState('sync');
         renderizarCartas();
         renderizarMisCorredores();
         actualizarUI();
@@ -335,6 +281,25 @@ function setActiveCard(cartaId) {
         return;
     }
 
+    var activeActual = playersData[myId].activeCardId;
+
+    // Si la carta clickeada YA es la activa: solo permitir desactivarla
+    // (no reabrir el intercambio de 17/33, para no permitir cambiar de "copia").
+    if (activeActual === cartaId) {
+        playersData[myId].activeCardId = null;
+        broadcastSetActive(myId, null);
+        renderizarMisCorredores();
+        actualizarUI();
+        saveSession();
+        return;
+    }
+
+    // Si ya hay OTRA carta activa esta ronda, no se permite cambiar de corredor.
+    if (activeActual) {
+        alert('Ya elegiste tu corredor para usar esta ronda. No puedes cambiar de carta hasta la proxima ronda.');
+        return;
+    }
+
     // ========== CARTAS ESPECIALES ==========
     if (carta.numero === 17) {
         intercambiarPor17(carta);
@@ -346,13 +311,9 @@ function setActiveCard(cartaId) {
     }
     // =======================================
 
-    // Comportamiento normal: activar/desactivar
-    if (playersData[myId].activeCardId === cartaId) {
-        playersData[myId].activeCardId = null;
-    } else {
-        playersData[myId].activeCardId = cartaId;
-    }
-    broadcastSetActive(myId, playersData[myId].activeCardId);
+    // Comportamiento normal: activar
+    playersData[myId].activeCardId = cartaId;
+    broadcastSetActive(myId, cartaId);
     renderizarMisCorredores();
     actualizarUI();
     saveSession();
@@ -398,8 +359,42 @@ function descartarActivas(ganadorId) {
     renderizarMisCorredores();
     actualizarUI();
     saveSession();
+    // Reenvio redundante: la red MQTT publica sin garantia de entrega, asi que
+    // se reenvia el estado poco despues para autocorregir a jugadores que
+    // hayan perdido el primer mensaje (por ejemplo, si se reconectaron justo
+    // en ese momento).
+    setTimeout(function() {
+        broadcastState('sync');
+    }, 700);
 }
 window.descartarActivas = descartarActivas;
+
+// Devuelve true solo si todos los jugadores que aun tienen cartas en juego
+// ya eligieron (boton "Usar") la carta que van a usar esta ronda.
+function todosEligieronCarta() {
+    for (var id in playersData) {
+        var data = playersData[id];
+        if (!data) continue;
+        var tieneCartas = false;
+        if (data.selecciones) {
+            for (var i = 0; i < data.selecciones.length; i++) {
+                var cId = data.selecciones[i];
+                for (var j = 0; j < cartas.length; j++) {
+                    if (cartas[j].id === cId && !cartas[j].descartada) {
+                        tieneCartas = true;
+                        break;
+                    }
+                }
+                if (tieneCartas) break;
+            }
+        }
+        if (tieneCartas && !data.activeCardId) {
+            return false;
+        }
+    }
+    return true;
+}
+window.todosEligieronCarta = todosEligieronCarta;
 
 function actualizarUI() {
     var startBtn = document.getElementById('startGameBtn');
@@ -410,6 +405,11 @@ function actualizarUI() {
     var puntosDisplay = document.getElementById('misPuntosDisplay');
     if (puntosDisplay && puntosPorJugador[myId] !== undefined) {
         puntosDisplay.textContent = 'Puntos: ' + puntosPorJugador[myId];
+    }
+    var resetBtn = document.getElementById('resetGameBtn');
+    if (resetBtn) {
+        var esAnfitrion = !currentRoom || !hostId || hostId === myId;
+        resetBtn.style.display = esAnfitrion ? '' : 'none';
     }
     renderLeaderboard();
     renderizarMisCorredores();
@@ -475,6 +475,10 @@ window.actualizarUI = actualizarUI;
 function resetGlobalGame() {
     if (!currentRoom) {
         resetLocalGame();
+        return;
+    }
+    if (hostId && hostId !== myId) {
+        alert('Solo el anfitrion de la sala puede reiniciar la partida.');
         return;
     }
     if (!confirm('Reiniciar la partida para TODOS los jugadores? Se perderan las selecciones y puntajes.')) {

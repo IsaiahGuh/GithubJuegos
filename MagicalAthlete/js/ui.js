@@ -136,8 +136,11 @@ function renderizarMisCorredores() {
         wrapper.appendChild(imgContainer);
         var btnUsar = document.createElement('button');
         btnUsar.className = 'btn-sm btn-usar';
-        btnUsar.textContent = 'Usar';
+        btnUsar.textContent = esActiva ? 'En uso' : 'Usar';
         if (carta.esGanadora || carta.descartada) {
+            btnUsar.disabled = true;
+        } else if (activeId && !esActiva) {
+            // Ya elegiste otra carta para esta ronda: no se puede cambiar.
             btnUsar.disabled = true;
         }
         btnUsar.addEventListener('click', function(cId) {

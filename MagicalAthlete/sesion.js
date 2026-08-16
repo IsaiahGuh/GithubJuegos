@@ -50,6 +50,7 @@ function saveSession() {
             cartaActivaId: cartaActivaId,
             playersData: playersData,
             tandaActual: tandaActual,
+            hostId: hostId || null,
             updatedAt: Date.now()
         }));
     } catch (e) {
@@ -66,6 +67,7 @@ function loadSession() {
             estadoRonda = data.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
             cartaActivaId = data.cartaActivaId || null;
             tandaActual = data.tandaActual !== undefined ? data.tandaActual : 0;
+            hostId = data.hostId || null;
             if (data.playersData) {
                 playersData = data.playersData;
                 var seenNames = {};
@@ -162,6 +164,7 @@ function reconnectToSession() {
     estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
     cartaActivaId = session.cartaActivaId || null;
     tandaActual = session.tandaActual !== undefined ? session.tandaActual : 0;
+    hostId = session.hostId || null;
     if (session.playersData) {
         playersData = session.playersData;
     }

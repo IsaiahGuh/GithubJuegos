@@ -60,6 +60,7 @@ function entrarSala() {
     cartaActivaId = null;
     gameStarted = false;
     gameInitiator = null;
+    hostId = null;
     
     var session = loadSession();
     if (session && session.roomCode === sala && session.myName === nombre) {
@@ -71,6 +72,7 @@ function entrarSala() {
         puntosPorJugador = session.puntosPorJugador || {};
         estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
         cartaActivaId = session.cartaActivaId || null;
+        hostId = session.hostId || null;
         if (session.playersData) {
             playersData = session.playersData;
         }
