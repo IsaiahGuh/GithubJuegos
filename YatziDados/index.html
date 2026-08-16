@@ -115,6 +115,29 @@
         </div>
     </div>
 
+    <!-- ELIMINAR JUGADOR DURANTE LA PARTIDA (SOLO ANFITRION, PIDE CONFIRMACION) -->
+    <div id="removePlayerModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Eliminar jugador</h3>
+            <p id="removePlayerText">¿Seguro que quieres eliminar a este jugador de la partida?</p>
+            <div class="modal-buttons row-btns">
+                <button class="modal-btn btn-outline" onclick="closeRemovePlayerModal()">Cancelar</button>
+                <button class="modal-btn btn-danger" onclick="confirmRemovePlayer()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECORDATORIO DE FINALIZAR TURNO -->
+    <div id="endTurnReminderModal" class="modal-overlay" onclick="closeEndTurnReminder()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3>Ya anotaste</h3>
+            <p>No olvides presionar "Finalizar Turno" para que le toque al siguiente jugador.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-primary" onclick="endTurnFromReminder()">Finalizar Turno</button>
+            </div>
+        </div>
+    </div>
+
     <!-- FIN DE LA PARTIDA -->
     <div id="gameOverModal" class="modal-overlay">
         <div class="modal-box game-over-box">
@@ -132,11 +155,6 @@
         <h1>Yatzy</h1>
         <div id="roomInfoDisplay" class="room-info" style="display:none;"></div>
     </header>
-
-    <div id="hostWarningBar" class="host-warning-bar" style="display:none;">
-        <span>El anfitrion se desconecto</span>
-        <button class="modal-btn btn-primary" onclick="claimHost()">Ser anfitrion</button>
-    </div>
 
     <!-- PANTALLA DE JUEGO (siempre visible tras unirse) -->
     <div id="gameArea" class="app-container" style="display:none;">
