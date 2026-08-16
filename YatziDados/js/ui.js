@@ -19,13 +19,77 @@ function pipsHTML(value) {
     return `<svg class="dice-svg" viewBox="0 0 100 100">${dots}</svg>`;
 }
 const HOUSE_SVG = '<svg class="cat-icon-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M9.5 19.5V14h5v5.5"/></svg>';
-const CARDS_SVG = '<svg class="cat-icon-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="12" height="15" rx="2" transform="rotate(-12 8.5 14.5)"/><rect x="8" y="3" width="12" height="15" rx="2"/></svg>';
+let _cardsMaskSeq = 0;
+function rotatePoint(x, y, cx, cy, angleDeg) {
+    const rad = angleDeg * Math.PI / 180;
+    const dx = x - cx, dy = y - cy;
+    return [cx + dx * Math.cos(rad) - dy * Math.sin(rad), cy + dx * Math.sin(rad) + dy * Math.cos(rad)];
+}
+function cardsIconSVG(count) {
+    const w = 6, h = 10, rx = 1.2, px = 12, py = 17;
+    const frontTilt = 16;
+    const spreadTable = { 2: 36, 4: 64, 5: 72 };
+    const spread = spreadTable[count] || 16 * (count - 1);
+    const step = count > 1 ? spread / (count - 1) : 0;
+    const angles = [];
+    for (let i = 0; i < count; i++) angles.push(frontTilt - spread + i * step);
+    const fx = px - w / 2, fy = py - h;
+    const rectAt = angle => `<rect x="${fx}" y="${fy}" width="${w}" height="${h}" rx="${rx}" transform="rotate(${angle} ${px} ${py})"/>`;
+    const rectAtFill = (angle, fill) => `<rect x="${fx}" y="${fy}" width="${w}" height="${h}" rx="${rx}" transform="rotate(${angle} ${px} ${py})" fill="${fill}"/>`;
+
+    // El abanico queda inclinado de forma asimetrica (angulos de frontTilt-spread a
+    // frontTilt), asi que su contorno real no coincide con el viewBox fijo 0 0 24 24:
+    // se ve corrido hacia un lado dentro de la casilla. Calculamos aqui el contorno
+    // real (las 4 esquinas de cada carta, rotadas) para usarlo como viewBox y para
+    // darle a la mascara una region explicita (ver mas abajo).
+    const corners = [[fx, fy], [fx + w, fy], [fx, fy + h], [fx + w, fy + h]];
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    angles.forEach(angle => {
+        corners.forEach(([x, y]) => {
+            const [rx2, ry2] = rotatePoint(x, y, px, py, angle);
+            minX = Math.min(minX, rx2); maxX = Math.max(maxX, rx2);
+            minY = Math.min(minY, ry2); maxY = Math.max(maxY, ry2);
+        });
+    });
+    const pad = 1;
+    const vbX = minX - pad, vbY = minY - pad, vbW = (maxX - minX) + pad * 2, vbH = (maxY - minY) + pad * 2;
+
+    // Region explicita, generosa, para cada <mask>. Sin esto, un <mask> sin x/y/width/height
+    // propios usa una region por defecto basada en porcentajes del viewport actual; al haber
+    // cambiado el viewBox fijo (0 0 24 24) por uno dinamico mas chico, esa region por defecto
+    // dejaba de cubrir todo el dibujo y recortaba trozos de las cartas traseras. Con una region
+    // explicita mas grande que el propio viewBox, la mascara siempre cubre todo el icono.
+    const maskPad = 20;
+    const maskRegionAttrs = `x="${vbX - maskPad}" y="${vbY - maskPad}" width="${vbW + maskPad * 2}" height="${vbH + maskPad * 2}"`;
+
+    // Cada carta trasera se enmascara solo donde las cartas de adelante la cubren, para que
+    // las lineas de sus bordes no se vean cruzando por encima/en el centro de las cartas
+    // que estan delante (tal como se penso originalmente).
+    let defs = '';
+    let body = '';
+    for (let i = 0; i < count; i++) {
+        if (i === count - 1) {
+            body += rectAt(angles[i]);
+            continue;
+        }
+        const maskId = `cardsFanMask${++_cardsMaskSeq}`;
+        let coverRects = '';
+        for (let j = i + 1; j < count; j++) coverRects += rectAtFill(angles[j], 'black');
+        defs += `<mask id="${maskId}" maskUnits="userSpaceOnUse" ${maskRegionAttrs}><rect ${maskRegionAttrs} fill="white"/>${coverRects}</mask>`;
+        body += `<g mask="url(#${maskId})">${rectAt(angles[i])}</g>`;
+    }
+
+    return `<svg class="cat-icon-svg" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" fill="none" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round">
+        <defs>${defs}</defs>
+        ${body}
+    </svg>`;
+}
 
 function catIconHTML(cat) {
     switch (cat.iconType) {
         case 'die': return pipsHTML(cat.dieValue);
         case 'house': return HOUSE_SVG;
-        case 'cards': return CARDS_SVG + `<span class="cat-sub">${cat.sub}</span>`;
+        case 'cards': return cardsIconSVG(cat.cardCount || 2) + `<span class="cat-sub">${cat.sub}</span>`;
         case 'yatzy': return '<span class="cat-yatzy">YATZY</span>';
         default: return `<span>${cat.icon}</span>`;
     }
@@ -97,6 +161,43 @@ function sfxUndo() { playTone(260, 0, 0.1, 'sawtooth', 0.08); playTone(180, 0.05
 function sfxTurnEnd() { playTone(340, 0, 0.12, 'sine', 0.09); playTone(230, 0.09, 0.18, 'sine', 0.07); }
 function sfxButton() { playTone(720, 0, 0.05, 'square', 0.05); }
 function sfxWin() { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => playTone(f, i * 0.12, 0.3, 'triangle', 0.15)); }
+function sfxReminder() { playTone(430, 0, 0.35, 'sine', 0.06); }
+
+// ===== RECORDATORIO DE FINALIZAR TURNO =====
+// Si el jugador ya anoto un puntaje (markedThisTurn) pero no presiona "Finalizar Turno",
+// le mostramos un modal con sonido para recordarselo, repitiendo el aviso si lo ignora.
+const END_TURN_REMINDER_FIRST_DELAY = 10000;  // ms antes del primer aviso
+const END_TURN_REMINDER_REPEAT_DELAY = 20000; // ms entre avisos si se sigue ignorando
+let endTurnReminderTimer = null;
+
+function scheduleEndTurnReminder(delay = END_TURN_REMINDER_FIRST_DELAY) {
+    clearTimeout(endTurnReminderTimer);
+    endTurnReminderTimer = setTimeout(() => {
+        if (markedThisTurn && isMyTurn()) showEndTurnReminder();
+    }, delay);
+}
+function cancelEndTurnReminder() {
+    clearTimeout(endTurnReminderTimer);
+    endTurnReminderTimer = null;
+    const modal = document.getElementById('endTurnReminderModal');
+    if (modal) modal.style.display = 'none';
+}
+function showEndTurnReminder() {
+    const modal = document.getElementById('endTurnReminderModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    sfxReminder();
+    // Si lo sigue ignorando, se lo volvemos a recordar mas adelante.
+    scheduleEndTurnReminder(END_TURN_REMINDER_REPEAT_DELAY);
+}
+function closeEndTurnReminder() {
+    const modal = document.getElementById('endTurnReminderModal');
+    if (modal) modal.style.display = 'none';
+}
+function endTurnFromReminder() {
+    cancelEndTurnReminder();
+    endTurn();
+}
 
 // ===== ANIMACIONES DE CELDAS =====
 function triggerPop(elId) {
@@ -116,6 +217,11 @@ function triggerShake(elId) {
 
 // ===== TOAST DE EVENTOS =====
 let pendingEvents = [];
+// Cola de mensajes a mostrar en el toast: si llegan varios casi al mismo tiempo
+// (ej. "Es tu turno" justo despues de un YATZY/BONO del jugador anterior), se
+// muestran uno tras otro en vez de que el ultimo pise al que estaba en pantalla.
+let toastQueue = [];
+let toastShowing = false;
 function queueEvent(tag, text) {
     pendingEvents = pendingEvents.filter(e => e.tag !== tag);
     pendingEvents.push({ tag, text });
@@ -131,16 +237,25 @@ function flushPendingEvents() {
     pendingEvents = [];
 }
 function showEventToast(text) {
+    toastQueue.push(text);
+    processToastQueue();
+}
+function processToastQueue() {
+    if (toastShowing || toastQueue.length === 0) return;
+    toastShowing = true;
     const el = document.getElementById('eventToast');
-    el.textContent = text;
+    el.textContent = toastQueue.shift();
     el.classList.add('show');
     clearTimeout(showEventToast._t);
-    showEventToast._t = setTimeout(() => el.classList.remove('show'), 3500);
+    showEventToast._t = setTimeout(() => {
+        el.classList.remove('show');
+        // Pequena pausa (coincide con la transicion de salida en CSS, 0.35s) antes de
+        // mostrar el siguiente, para que no se corten uno al otro.
+        setTimeout(() => { toastShowing = false; processToastQueue(); }, 350);
+    }, 3500);
 }
 function broadcastEvent(text) {
-    if (mqttClient && currentRoom) {
-        mqttClient.publish(`yatzy_app_xyz/room/${currentRoom}`, JSON.stringify({ action: 'event_toast', id: myId, text }));
-    }
+    publishRoom({ action: 'event_toast', id: myId, text });
 }
 
 // ===== RENDER: TABLERO =====
@@ -199,6 +314,7 @@ function renderScores() {
         const cell = document.getElementById(`score-${cat.id}`);
         if (!cell) return;
         cell.classList.remove('ghost', 'locked', 'disabled-turn', 'yatzy-again', 'joker-eligible', 'undoable');
+        cell.style.outlineColor = '';
         cell.style.borderColor = '';
         cell.style.background = '';
         cell.style.color = '';
@@ -212,8 +328,14 @@ function renderScores() {
             cell.style.background = myColor;
             cell.style.borderColor = myColor;
             cell.style.color = readableTextOn(myColor);
-            if (markedThisTurn && cat.id === lastMarkedCatId) cell.classList.add('undoable');
-            if (jokerModeActive && cat.id === 'yatzy') cell.classList.add('undoable');
+            if (markedThisTurn && cat.id === lastMarkedCatId) {
+                cell.classList.add('undoable');
+                cell.style.outlineColor = myColorHex();
+            }
+            if (jokerModeActive && cat.id === 'yatzy') {
+                cell.classList.add('undoable');
+                cell.style.outlineColor = myColorHex();
+            }
         } else {
             if (!gameStarted) {
                 cell.classList.add('disabled-turn');
@@ -276,7 +398,6 @@ function renderTurnBanner() {
     const banner = document.getElementById('turnBanner');
     const resetBtn = document.getElementById('resetGameBtn');
     if (resetBtn) resetBtn.style.display = (isRoomCreator && gameStarted && currentRoom) ? 'block' : 'none';
-    updateHostWarning();
     updateStartButton();
     if (!banner) return;
     if (!gameStarted) {
@@ -371,9 +492,15 @@ function closeGameOverModal() {
     document.getElementById('gameOverModal').style.display = 'none';
 }
 
+// Jugador cuya cartilla esta abierta en el modal de "ver cartilla" (null si esta cerrado).
+// Permite refrescar el contenido en vivo cada vez que llegan datos nuevos, sin que el
+// usuario tenga que cerrar y volver a abrir el modal para ver los cambios.
+let viewingPlayerId = null;
+
 function openViewPlayer(id) {
     const p = playersData[id];
-    if (!p) return;
+    if (!p) { closeViewPlayer(); return; }
+    viewingPlayerId = id;
     document.getElementById('viewPlayerTitle').textContent = `${p.name}${id === myId ? ' (Tu)' : ''}`;
     const scores = p.scores || {};
     const hex = colorHexOf(p.color);
@@ -435,7 +562,21 @@ function openViewPlayer(id) {
 
     document.getElementById('viewPlayerModal').style.display = 'flex';
 }
-function closeViewPlayer() { document.getElementById('viewPlayerModal').style.display = 'none'; }
+function closeViewPlayer() {
+    viewingPlayerId = null;
+    document.getElementById('viewPlayerModal').style.display = 'none';
+}
+
+// Se llama cada vez que llegan datos nuevos de jugadores (leaderboard.js). Si el modal
+// de "ver cartilla" esta abierto, lo reconstruye con los datos actuales; si el jugador
+// que se estaba viendo ya no existe (lo removieron), simplemente lo cierra.
+function refreshViewPlayerIfOpen() {
+    if (!viewingPlayerId) return;
+    const modal = document.getElementById('viewPlayerModal');
+    if (!modal || modal.style.display !== 'flex') { viewingPlayerId = null; return; }
+    if (!playersData[viewingPlayerId]) { closeViewPlayer(); return; }
+    openViewPlayer(viewingPlayerId);
+}
 
 // ===== AVISO GENERAL =====
 function showNotice(text, title = 'Aviso') {
@@ -446,13 +587,10 @@ function showNotice(text, title = 'Aviso') {
 function closeNotice() { document.getElementById('noticeModal').style.display = 'none'; }
 
 // ===== FUNCIONES FALTANTES =====
-function updateHostWarning() {
-    const bar = document.getElementById('hostWarningBar');
-    if (!bar) return;
-    const shouldShow = !!currentRoom && hostId !== null && !hostIsPresent() && !isRoomCreator;
-    bar.style.display = shouldShow ? 'flex' : 'none';
-}
 
 function closeResetGameModal() {
     document.getElementById('resetGameModal').style.display = 'none';
 }
+
+// closeRemovePlayerModal y confirmRemovePlayer viven en turnos.js (junto con el
+// resto de la logica de eliminacion de jugadores), no aca.
