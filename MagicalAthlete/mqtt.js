@@ -418,7 +418,10 @@ function connectToRoom(code, isReconnect) {
                             playersData[pid].name = data.playersData[pid].name;
                             playersData[pid].selecciones = data.playersData[pid].selecciones || [];
                             playersData[pid].cartasGanadoras = data.playersData[pid].cartasGanadoras || [];
-                            playersData[pid].activeCardId = activeCardIdSaneado(data.playersData[pid].activeCardId || null);
+                            // --- FIX: Solo actualizar si el mensaje incluye activeCardId ---
+                            if (data.playersData[pid].activeCardId !== undefined) {
+                                playersData[pid].activeCardId = activeCardIdSaneado(data.playersData[pid].activeCardId);
+                            }
                         }
                     }
                 }
@@ -446,13 +449,17 @@ function connectToRoom(code, isReconnect) {
                         name: data.name,
                         selecciones: data.selecciones || [],
                         cartasGanadoras: data.cartasGanadoras || [],
-                        activeCardId: activeCardIdSaneado(data.activeCardId || null)
+                        activeCardId: data.activeCardId !== undefined ? activeCardIdSaneado(data.activeCardId) : null
                     };
                 } else {
                     playersData[data.id].name = data.name;
                     playersData[data.id].selecciones = data.selecciones || [];
                     playersData[data.id].cartasGanadoras = data.cartasGanadoras || [];
-                    playersData[data.id].activeCardId = activeCardIdSaneado(data.activeCardId || null);
+                    // Solo actualizar si el mensaje incluye activeCardId
+                    if (data.activeCardId !== undefined) {
+                        playersData[data.id].activeCardId = activeCardIdSaneado(data.activeCardId);
+                    }
+                    // Si no viene, conservamos el valor que ya tenía
                 }
                 renderLeaderboard();
 
