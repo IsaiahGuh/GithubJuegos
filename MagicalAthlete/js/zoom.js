@@ -1,3 +1,4 @@
+// zoom.js
 var cartaEnZoom = null;
 
 function abrirZoom(carta, mostrarBoton, soloVisualizacion) {
@@ -54,4 +55,14 @@ document.addEventListener('DOMContentLoaded', function() {
             cerrarZoom();
         }
     });
+
+    // Cerrar modal de intercambio al hacer clic fuera
+    var intercambioModal = document.getElementById('intercambioModal');
+    if (intercambioModal) {
+        intercambioModal.addEventListener('click', function(e) {
+            if (e.target === intercambioModal) {
+                cerrarIntercambio();
+            }
+        });
+    }
 });

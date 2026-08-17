@@ -62,6 +62,7 @@ function entrarSala() {
     cicloTandaInicio = 0;
     mazoRestante = [];
     copiasVisuales = {};
+    gruposExpansion31 = {};
     gameStarted = false;
     gameInitiator = null;
     hostId = null;
@@ -80,6 +81,7 @@ function entrarSala() {
         cicloTandaInicio = session.cicloTandaInicio !== undefined ? session.cicloTandaInicio : 0;
         mazoRestante = session.mazoRestante || [];
         copiasVisuales = session.copiasVisuales || {};
+        gruposExpansion31 = session.gruposExpansion31 || {};
         hostId = session.hostId || null;
         if (session.playersData) {
             playersData = session.playersData;

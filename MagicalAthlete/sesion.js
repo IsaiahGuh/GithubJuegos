@@ -53,6 +53,7 @@ function saveSession() {
             cicloTandaInicio: cicloTandaInicio,
             mazoRestante: mazoRestante,
             copiasVisuales: copiasVisuales,
+            gruposExpansion31: gruposExpansion31,
             hostId: hostId || null,
             updatedAt: Date.now()
         }));
@@ -73,6 +74,7 @@ function loadSession() {
             cicloTandaInicio = data.cicloTandaInicio !== undefined ? data.cicloTandaInicio : 0;
             mazoRestante = data.mazoRestante || [];
             copiasVisuales = data.copiasVisuales || {};
+            gruposExpansion31 = data.gruposExpansion31 || {};
             hostId = data.hostId || null;
             if (data.playersData) {
                 playersData = data.playersData;
@@ -173,6 +175,7 @@ function reconnectToSession() {
     cicloTandaInicio = session.cicloTandaInicio !== undefined ? session.cicloTandaInicio : 0;
     mazoRestante = session.mazoRestante || [];
     copiasVisuales = session.copiasVisuales || {};
+    gruposExpansion31 = session.gruposExpansion31 || {};
     hostId = session.hostId || null;
     if (session.playersData) {
         playersData = session.playersData;

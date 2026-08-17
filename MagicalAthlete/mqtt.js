@@ -78,6 +78,7 @@ function connectToRoom(code, isReconnect) {
         cicloTandaInicio = 0;
         mazoRestante = [];
         copiasVisuales = {};
+        gruposExpansion31 = {};
         gameStarted = false;
         gameInitiator = null;
         hostId = null;
@@ -262,6 +263,7 @@ function connectToRoom(code, isReconnect) {
                     puntosPorJugador = {};
                     cartaActivaId = null;
                     copiasVisuales = {};
+                    gruposExpansion31 = {};
                 }
                 estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
                 for (var pid in playersData) {

@@ -119,6 +119,11 @@ function renderizarMisCorredores() {
         imgContainer.addEventListener('click', function(c, v) {
             return function(e) {
                 e.stopPropagation();
+                if (typeof EXPANSION_31_NUMERO !== 'undefined' && c.numero === EXPANSION_31_NUMERO &&
+                    typeof gruposExpansion31 !== 'undefined' && gruposExpansion31[c.id]) {
+                    mostrarGrupoExpansion31(c.id);
+                    return;
+                }
                 var cartaParaZoom = c;
                 if (v) {
                     cartaParaZoom = {

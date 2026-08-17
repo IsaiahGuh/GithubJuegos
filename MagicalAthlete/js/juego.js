@@ -12,6 +12,13 @@ var mazoRestante = [];
 var LOTES_POR_CICLO = 2;
 var cicloTandaInicio = 0;
 var copiasVisuales = {};
+// Numero de la carta especial "Expansion_31" (acumulativa, sin limite)
+var EXPANSION_31_NUMERO = TOTAL_IMAGENES_BASE + 31;
+// Grupo de cartas visuales acumuladas por carta Expansion_31, solo local
+// (nunca se sincroniza por red, igual que copiasVisuales para 17/33).
+// Formato: { [cartaId]: [ {numero, imagen}, ... ] }
+var gruposExpansion31 = {};
+window.EXPANSION_31_NUMERO = EXPANSION_31_NUMERO;
 
 // Funciones globales para tipo y prefijo
 function getTipoCarta(numero) {
@@ -195,6 +202,7 @@ function iniciarJuego() {
         cartaActivaId = null;
         tandaActual = -1;
         copiasVisuales = {};
+        gruposExpansion31 = {};
         puntosPorJugador = {};
         for (var id in playersData) {
             playersData[id].selecciones = [];
@@ -341,6 +349,157 @@ function intercambiarPor33(cartaActual) {
     });
 }
 
+// ===== CARTA ESPECIAL EXPANSION_31 (acumulativa, sin limite) =====
+// A diferencia de 17/33 (que reemplazan la carta por UNA copia visual),
+// esta carta acumula un grupo de cartas visuales sin limite. Todo el grupo
+// es local: nunca se transmite por red, asi que los demas jugadores solo
+// ven la carta Expansion_31 tal cual es.
+
+function generarCartaAleatoriaVisual() {
+    var numero;
+    do {
+        numero = Math.floor(Math.random() * TOTAL_IMAGENES) + 1;
+    } while (numero === 17 || numero === 33);
+    return { numero: numero, imagen: getImagenCarta(numero) };
+}
+
+function activarExpansion31(carta) {
+    if (!gruposExpansion31[carta.id]) {
+        gruposExpansion31[carta.id] = [{ numero: carta.numero, imagen: carta.imagen }];
+    }
+    playersData[myId].activeCardId = carta.id;
+    broadcastSetActive(myId, carta.id);
+    broadcastState('sync');
+    renderizarMisCorredores();
+    actualizarUI();
+    saveSession();
+    mostrarGrupoExpansion31(carta.id);
+}
+window.activarExpansion31 = activarExpansion31;
+
+function mostrarGrupoExpansion31(cartaId) {
+    var zoomModal = document.getElementById('zoomModal');
+    if (zoomModal) zoomModal.style.display = 'none';
+
+    if (!gruposExpansion31[cartaId] || gruposExpansion31[cartaId].length === 0) {
+        var cartaBase = null;
+        for (var i = 0; i < cartas.length; i++) {
+            if (cartas[i].id === cartaId) {
+                cartaBase = cartas[i];
+                break;
+            }
+        }
+        if (!cartaBase) return;
+        gruposExpansion31[cartaId] = [{ numero: cartaBase.numero, imagen: cartaBase.imagen }];
+    }
+
+    var modal = document.getElementById('intercambioModal');
+    var contenido = document.getElementById('intercambioContenido');
+    var tituloElem = document.getElementById('intercambioTitulo');
+    if (!modal || !contenido || !tituloElem) return;
+
+    tituloElem.textContent = 'Tus corredores (Expansion 31) - solo tu los ves';
+    contenido.innerHTML = '';
+
+    var grupo = gruposExpansion31[cartaId];
+    grupo.forEach(function(item, idx) {
+        var div = document.createElement('div');
+        div.className = 'carta-opcion';
+        var img = document.createElement('img');
+        img.src = item.imagen;
+        img.alt = '#' + item.numero;
+        img.loading = 'lazy';
+        div.appendChild(img);
+        var span = document.createElement('span');
+        span.textContent = '#' + item.numero;
+        div.appendChild(span);
+        div.addEventListener('click', function(e) {
+            e.stopPropagation();
+            abrirZoomGrupoItem(cartaId, idx);
+        });
+        contenido.appendChild(div);
+    });
+
+    var addDiv = document.createElement('div');
+    addDiv.className = 'carta-opcion carta-opcion-agregar';
+    var addSigno = document.createElement('span');
+    addSigno.className = 'agregar-signo';
+    addSigno.textContent = '+';
+    addDiv.appendChild(addSigno);
+    var addLabel = document.createElement('span');
+    addLabel.textContent = 'Agregar';
+    addDiv.appendChild(addLabel);
+    addDiv.addEventListener('click', function(e) {
+        e.stopPropagation();
+        agregarCartaAGrupo(cartaId);
+    });
+    contenido.appendChild(addDiv);
+
+    modal.style.display = 'flex';
+}
+window.mostrarGrupoExpansion31 = mostrarGrupoExpansion31;
+
+function agregarCartaAGrupo(cartaId) {
+    if (!gruposExpansion31[cartaId]) {
+        gruposExpansion31[cartaId] = [];
+    }
+    gruposExpansion31[cartaId].push(generarCartaAleatoriaVisual());
+    saveSession();
+    mostrarGrupoExpansion31(cartaId);
+}
+window.agregarCartaAGrupo = agregarCartaAGrupo;
+
+function abrirZoomGrupoItem(cartaId, idx) {
+    var grupo = gruposExpansion31[cartaId];
+    if (!grupo || !grupo[idx]) return;
+    var item = grupo[idx];
+
+    var intercambioModal = document.getElementById('intercambioModal');
+    if (intercambioModal) intercambioModal.style.display = 'none';
+
+    var modal = document.getElementById('zoomModal');
+    var content = document.getElementById('zoomContent');
+    if (!modal || !content) return;
+    content.innerHTML = '';
+
+    var img = document.createElement('img');
+    img.src = item.imagen;
+    img.alt = 'Corredor ' + item.numero;
+    content.appendChild(img);
+
+    var info = document.createElement('div');
+    info.className = 'zoom-info';
+    var prefijo = getPrefijoCarta(item.numero);
+    info.innerHTML = 'Corredor <span>' + prefijo + ' - #' + item.numero + '</span>';
+    content.appendChild(info);
+
+    var btnRow = document.createElement('div');
+    btnRow.style.display = 'flex';
+    btnRow.style.gap = '10px';
+    btnRow.style.flexWrap = 'wrap';
+    btnRow.style.justifyContent = 'center';
+
+    var btnMas = document.createElement('button');
+    btnMas.className = 'btn-choose';
+    btnMas.textContent = '+ Agregar otro';
+    btnMas.addEventListener('click', function() {
+        agregarCartaAGrupo(cartaId);
+    });
+    btnRow.appendChild(btnMas);
+
+    var btnVolver = document.createElement('button');
+    btnVolver.className = 'modal-btn btn-secondary';
+    btnVolver.textContent = 'Volver';
+    btnVolver.addEventListener('click', function() {
+        mostrarGrupoExpansion31(cartaId);
+    });
+    btnRow.appendChild(btnVolver);
+
+    content.appendChild(btnRow);
+    modal.style.display = 'flex';
+}
+window.abrirZoomGrupoItem = abrirZoomGrupoItem;
+
 function setActiveCard(cartaId) {
     if (!playersData[myId]) {
         playersData[myId] = { name: myName, selecciones: [], cartasGanadoras: [], activeCardId: null };
@@ -377,6 +536,10 @@ function setActiveCard(cartaId) {
     }
     if (carta.numero === 33) {
         intercambiarPor33(carta);
+        return;
+    }
+    if (carta.numero === EXPANSION_31_NUMERO) {
+        activarExpansion31(carta);
         return;
     }
 
@@ -576,6 +739,7 @@ function resetLocalGame() {
     cicloTandaInicio = 0;
     mazoRestante = [];
     copiasVisuales = {};
+    gruposExpansion31 = {};
     gameStarted = false;
     gameInitiator = null;
     for (var id in playersData) {
