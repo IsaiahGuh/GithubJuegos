@@ -59,6 +59,7 @@ function entrarSala() {
     misSelecciones = [];
     cartaActivaId = null;
     tandaActual = -1;
+    cicloTandaInicio = 0;
     mazoRestante = [];
     copiasVisuales = {};
     gameStarted = false;
@@ -76,6 +77,7 @@ function entrarSala() {
         estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
         cartaActivaId = session.cartaActivaId || null;
         tandaActual = session.tandaActual !== undefined ? session.tandaActual : -1;
+        cicloTandaInicio = session.cicloTandaInicio !== undefined ? session.cicloTandaInicio : 0;
         mazoRestante = session.mazoRestante || [];
         copiasVisuales = session.copiasVisuales || {};
         hostId = session.hostId || null;

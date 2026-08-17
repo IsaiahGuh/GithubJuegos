@@ -15,13 +15,16 @@ function renderizarCartas() {
     });
     
     if (disponibles.length === 0) {
-        var haySinDescartar = cartas.some(function(c) {
-            return c.tanda === tandaActual && !c.descartada;
-        });
-        if (haySinDescartar) {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas de este lote ya fueron seleccionadas</div>';
+        var cicloYaTerminado = (typeof cicloTerminado === 'function') && cicloTerminado();
+        if (cicloYaTerminado) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Presiona "Corredores" para repartir un nuevo lote</div>';
         } else {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Corredores en juego. Cuando todos usen y descarten sus cartas, presiona "Corredores" para repartir el siguiente lote.</div>';
+            var loteCompleto = (typeof todosLotesCicloCompletos === 'function') && todosLotesCicloCompletos();
+            if (!loteCompleto) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Repartiendo el siguiente lote de corredores...</div>';
+            } else {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Corredores en juego. Cuando todos usen y descarten sus 4 corredores, presiona "Corredores" para repartir un nuevo lote.</div>';
+            }
         }
         if (boardContainer) boardContainer.style.display = 'block';
         return;
@@ -151,11 +154,21 @@ function renderizarMisCorredores() {
         wrapper.appendChild(imgContainer);
         var btnUsar = document.createElement('button');
         btnUsar.className = 'btn-sm btn-usar';
-        btnUsar.textContent = esActiva ? 'En uso' : 'Usar';
+        var faseSeleccionCompleta = (typeof todosLotesCicloCompletos !== 'function') || todosLotesCicloCompletos();
+        if (esActiva) {
+            btnUsar.textContent = 'En uso';
+        } else if (!faseSeleccionCompleta) {
+            btnUsar.textContent = 'Espera...';
+        } else {
+            btnUsar.textContent = 'Usar';
+        }
         if (carta.esGanadora || carta.descartada || esActiva) {
             btnUsar.disabled = true;
         } else if (activeId) {
             // Ya elegiste otra carta para esta ronda: no se puede cambiar.
+            btnUsar.disabled = true;
+        } else if (!faseSeleccionCompleta) {
+            // Todavia faltan corredores por repartir/escoger en este ciclo.
             btnUsar.disabled = true;
         }
         btnUsar.addEventListener('click', function(cId) {

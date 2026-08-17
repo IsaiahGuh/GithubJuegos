@@ -75,6 +75,7 @@ function connectToRoom(code, isReconnect) {
         misSelecciones = [];
         cartaActivaId = null;
         tandaActual = -1;
+        cicloTandaInicio = 0;
         mazoRestante = [];
         copiasVisuales = {};
         gameStarted = false;
@@ -246,6 +247,12 @@ function connectToRoom(code, isReconnect) {
                 cartas = data.cartas || [];
                 tandaActual = data.tandaActual !== undefined ? data.tandaActual : 0;
                 mazoRestante = data.mazoRestante || [];
+                if (data.nuevoCiclo) {
+                    // Este lote es el primero de un ciclo nuevo (los dos
+                    // lotes que se reparten automaticamente por cada
+                    // "Corredores").
+                    cicloTandaInicio = tandaActual;
+                }
                 if (data.id !== myId && data.esPrimerLote) {
                     // Solo reiniciamos nuestro estado local si es el PRIMER
                     // lote de una partida nueva; si es un lote adicional
@@ -305,6 +312,15 @@ function connectToRoom(code, isReconnect) {
                         }
                     }
                     if (tipo === '+2') {
+                        // Cada jugador aplica el descarte en su propio
+                        // dispositivo (en vez de esperar a que le llegue el
+                        // "sync" de quien presiono el boton). Esto es lo que
+                        // hace que la carta ganadora SI desaparezca de "Mis
+                        // Corredores" en la pantalla del ganador, y que su
+                        // activeCardId quede libre para la siguiente ronda.
+                        if (typeof window.aplicarDescarteActivas === 'function') {
+                            window.aplicarDescarteActivas(estadoRonda.jugadorGanador);
+                        }
                         setTimeout(function() {
                             reiniciarRonda();
                         }, 500);
@@ -361,6 +377,9 @@ function connectToRoom(code, isReconnect) {
                 renderLeaderboard();
                 actualizarUI();
                 saveSession();
+                if (typeof window.verificarSiguienteLote === 'function') {
+                    window.verificarSiguienteLote();
+                }
             }
 
             if (data.action === 'remove') {
@@ -377,6 +396,9 @@ function connectToRoom(code, isReconnect) {
                 }
                 if (data.tandaActual !== undefined) {
                     tandaActual = data.tandaActual;
+                }
+                if (data.cicloTandaInicio !== undefined) {
+                    cicloTandaInicio = data.cicloTandaInicio;
                 }
                 if (data.mazoRestante !== undefined) {
                     mazoRestante = data.mazoRestante;
@@ -468,6 +490,7 @@ function broadcastState(action) {
             selecciones: misSelecciones || [],
             cartas: cartas || [],
             tandaActual: tandaActual,
+            cicloTandaInicio: cicloTandaInicio,
             mazoRestante: mazoRestante || [],
             gameStarted: gameStarted,
             gameInitiator: gameInitiator || null,
@@ -511,7 +534,7 @@ function broadcastHostClaim() {
     }
 }
 
-function broadcastStart(cartasArray, tanda, mazo, esPrimerLote) {
+function broadcastStart(cartasArray, tanda, mazo, esPrimerLote, nuevoCiclo) {
     if (mqttClient && currentRoom) {
         var topic = 'magical_athlete/room/' + currentRoom;
         var payload = JSON.stringify({
@@ -520,8 +543,10 @@ function broadcastStart(cartasArray, tanda, mazo, esPrimerLote) {
             name: myName,
             cartas: cartasArray,
             tandaActual: tanda !== undefined ? tanda : 0,
+            cicloTandaInicio: cicloTandaInicio,
             mazoRestante: mazo || [],
             esPrimerLote: !!esPrimerLote,
+            nuevoCiclo: !!nuevoCiclo,
             gameStarted: true,
             playersData: playersData,
             puntosPorJugador: puntosPorJugador,

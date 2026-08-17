@@ -50,6 +50,7 @@ function saveSession() {
             cartaActivaId: cartaActivaId,
             playersData: playersData,
             tandaActual: tandaActual,
+            cicloTandaInicio: cicloTandaInicio,
             mazoRestante: mazoRestante,
             copiasVisuales: copiasVisuales,
             hostId: hostId || null,
@@ -69,6 +70,7 @@ function loadSession() {
             estadoRonda = data.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
             cartaActivaId = data.cartaActivaId || null;
             tandaActual = data.tandaActual !== undefined ? data.tandaActual : -1;
+            cicloTandaInicio = data.cicloTandaInicio !== undefined ? data.cicloTandaInicio : 0;
             mazoRestante = data.mazoRestante || [];
             copiasVisuales = data.copiasVisuales || {};
             hostId = data.hostId || null;
@@ -168,6 +170,7 @@ function reconnectToSession() {
     estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
     cartaActivaId = session.cartaActivaId || null;
     tandaActual = session.tandaActual !== undefined ? session.tandaActual : -1;
+    cicloTandaInicio = session.cicloTandaInicio !== undefined ? session.cicloTandaInicio : 0;
     mazoRestante = session.mazoRestante || [];
     copiasVisuales = session.copiasVisuales || {};
     hostId = session.hostId || null;
