@@ -50,6 +50,8 @@ function saveSession() {
             cartaActivaId: cartaActivaId,
             playersData: playersData,
             tandaActual: tandaActual,
+            mazoRestante: mazoRestante,
+            copiasVisuales: copiasVisuales,
             hostId: hostId || null,
             updatedAt: Date.now()
         }));
@@ -66,7 +68,9 @@ function loadSession() {
             puntosPorJugador = data.puntosPorJugador || {};
             estadoRonda = data.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
             cartaActivaId = data.cartaActivaId || null;
-            tandaActual = data.tandaActual !== undefined ? data.tandaActual : 0;
+            tandaActual = data.tandaActual !== undefined ? data.tandaActual : -1;
+            mazoRestante = data.mazoRestante || [];
+            copiasVisuales = data.copiasVisuales || {};
             hostId = data.hostId || null;
             if (data.playersData) {
                 playersData = data.playersData;
@@ -163,7 +167,9 @@ function reconnectToSession() {
     puntosPorJugador = session.puntosPorJugador || {};
     estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
     cartaActivaId = session.cartaActivaId || null;
-    tandaActual = session.tandaActual !== undefined ? session.tandaActual : 0;
+    tandaActual = session.tandaActual !== undefined ? session.tandaActual : -1;
+    mazoRestante = session.mazoRestante || [];
+    copiasVisuales = session.copiasVisuales || {};
     hostId = session.hostId || null;
     if (session.playersData) {
         playersData = session.playersData;

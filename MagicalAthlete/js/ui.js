@@ -1,10 +1,10 @@
-// ui.js (sin cambios)
+// ui.js
 function renderizarCartas() {
     var grid = document.getElementById('card-grid');
     grid.innerHTML = '';
     var boardContainer = document.querySelector('.board-container');
     
-    if (!cartas || cartas.length === 0) {
+    if (!cartas || cartas.length === 0 || tandaActual < 0) {
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Presiona "Corredores" para comenzar la partida</div>';
         if (boardContainer) boardContainer.style.display = 'block';
         return;
@@ -19,13 +19,9 @@ function renderizarCartas() {
             return c.tanda === tandaActual && !c.descartada;
         });
         if (haySinDescartar) {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas de esta tanda ya fueron seleccionadas</div>';
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas de este lote ya fueron seleccionadas</div>';
         } else {
-            if (tandaActual < TOTAL_TANDAS - 1) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Esperando siguiente tanda...</div>';
-            } else {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas han sido seleccionadas o descartadas</div>';
-            }
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Corredores en juego. Cuando todos usen y descarten sus cartas, presiona "Corredores" para repartir el siguiente lote.</div>';
         }
         if (boardContainer) boardContainer.style.display = 'block';
         return;
@@ -107,25 +103,44 @@ function renderizarMisCorredores() {
     var activeId = playersData[myId] ? playersData[myId].activeCardId : null;
     for (var k = 0; k < misCartas.length; k++) {
         var carta = misCartas[k];
+        var visual = (typeof copiasVisuales !== 'undefined' && copiasVisuales[carta.id]) ? copiasVisuales[carta.id] : null;
+        var numeroMostrado = visual ? visual.numero : carta.numero;
+        var imagenMostrada = visual ? visual.imagen : carta.imagen;
         var esActiva = (activeId === carta.id);
         var esGanadora = carta.esGanadora || false;
         var wrapper = document.createElement('div');
         wrapper.className = 'my-card-wrapper' + (esActiva ? ' activa' : '') + (esGanadora ? ' ganadora' : '');
         var imgContainer = document.createElement('div');
         imgContainer.className = 'my-card-img';
-        imgContainer.addEventListener('click', function(c) {
+        imgContainer.addEventListener('click', function(c, v) {
             return function(e) {
                 e.stopPropagation();
-                abrirZoom(c, false, true);
+                var cartaParaZoom = c;
+                if (v) {
+                    // Muestro mi copia visual (solo yo la veo asi); el
+                    // estado real (activa/ganadora/descartada) sigue
+                    // siendo el de la carta original.
+                    cartaParaZoom = {
+                        id: c.id,
+                        numero: v.numero,
+                        imagen: v.imagen,
+                        seleccionadoPor: c.seleccionadoPor,
+                        seleccionadoPorId: c.seleccionadoPorId,
+                        esGanadora: c.esGanadora,
+                        descartada: c.descartada,
+                        tanda: c.tanda
+                    };
+                }
+                abrirZoom(cartaParaZoom, false, true);
             };
-        }(carta));
+        }(carta, visual));
         var img = document.createElement('img');
-        img.src = carta.imagen;
-        img.alt = 'Corredor ' + carta.numero;
+        img.src = imagenMostrada;
+        img.alt = 'Corredor ' + numeroMostrado;
         imgContainer.appendChild(img);
         var num = document.createElement('div');
         num.className = 'mini-number';
-        num.textContent = '#' + carta.numero;
+        num.textContent = '#' + numeroMostrado;
         imgContainer.appendChild(num);
         if (esGanadora) {
             var badge = document.createElement('div');
@@ -137,9 +152,9 @@ function renderizarMisCorredores() {
         var btnUsar = document.createElement('button');
         btnUsar.className = 'btn-sm btn-usar';
         btnUsar.textContent = esActiva ? 'En uso' : 'Usar';
-        if (carta.esGanadora || carta.descartada) {
+        if (carta.esGanadora || carta.descartada || esActiva) {
             btnUsar.disabled = true;
-        } else if (activeId && !esActiva) {
+        } else if (activeId) {
             // Ya elegiste otra carta para esta ronda: no se puede cambiar.
             btnUsar.disabled = true;
         }

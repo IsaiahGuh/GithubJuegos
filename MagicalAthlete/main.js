@@ -58,6 +58,9 @@ function entrarSala() {
     cartas = [];
     misSelecciones = [];
     cartaActivaId = null;
+    tandaActual = -1;
+    mazoRestante = [];
+    copiasVisuales = {};
     gameStarted = false;
     gameInitiator = null;
     hostId = null;
@@ -72,6 +75,9 @@ function entrarSala() {
         puntosPorJugador = session.puntosPorJugador || {};
         estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
         cartaActivaId = session.cartaActivaId || null;
+        tandaActual = session.tandaActual !== undefined ? session.tandaActual : -1;
+        mazoRestante = session.mazoRestante || [];
+        copiasVisuales = session.copiasVisuales || {};
         hostId = session.hostId || null;
         if (session.playersData) {
             playersData = session.playersData;

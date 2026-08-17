@@ -13,6 +13,57 @@ var hostId = null; // id del jugador anfitrion de la sala (unico que puede reini
 var hostClaimTimer = null;
 var hostHeartbeatInterval = null;
 
+// Fusiona el arreglo de cartas recibido por red con el que tenemos localmente,
+// en vez de reemplazarlo por completo. Esto evita que un mensaje "sync" que
+// llegue tarde o desordenado (la red MQTT no garantiza orden) "resucite" una
+// carta que ya sabiamos que estaba descartada. Los campos criticos
+// (descartada, esGanadora) son monotonos: una vez true, se quedan en true
+// sin importar lo que diga el mensaje entrante.
+function mergeCartas(incomingCartas) {
+    if (!incomingCartas || !incomingCartas.length) return;
+    var localById = {};
+    for (var i = 0; i < cartas.length; i++) {
+        localById[cartas[i].id] = cartas[i];
+    }
+    var merged = [];
+    for (var j = 0; j < incomingCartas.length; j++) {
+        var inc = incomingCartas[j];
+        var loc = localById[inc.id];
+        if (!loc) {
+            merged.push(inc);
+            continue;
+        }
+        merged.push({
+            id: inc.id,
+            numero: inc.numero,
+            imagen: inc.imagen,
+            tanda: inc.tanda !== undefined ? inc.tanda : loc.tanda,
+            descartada: !!(loc.descartada || inc.descartada),
+            esGanadora: !!(loc.esGanadora || inc.esGanadora),
+            seleccionadoPor: loc.seleccionadoPor || inc.seleccionadoPor || null,
+            seleccionadoPorId: loc.seleccionadoPorId || inc.seleccionadoPorId || null
+        });
+    }
+    cartas = merged;
+}
+window.mergeCartas = mergeCartas;
+
+// Si el activeCardId que llega por red apunta a una carta que en nuestro
+// estado actual ya esta descartada (o que no existe), lo ignoramos. Esto
+// evita que un jugador que se reconecta con datos atrasados (por ejemplo,
+// porque cerro la pagina antes de enterarse de que su carta fue descartada)
+// "resucite" esa carta como si siguiera activa en la ronda.
+function activeCardIdSaneado(id) {
+    if (!id) return null;
+    for (var i = 0; i < cartas.length; i++) {
+        if (cartas[i].id === id) {
+            return cartas[i].descartada ? null : id;
+        }
+    }
+    return id; // si no la conocemos aun (p.ej. cartas todavia no ha llegado), la dejamos pasar
+}
+window.activeCardIdSaneado = activeCardIdSaneado;
+
 function connectToRoom(code, isReconnect) {
     if (isReconnect === undefined) isReconnect = false;
     
@@ -23,8 +74,9 @@ function connectToRoom(code, isReconnect) {
         cartas = [];
         misSelecciones = [];
         cartaActivaId = null;
-        tandaActual = 0;
-        avanzando = false;
+        tandaActual = -1;
+        mazoRestante = [];
+        copiasVisuales = {};
         gameStarted = false;
         gameInitiator = null;
         hostId = null;
@@ -193,13 +245,18 @@ function connectToRoom(code, isReconnect) {
                 gameInitiator = data.id;
                 cartas = data.cartas || [];
                 tandaActual = data.tandaActual !== undefined ? data.tandaActual : 0;
-                if (data.id !== myId) {
+                mazoRestante = data.mazoRestante || [];
+                if (data.id !== myId && data.esPrimerLote) {
+                    // Solo reiniciamos nuestro estado local si es el PRIMER
+                    // lote de una partida nueva; si es un lote adicional
+                    // (continuacion de la misma partida), conservamos
+                    // nuestros puntos y demas datos actuales.
                     misSelecciones = [];
                     puntosPorJugador = {};
-                    estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
                     cartaActivaId = null;
-                    avanzando = false;
+                    copiasVisuales = {};
                 }
+                estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
                 for (var pid in playersData) {
                     if (!puntosPorJugador[pid]) {
                         puntosPorJugador[pid] = 0;
@@ -212,17 +269,6 @@ function connectToRoom(code, isReconnect) {
                 renderizarMisCorredores();
                 actualizarUI();
                 saveSession();
-            }
-
-            if (data.action === 'next_tanda') {
-                if (data.tandaActual > tandaActual) {
-                    tandaActual = data.tandaActual;
-                    renderizarCartas();
-                    renderizarMisCorredores();
-                    actualizarUI();
-                    saveSession();
-                }
-                return;
             }
 
             if (data.action === 'puntaje_global') {
@@ -315,10 +361,6 @@ function connectToRoom(code, isReconnect) {
                 renderLeaderboard();
                 actualizarUI();
                 saveSession();
-
-                if (jugadorId !== myId) {
-                    verificarYAvanzarTanda();
-                }
             }
 
             if (data.action === 'remove') {
@@ -330,11 +372,14 @@ function connectToRoom(code, isReconnect) {
 
             if (data.action === 'sync') {
                 if (data.cartas) {
-                    cartas = data.cartas;
+                    mergeCartas(data.cartas);
                     renderizarCartas();
                 }
                 if (data.tandaActual !== undefined) {
                     tandaActual = data.tandaActual;
+                }
+                if (data.mazoRestante !== undefined) {
+                    mazoRestante = data.mazoRestante;
                 }
                 if (data.gameStarted !== undefined) {
                     gameStarted = data.gameStarted;
@@ -351,7 +396,7 @@ function connectToRoom(code, isReconnect) {
                             playersData[pid].name = data.playersData[pid].name;
                             playersData[pid].selecciones = data.playersData[pid].selecciones || [];
                             playersData[pid].cartasGanadoras = data.playersData[pid].cartasGanadoras || [];
-                            playersData[pid].activeCardId = data.playersData[pid].activeCardId || null;
+                            playersData[pid].activeCardId = activeCardIdSaneado(data.playersData[pid].activeCardId || null);
                         }
                     }
                 }
@@ -379,13 +424,13 @@ function connectToRoom(code, isReconnect) {
                         name: data.name,
                         selecciones: data.selecciones || [],
                         cartasGanadoras: data.cartasGanadoras || [],
-                        activeCardId: data.activeCardId || null
+                        activeCardId: activeCardIdSaneado(data.activeCardId || null)
                     };
                 } else {
                     playersData[data.id].name = data.name;
                     playersData[data.id].selecciones = data.selecciones || [];
                     playersData[data.id].cartasGanadoras = data.cartasGanadoras || [];
-                    playersData[data.id].activeCardId = data.activeCardId || null;
+                    playersData[data.id].activeCardId = activeCardIdSaneado(data.activeCardId || null);
                 }
                 renderLeaderboard();
 
@@ -423,6 +468,7 @@ function broadcastState(action) {
             selecciones: misSelecciones || [],
             cartas: cartas || [],
             tandaActual: tandaActual,
+            mazoRestante: mazoRestante || [],
             gameStarted: gameStarted,
             gameInitiator: gameInitiator || null,
             playersData: playersData,
@@ -430,7 +476,16 @@ function broadcastState(action) {
             estadoRonda: estadoRonda,
             hostId: hostId || null
         });
-        mqttClient.publish(topic, payload, { qos: 1 });
+        var opts = { qos: 1 };
+        // Los mensajes "sync" se retienen en el broker: asi, cualquier
+        // jugador que se conecte o reconecte (celular apagado, se salio de
+        // la pagina, etc.) recibe el ultimo estado conocido INMEDIATAMENTE
+        // al suscribirse, sin depender de que otro cliente le responda a
+        // tiempo con el estado.
+        if (action === 'sync') {
+            opts.retain = true;
+        }
+        mqttClient.publish(topic, payload, opts);
     }
 }
 
@@ -456,7 +511,7 @@ function broadcastHostClaim() {
     }
 }
 
-function broadcastStart(cartasArray, tanda) {
+function broadcastStart(cartasArray, tanda, mazo, esPrimerLote) {
     if (mqttClient && currentRoom) {
         var topic = 'magical_athlete/room/' + currentRoom;
         var payload = JSON.stringify({
@@ -465,16 +520,19 @@ function broadcastStart(cartasArray, tanda) {
             name: myName,
             cartas: cartasArray,
             tandaActual: tanda !== undefined ? tanda : 0,
+            mazoRestante: mazo || [],
+            esPrimerLote: !!esPrimerLote,
             gameStarted: true,
             playersData: playersData,
             puntosPorJugador: puntosPorJugador,
             estadoRonda: estadoRonda,
             hostId: hostId || null
         });
-        mqttClient.publish(topic, payload, { qos: 1 });
+        mqttClient.publish(topic, payload, { qos: 1, retain: true });
         gameStarted = true;
         gameInitiator = myId;
         tandaActual = tanda !== undefined ? tanda : 0;
+        mazoRestante = mazo || [];
     }
 }
 
@@ -488,18 +546,6 @@ function broadcastSelect(cartaId) {
             cartaId: cartaId,
             selecciones: misSelecciones || [],
             tandaActual: tandaActual
-        });
-        mqttClient.publish(topic, payload, { qos: 1 });
-    }
-}
-
-function broadcastNextTanda(nuevaTanda) {
-    if (mqttClient && currentRoom) {
-        var topic = 'magical_athlete/room/' + currentRoom;
-        var payload = JSON.stringify({
-            action: 'next_tanda',
-            id: myId,
-            tandaActual: nuevaTanda
         });
         mqttClient.publish(topic, payload, { qos: 1 });
     }

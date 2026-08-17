@@ -32,7 +32,8 @@ function renderLeaderboard() {
         card.addEventListener('click', function(pid) {
             return function() {
                 if (typeof todosEligieronCarta === 'function' && !todosEligieronCarta()) {
-                    alert('Todavia faltan jugadores por elegir su corredor de esta ronda. Espera a que todos usen su carta.');
+                    // Todavia faltan jugadores por elegir su corredor de esta
+                    // ronda: no mostramos nada (sin alerta) hasta que todos elijan.
                     return;
                 }
                 var activeId = playersData[pid] ? playersData[pid].activeCardId : null;

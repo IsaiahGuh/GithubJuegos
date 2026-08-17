@@ -1,13 +1,33 @@
 // juego.js
 // ===== CONFIGURACION =====
+// --- Como funciona el mazo/lotes (para futuras modificaciones) ---
+// - `mazoRestante` guarda los numeros de corredor (1..36) que TODAVIA no se
+//   han repartido en esta partida. Se baraja una sola vez, al presionar
+//   "Corredores" por primera vez, y se va consumiendo de a poco.
+// - Cada vez que se presiona "Corredores" se reparte UN lote nuevo de
+//   tamano = numJugadores * 2 (si hay 4 jugadores, 8 cartas; si hay 3,
+//   6 cartas), sacado directamente de `mazoRestante`. Como se saca sin
+//   reponer, un numero de corredor JAMAS se repite entre lotes.
+// - `cartas` acumula TODAS las cartas repartidas en la partida (de todos
+//   los lotes), no se reemplaza entre lotes. Cada carta recuerda a que
+//   lote pertenece en su campo `tanda`.
+// - `tandaActual` es el indice del lote actualmente en juego (0, 1, 2...).
+// - El boton "Corredores" se bloquea apenas se reparte un lote, y se
+//   vuelve a habilitar solo cuando TODOS los jugadores ya usaron/descartaron
+//   sus 2 cartas de ese lote (ver loteTerminado()).
 var cartas = [];
 var misSelecciones = [];
-var MAX_SELECCIONES = 2; // por tanda
+var MAX_SELECCIONES = 2; // corredores por jugador, por lote
 var TOTAL_IMAGENES = 36;
 var cartaActivaId = null; // ya no se usa a nivel global, se usa por jugador
-var tandaActual = 0;
-var TOTAL_TANDAS = 2;
-var avanzando = false;
+var tandaActual = -1; // -1 = todavia no se ha repartido ningun lote
+var mazoRestante = []; // numeros de corredor que faltan por repartir
+// Cambio VISUAL y LOCAL de las cartas 17/33: cuando yo uso una de estas
+// cartas para "copiar" a otro corredor, SOLO YO veo esa apariencia; el
+// resto de jugadores sigue viendo la carta como #17 o #33. Por eso esto
+// NUNCA se transmite por red ni se guarda en `cartas` (que es compartido):
+// vive unicamente en este mapa local. cartaId -> { numero, imagen }
+var copiasVisuales = {};
 
 function seleccionarCarta(cartaId) {
     var carta = null;
@@ -22,7 +42,7 @@ function seleccionarCarta(cartaId) {
         return;
     }
     if (carta.tanda !== tandaActual) {
-        alert('Esta carta no pertenece a la tanda actual.');
+        alert('Esta carta no pertenece al lote actual.');
         return;
     }
     if (carta.seleccionadoPor) {
@@ -48,7 +68,7 @@ function seleccionarCarta(cartaId) {
         return c && c.tanda === tandaActual && !c.descartada && !c.esGanadora;
     });
     if (seleccionadasEnTanda.length >= MAX_SELECCIONES) {
-        alert('Ya seleccionaste tus 2 cartas en esta tanda.');
+        alert('Ya seleccionaste tus 2 cartas de este lote.');
         return;
     }
     carta.seleccionadoPor = myName;
@@ -64,9 +84,29 @@ function seleccionarCarta(cartaId) {
     actualizarUI();
     renderLeaderboard();
     saveSession();
-    verificarYAvanzarTanda();
 }
 window.seleccionarCarta = seleccionarCarta;
+
+// Devuelve true si el lote actual ya esta completamente resuelto: es decir,
+// ningun jugador tiene ya una carta pendiente (sin descartar) de ese lote.
+// Mientras esto sea false, el boton "Corredores" permanece bloqueado.
+function loteTerminado() {
+    if (tandaActual < 0) return true; // todavia no se reparte nada
+    for (var id in playersData) {
+        var data = playersData[id];
+        if (!data || !data.selecciones) continue;
+        for (var i = 0; i < data.selecciones.length; i++) {
+            var cId = data.selecciones[i];
+            for (var j = 0; j < cartas.length; j++) {
+                if (cartas[j].id === cId && cartas[j].tanda === tandaActual && !cartas[j].descartada) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+window.loteTerminado = loteTerminado;
 
 function iniciarJuego() {
     var numJugadores = Object.keys(playersData).length;
@@ -74,81 +114,74 @@ function iniciarJuego() {
         alert('No hay jugadores en la sala. Espera a que alguien se una.');
         return;
     }
-    var totalCartas = numJugadores * 4;
-    var cartasPorTanda = numJugadores * 2;
-    var indicesDisponibles = [];
-    for (var i = 1; i <= TOTAL_IMAGENES; i++) {
-        indicesDisponibles.push(i);
+    if (gameStarted && !loteTerminado()) {
+        alert('Todavia hay corredores en juego. Espera a que todos usen y descarten sus corredores actuales.');
+        return;
     }
-    for (var i = indicesDisponibles.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = indicesDisponibles[i];
-        indicesDisponibles[i] = indicesDisponibles[j];
-        indicesDisponibles[j] = temp;
-    }
-    var indicesSeleccionados = indicesDisponibles.slice(0, totalCartas);
-    var nuevasCartas = [];
-    for (var t = 0; t < TOTAL_TANDAS; t++) {
-        var inicio = t * cartasPorTanda;
-        var fin = inicio + cartasPorTanda;
-        for (var i = inicio; i < fin; i++) {
-            nuevasCartas.push({
-                id: 'carta-' + i,
-                numero: indicesSeleccionados[i],
-                imagen: 'imagenes/Corredor_' + indicesSeleccionados[i] + '.png',
-                seleccionadoPor: null,
-                seleccionadoPorId: null,
-                esGanadora: false,
-                descartada: false,
-                tanda: t
-            });
+
+    var cartasPorLote = numJugadores * 2;
+    var esPrimerLote = !gameStarted;
+
+    if (esPrimerLote) {
+        // Partida nueva: armar y barajar el mazo completo de corredores.
+        mazoRestante = [];
+        for (var i = 1; i <= TOTAL_IMAGENES; i++) {
+            mazoRestante.push(i);
+        }
+        for (var i = mazoRestante.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = mazoRestante[i];
+            mazoRestante[i] = mazoRestante[j];
+            mazoRestante[j] = temp;
+        }
+        cartas = [];
+        misSelecciones = [];
+        cartaActivaId = null;
+        tandaActual = -1;
+        copiasVisuales = {};
+        puntosPorJugador = {};
+        for (var id in playersData) {
+            playersData[id].selecciones = [];
+            playersData[id].cartasGanadoras = [];
+            playersData[id].activeCardId = null;
+            puntosPorJugador[id] = 0;
         }
     }
-    misSelecciones = [];
-    cartaActivaId = null;
-    puntosPorJugador = {};
-    estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
-    tandaActual = 0;
-    avanzando = false;
-    for (var id in playersData) {
-        playersData[id].selecciones = [];
-        playersData[id].cartasGanadoras = [];
-        playersData[id].activeCardId = null;
-        puntosPorJugador[id] = 0;
+
+    if (mazoRestante.length < cartasPorLote) {
+        alert('No quedan suficientes corredores en el mazo para repartir a todos los jugadores (quedan ' + mazoRestante.length + '). Reinicia la partida para barajar un mazo nuevo.');
+        return;
     }
-    cartas = nuevasCartas;
-    broadcastStart(cartas, tandaActual);
+
+    // Al reiniciar un lote (incluso si no es el primero), el estado de la
+    // ronda de puntaje (1grado/2grado) siempre debe partir limpio.
+    estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
+
+    tandaActual++;
+    var nuevasCartas = [];
+    for (var k = 0; k < cartasPorLote; k++) {
+        var numero = mazoRestante.shift();
+        nuevasCartas.push({
+            id: 'carta-' + tandaActual + '-' + k,
+            numero: numero,
+            imagen: 'imagenes/Corredor_' + numero + '.png',
+            seleccionadoPor: null,
+            seleccionadoPorId: null,
+            esGanadora: false,
+            descartada: false,
+            tanda: tandaActual
+        });
+    }
+    cartas = cartas.concat(nuevasCartas);
+    gameStarted = true;
+
+    broadcastStart(cartas, tandaActual, mazoRestante, esPrimerLote);
     renderizarCartas();
     renderizarMisCorredores();
     actualizarUI();
     saveSession();
 }
 window.iniciarJuego = iniciarJuego;
-
-function verificarYAvanzarTanda() {
-    if (avanzando) return;
-    var disponibles = cartas.filter(function(c) {
-        return c.tanda === tandaActual && !c.seleccionadoPor && !c.descartada && !c.esGanadora;
-    });
-    if (disponibles.length === 0 && tandaActual < TOTAL_TANDAS - 1) {
-        avanzando = true;
-        avanzarTanda();
-        setTimeout(function() {
-            avanzando = false;
-        }, 100);
-    }
-}
-
-function avanzarTanda() {
-    tandaActual++;
-    broadcastNextTanda(tandaActual);
-    renderizarCartas();
-    renderizarMisCorredores();
-    actualizarUI();
-    saveSession();
-}
-window.avanzarTanda = avanzarTanda;
-window.verificarYAvanzarTanda = verificarYAvanzarTanda;
 
 // NOTA: renderizarMisCorredores() vive en ui.js (se carga despues de este
 // archivo y sobrescribe cualquier definicion aqui). Se elimino la copia
@@ -195,43 +228,40 @@ function cerrarIntercambio() {
 }
 window.cerrarIntercambio = cerrarIntercambio;
 
-// --- CARTA 17: muestra 3 cartas al azar que YA hayan salido (repartidas), NO sean ganadoras ni 17/33, sin repetir numero ---
+// --- CARTA 17: deja "copiar" (solo visualmente, y SOLO PARA MI) la imagen de
+// un corredor que TODAVIA no ha salido en ninguna tanda (sigue en el mazo).
+// El resto de jugadores sigue viendo esta carta como "#17" normal: no se
+// cambia carta.numero/imagen (eso es compartido), solo se guarda en
+// `copiasVisuales`, que es local. No afecta su estado real (activa,
+// ganadora, descartada), que siempre se maneja por el id real de la carta.
 function intercambiarPor17(cartaActual) {
-    // Solo cartas de tandas ya repartidas (no cartas de tandas futuras aun no reveladas),
-    // que no sean ganadoras, no sean ella misma, no sean 17 ni 33, y sin numeros duplicados.
-    var vistos = {};
-    var filtradas = cartas.filter(function(c) {
-        if (c.id === cartaActual.id) return false;
-        if (c.esGanadora) return false;
-        if (c.numero === 17 || c.numero === 33) return false;
-        if (c.tanda > tandaActual) return false; // aun no ha salido
-        if (vistos[c.numero]) return false;
-        vistos[c.numero] = true;
-        return true;
+    if (!mazoRestante || mazoRestante.length === 0) {
+        alert('No quedan corredores en el mazo para copiar.');
+        return;
+    }
+    var candidatosNumeros = mazoRestante.filter(function(n) {
+        return n !== 17 && n !== 33;
     });
-    if (filtradas.length === 0) {
-        alert('No hay cartas disponibles para copiar (sin ganadoras ni especiales).');
+    if (candidatosNumeros.length === 0) {
+        alert('No quedan corredores disponibles en el mazo para copiar.');
         return;
     }
     // Mezclar
-    for (var i = filtradas.length - 1; i > 0; i--) {
+    var mezclados = candidatosNumeros.slice();
+    for (var i = mezclados.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
-        var temp = filtradas[i];
-        filtradas[i] = filtradas[j];
-        filtradas[j] = temp;
+        var temp = mezclados[i];
+        mezclados[i] = mezclados[j];
+        mezclados[j] = temp;
     }
-    // Tomar hasta 3
-    var seleccionables = filtradas.slice(0, Math.min(3, filtradas.length));
+    var seleccionables = mezclados.slice(0, Math.min(3, mezclados.length)).map(function(n) {
+        return { numero: n, imagen: 'imagenes/Corredor_' + n + '.png' };
+    });
 
-    mostrarModalSeleccion(seleccionables, 'Elige una carta para copiar (17)', function(cartaElegida) {
-        // Copiar visualmente
-        cartaActual.numero = cartaElegida.numero;
-        cartaActual.imagen = cartaElegida.imagen;
-        // Activar la carta actual
+    mostrarModalSeleccion(seleccionables, 'Elige un corredor para copiar (17) - solo tu lo veras asi', function(elegido) {
+        copiasVisuales[cartaActual.id] = { numero: elegido.numero, imagen: elegido.imagen };
         playersData[myId].activeCardId = cartaActual.id;
         broadcastSetActive(myId, cartaActual.id);
-        // Sincronizar de inmediato el estado completo para que todos vean la
-        // identidad copiada y el descarte funcione correctamente despues.
         broadcastState('sync');
         renderizarCartas();
         renderizarMisCorredores();
@@ -240,23 +270,27 @@ function intercambiarPor17(cartaActual) {
     });
 }
 
-// --- CARTA 33: muestra ganadoras que no sean 17 ni 33 ---
+// --- CARTA 33: deja "copiar" (solo visualmente, y SOLO PARA MI) la imagen de
+// una carta ganadora ya existente. Igual que 17: el resto sigue viendo "#33".
 function intercambiarPor33(cartaActual) {
+    var vistos = {};
     var ganadoras = cartas.filter(function(c) {
-        return c.esGanadora && c.numero !== 17 && c.numero !== 33;
+        if (c.id === cartaActual.id) return false;
+        if (!c.esGanadora) return false;
+        if (c.numero === 17 || c.numero === 33) return false;
+        if (vistos[c.numero]) return false; // evitar ofrecer el mismo numero dos veces
+        vistos[c.numero] = true;
+        return true;
     });
     if (ganadoras.length === 0) {
         alert('No hay cartas ganadoras disponibles (o son especiales).');
         return;
     }
 
-    mostrarModalSeleccion(ganadoras, 'Elige una carta ganadora para copiar (33)', function(cartaElegida) {
-        cartaActual.numero = cartaElegida.numero;
-        cartaActual.imagen = cartaElegida.imagen;
+    mostrarModalSeleccion(ganadoras, 'Elige una carta ganadora para copiar (33) - solo tu la veras asi', function(cartaElegida) {
+        copiasVisuales[cartaActual.id] = { numero: cartaElegida.numero, imagen: cartaElegida.imagen };
         playersData[myId].activeCardId = cartaActual.id;
         broadcastSetActive(myId, cartaActual.id);
-        // Sincronizar de inmediato el estado completo para que todos vean la
-        // identidad copiada y el descarte funcione correctamente despues.
         broadcastState('sync');
         renderizarCartas();
         renderizarMisCorredores();
@@ -283,20 +317,12 @@ function setActiveCard(cartaId) {
 
     var activeActual = playersData[myId].activeCardId;
 
-    // Si la carta clickeada YA es la activa: solo permitir desactivarla
-    // (no reabrir el intercambio de 17/33, para no permitir cambiar de "copia").
-    if (activeActual === cartaId) {
-        playersData[myId].activeCardId = null;
-        broadcastSetActive(myId, null);
-        renderizarMisCorredores();
-        actualizarUI();
-        saveSession();
-        return;
-    }
-
-    // Si ya hay OTRA carta activa esta ronda, no se permite cambiar de corredor.
+    // Si ya elegiste una carta esta ronda (sea esta misma u otra), la eleccion
+    // queda bloqueada: no se puede deshacer ni cambiar hasta la proxima ronda.
     if (activeActual) {
-        alert('Ya elegiste tu corredor para usar esta ronda. No puedes cambiar de carta hasta la proxima ronda.');
+        if (activeActual !== cartaId) {
+            alert('Ya elegiste tu corredor para usar esta ronda. No puedes cambiar de carta hasta la proxima ronda.');
+        }
         return;
     }
 
@@ -314,12 +340,19 @@ function setActiveCard(cartaId) {
     // Comportamiento normal: activar
     playersData[myId].activeCardId = cartaId;
     broadcastSetActive(myId, cartaId);
+    // Sincronizamos el estado completo de inmediato: ayuda a que el resto de
+    // jugadores (y el leaderboard) sepan cuanto antes que ya elegiste tu carta.
+    broadcastState('sync');
     renderizarMisCorredores();
     actualizarUI();
     saveSession();
 }
 window.setActiveCard = setActiveCard;
 
+// Descarta las cartas activas de TODOS los jugadores (se llama al presionar
+// "2grado"). La carta del ganador (esGanadora === true) tambien se descarta
+// y desaparece de "Mis Corredores", pero conserva su estatus de ganadora y
+// sigue visible en el boton "Ganadores".
 function descartarActivas(ganadorId) {
     for (var id in playersData) {
         var data = playersData[id];
@@ -328,21 +361,11 @@ function descartarActivas(ganadorId) {
         if (activeId) {
             for (var i = 0; i < cartas.length; i++) {
                 if (cartas[i].id === activeId) {
-                    if (id === ganadorId && cartas[i].esGanadora) {
-                        cartas[i].descartada = true;
-                        if (id === myId) {
-                            var idx = misSelecciones.indexOf(activeId);
-                            if (idx !== -1) {
-                                misSelecciones.splice(idx, 1);
-                            }
-                        }
-                    } else {
-                        cartas[i].descartada = true;
-                        if (id === myId) {
-                            var idx = misSelecciones.indexOf(activeId);
-                            if (idx !== -1) {
-                                misSelecciones.splice(idx, 1);
-                            }
+                    cartas[i].descartada = true;
+                    if (id === myId) {
+                        var idx = misSelecciones.indexOf(activeId);
+                        if (idx !== -1) {
+                            misSelecciones.splice(idx, 1);
                         }
                     }
                     break;
@@ -366,6 +389,9 @@ function descartarActivas(ganadorId) {
     setTimeout(function() {
         broadcastState('sync');
     }, 700);
+    setTimeout(function() {
+        broadcastState('sync');
+    }, 2000);
 }
 window.descartarActivas = descartarActivas;
 
@@ -399,12 +425,23 @@ window.todosEligieronCarta = todosEligieronCarta;
 function actualizarUI() {
     var startBtn = document.getElementById('startGameBtn');
     if (startBtn) {
-        startBtn.disabled = gameStarted;
-        startBtn.textContent = gameStarted ? 'Juego en curso' : 'Corredores';
+        var puedeRepartir = !gameStarted || (typeof loteTerminado === 'function' && loteTerminado());
+        startBtn.disabled = !puedeRepartir;
+        if (!gameStarted) {
+            startBtn.textContent = 'Corredores';
+        } else if (puedeRepartir) {
+            startBtn.textContent = 'Siguiente lote';
+        } else {
+            startBtn.textContent = 'Corredores en juego';
+        }
     }
     var puntosDisplay = document.getElementById('misPuntosDisplay');
     if (puntosDisplay && puntosPorJugador[myId] !== undefined) {
         puntosDisplay.textContent = 'Puntos: ' + puntosPorJugador[myId];
+    }
+    var restantesDisplay = document.getElementById('mazoRestanteDisplay');
+    if (restantesDisplay) {
+        restantesDisplay.textContent = 'Restantes: ' + (mazoRestante ? mazoRestante.length : 0);
     }
     var resetBtn = document.getElementById('resetGameBtn');
     if (resetBtn) {
@@ -416,9 +453,12 @@ function actualizarUI() {
     if (typeof actualizarBotonesGlobales === 'function') {
         actualizarBotonesGlobales();
     }
-    
-    var juegoTerminado = true;
+
+    // El juego se considera terminado solo cuando nadie tiene cartas en
+    // juego Y ya no queda mazo suficiente para repartir un lote nuevo.
+    var juegoTerminado = false;
     if (gameStarted) {
+        var quedanCartasEnJuego = false;
         for (var id in playersData) {
             var data = playersData[id];
             if (!data) continue;
@@ -436,15 +476,18 @@ function actualizarUI() {
                 }
             }
             if (tieneCartas) {
-                juegoTerminado = false;
+                quedanCartasEnJuego = true;
                 break;
             }
         }
-    } else {
-        juegoTerminado = false;
+        var numJugadoresActual = Object.keys(playersData).length;
+        var alcanzaMazo = mazoRestante.length >= (numJugadoresActual * 2) && numJugadoresActual > 0;
+        if (!quedanCartasEnJuego && !alcanzaMazo) {
+            juegoTerminado = true;
+        }
     }
-    
-    if (juegoTerminado && gameStarted) {
+
+    if (juegoTerminado) {
         var btns = document.querySelectorAll('.btn-puntaje');
         for (var b = 0; b < btns.length; b++) {
             btns[b].disabled = true;
@@ -456,7 +499,7 @@ function actualizarUI() {
             msg.style.color = '#F8B195';
             msg.style.fontWeight = 'bold';
             msg.style.padding = '10px';
-            msg.textContent = 'Juego terminado: no quedan cartas disponibles.';
+            msg.textContent = 'Juego terminado: no quedan corredores en el mazo.';
             var oldMsg = list.querySelector('.game-ended-msg');
             if (oldMsg) oldMsg.remove();
             msg.className = 'game-ended-msg';
@@ -486,6 +529,9 @@ function resetGlobalGame() {
     }
     broadcastReset();
     resetLocalGame();
+    // Refrescamos el mensaje "sync" retenido para que cualquiera que se una
+    // despues del reinicio reciba el estado ya reiniciado, no el anterior.
+    broadcastState('sync');
 }
 window.resetGlobalGame = resetGlobalGame;
 
@@ -495,8 +541,9 @@ function resetLocalGame() {
     puntosPorJugador = {};
     estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
     cartaActivaId = null;
-    tandaActual = 0;
-    avanzando = false;
+    tandaActual = -1;
+    mazoRestante = [];
+    copiasVisuales = {};
     gameStarted = false;
     gameInitiator = null;
     for (var id in playersData) {
@@ -541,6 +588,9 @@ function mostrarGanadores() {
 
     for (var i = 0; i < ganadoras.length; i++) {
         var c = ganadoras[i];
+        var visual = copiasVisuales[c.id] || null;
+        var numeroMostrado = visual ? visual.numero : c.numero;
+        var imagenMostrada = visual ? visual.imagen : c.imagen;
         var cardContainer = document.createElement('div');
         cardContainer.style.display = 'flex';
         cardContainer.style.alignItems = 'center';
@@ -551,8 +601,8 @@ function mostrarGanadores() {
         cardContainer.style.borderRadius = '8px';
         cardContainer.style.width = '100%';
         var img = document.createElement('img');
-        img.src = c.imagen;
-        img.alt = 'Corredor ' + c.numero;
+        img.src = imagenMostrada;
+        img.alt = 'Corredor ' + numeroMostrado;
         img.style.width = '60px';
         img.style.height = '80px';
         img.style.objectFit = 'cover';
@@ -563,7 +613,7 @@ function mostrarGanadores() {
         info.style.flexDirection = 'column';
         info.style.alignItems = 'flex-start';
         var numSpan = document.createElement('span');
-        numSpan.textContent = '#' + c.numero;
+        numSpan.textContent = '#' + numeroMostrado;
         numSpan.style.fontWeight = 'bold';
         info.appendChild(numSpan);
         var dueno = 'Desconocido';
