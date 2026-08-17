@@ -1,4 +1,4 @@
-// leaderboard.js (sin cambios)
+// leaderboard.js
 function renderLeaderboard() {
     var list = document.getElementById('playersList');
     list.innerHTML = '';
@@ -32,8 +32,6 @@ function renderLeaderboard() {
         card.addEventListener('click', function(pid) {
             return function() {
                 if (typeof todosEligieronCarta === 'function' && !todosEligieronCarta()) {
-                    // Todavia faltan jugadores por elegir su corredor de esta
-                    // ronda: no mostramos nada (sin alerta) hasta que todos elijan.
                     return;
                 }
                 var activeId = playersData[pid] ? playersData[pid].activeCardId : null;
@@ -74,7 +72,8 @@ function renderLeaderboard() {
                     }
                 }
                 if (carta) {
-                    seleccionesHtml += '<span style="font-size:0.7rem; background:#2a2a4a; padding:2px 6px; border-radius:4px;">#' + carta.numero + '</span>';
+                    var prefijo = getPrefijoCarta(carta.numero);
+                    seleccionesHtml += '<span style="font-size:0.7rem; background:#2a2a4a; padding:2px 6px; border-radius:4px;">' + prefijo + ' - #' + carta.numero + '</span>';
                 }
             }
         }

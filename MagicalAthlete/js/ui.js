@@ -44,7 +44,8 @@ function renderizarCartas() {
         cardDiv.appendChild(img);
         var numberSpan = document.createElement('div');
         numberSpan.className = 'card-number';
-        numberSpan.textContent = '#' + carta.numero;
+        var prefijo = getPrefijoCarta(carta.numero);
+        numberSpan.textContent = prefijo + ' - #' + carta.numero;
         cardDiv.appendChild(numberSpan);
         var overlay = document.createElement('div');
         overlay.className = 'card-overlay';
@@ -120,9 +121,6 @@ function renderizarMisCorredores() {
                 e.stopPropagation();
                 var cartaParaZoom = c;
                 if (v) {
-                    // Muestro mi copia visual (solo yo la veo asi); el
-                    // estado real (activa/ganadora/descartada) sigue
-                    // siendo el de la carta original.
                     cartaParaZoom = {
                         id: c.id,
                         numero: v.numero,
@@ -143,7 +141,8 @@ function renderizarMisCorredores() {
         imgContainer.appendChild(img);
         var num = document.createElement('div');
         num.className = 'mini-number';
-        num.textContent = '#' + numeroMostrado;
+        var prefijo = getPrefijoCarta(numeroMostrado);
+        num.textContent = prefijo + ' - #' + numeroMostrado;
         imgContainer.appendChild(num);
         if (esGanadora) {
             var badge = document.createElement('div');
@@ -165,10 +164,8 @@ function renderizarMisCorredores() {
         if (carta.esGanadora || carta.descartada || esActiva) {
             btnUsar.disabled = true;
         } else if (activeId) {
-            // Ya elegiste otra carta para esta ronda: no se puede cambiar.
             btnUsar.disabled = true;
         } else if (!faseSeleccionCompleta) {
-            // Todavia faltan corredores por repartir/escoger en este ciclo.
             btnUsar.disabled = true;
         }
         btnUsar.addEventListener('click', function(cId) {

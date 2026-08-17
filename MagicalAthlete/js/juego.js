@@ -1,52 +1,39 @@
 // juego.js
 // ===== CONFIGURACION =====
-// --- Como funciona el mazo/lotes/ciclos (para futuras modificaciones) ---
-// - `mazoRestante` guarda los numeros de corredor (1..36) que TODAVIA no se
-//   han repartido en esta partida. Se baraja una sola vez, al presionar
-//   "Corredores" por primera vez, y se va consumiendo de a poco.
-// - Cada vez que se presiona "Corredores" arranca un CICLO nuevo: se
-//   reparten LOTES_POR_CICLO (2) lotes de tamano = numJugadores * 2 cada
-//   uno, sacados directamente de `mazoRestante`. El primer lote se reparte
-//   al presionar el boton; el segundo se reparte SOLO Y AUTOMATICAMENTE en
-//   cuanto todos terminan de escoger las cartas del primer lote (ver
-//   verificarSiguienteLote()), sin que nadie tenga que presionar nada. Como
-//   se saca sin reponer, un numero de corredor JAMAS se repite entre lotes.
-// - `cartas` acumula TODAS las cartas repartidas en la partida (de todos
-//   los lotes/ciclos), no se reemplaza entre lotes. Cada carta recuerda a
-//   que lote pertenece en su campo `tanda`.
-// - `tandaActual` es el indice del ultimo lote repartido (0, 1, 2...) y
-//   `cicloTandaInicio` es el indice del primer lote del ciclo actual.
-// - Recien cuando los 2 lotes del ciclo fueron repartidos Y seleccionados
-//   por completo (cada jugador con sus 4 corredores) se habilita el boton
-//   "Usar" (ver todosLotesCicloCompletos()).
-// - El boton "Corredores" se bloquea apenas arranca un ciclo, y se vuelve a
-//   habilitar solo cuando TODAS las cartas de ese ciclo (las 4 de cada
-//   jugador) ya fueron usadas/descartadas (ver cicloTerminado()).
 var cartas = [];
 var misSelecciones = [];
-var MAX_SELECCIONES = 2; // corredores por jugador, por lote
-var TOTAL_IMAGENES = 36;
-var cartaActivaId = null; // ya no se usa a nivel global, se usa por jugador
-var tandaActual = -1; // -1 = todavia no se ha repartido ningun lote
-var mazoRestante = []; // numeros de corredor que faltan por repartir
-// --- CICLOS DE REPARTO ---
-// Cada vez que se presiona "Corredores" arranca un CICLO nuevo. Un ciclo
-// reparte LOTES_POR_CICLO lotes (2) de forma automatica, uno detras de
-// otro: en cuanto todos los jugadores terminan de escoger las cartas del
-// lote actual, se reparte de inmediato el siguiente lote del mismo ciclo,
-// sin que nadie tenga que presionar ningun boton. Recien cuando los
-// LOTES_POR_CICLO lotes fueron repartidos Y seleccionados por completo
-// (cada jugador con sus 4 corredores) se habilita el boton "Usar". El
-// boton "Corredores" se vuelve a habilitar solo cuando TODAS las cartas
-// del ciclo actual fueron descartadas (jugadas).
+var MAX_SELECCIONES = 2;
+var TOTAL_IMAGENES_BASE = 36;
+var TOTAL_IMAGENES_EXPANSION = 36;
+var TOTAL_IMAGENES = TOTAL_IMAGENES_BASE + TOTAL_IMAGENES_EXPANSION; // 72
+var cartaActivaId = null;
+var tandaActual = -1;
+var mazoRestante = [];
 var LOTES_POR_CICLO = 2;
-var cicloTandaInicio = 0; // indice de "tanda" en el que arranco el ciclo actual
-// Cambio VISUAL y LOCAL de las cartas 17/33: cuando yo uso una de estas
-// cartas para "copiar" a otro corredor, SOLO YO veo esa apariencia; el
-// resto de jugadores sigue viendo la carta como #17 o #33. Por eso esto
-// NUNCA se transmite por red ni se guarda en `cartas` (que es compartido):
-// vive unicamente en este mapa local. cartaId -> { numero, imagen }
+var cicloTandaInicio = 0;
 var copiasVisuales = {};
+
+// Funciones globales para tipo y prefijo
+function getTipoCarta(numero) {
+    return numero <= TOTAL_IMAGENES_BASE ? 'base' : 'expansion';
+}
+
+function getPrefijoCarta(numero) {
+    return numero <= TOTAL_IMAGENES_BASE ? 'BS' : 'EX';
+}
+
+function getImagenCarta(numero) {
+    if (numero <= TOTAL_IMAGENES_BASE) {
+        return 'imagenes/Corredor_' + numero + '.png';
+    } else {
+        var expNum = numero - TOTAL_IMAGENES_BASE;
+        return 'imagenes/Expansion_' + expNum + '.png';
+    }
+}
+
+window.getPrefijoCarta = getPrefijoCarta;
+window.getImagenCarta = getImagenCarta;
+window.getTipoCarta = getTipoCarta;
 
 function seleccionarCarta(cartaId) {
     var carta = null;
@@ -107,13 +94,8 @@ function seleccionarCarta(cartaId) {
 }
 window.seleccionarCarta = seleccionarCarta;
 
-// Devuelve true si el CICLO actual (los LOTES_POR_CICLO lotes repartidos
-// desde la ultima vez que se presiono "Corredores") ya esta completamente
-// resuelto: es decir, todas las cartas de esos lotes fueron descartadas
-// (jugadas). Mientras esto sea false, el boton "Corredores" permanece
-// bloqueado.
 function cicloTerminado() {
-    if (tandaActual < 0) return true; // todavia no se reparte nada
+    if (tandaActual < 0) return true;
     for (var i = 0; i < cartas.length; i++) {
         var c = cartas[i];
         if (c.tanda >= cicloTandaInicio && c.tanda <= tandaActual && !c.descartada) {
@@ -124,10 +106,6 @@ function cicloTerminado() {
 }
 window.cicloTerminado = cicloTerminado;
 
-// Devuelve true solo cuando YA se repartieron los LOTES_POR_CICLO lotes del
-// ciclo actual Y todas esas cartas ya fueron seleccionadas por algun
-// jugador (es decir, cada jugador ya tiene sus 4 corredores). Solo a partir
-// de aqui se puede usar el boton "Usar" para jugar una carta.
 function todosLotesCicloCompletos() {
     if (tandaActual < cicloTandaInicio + LOTES_POR_CICLO - 1) return false;
     for (var i = 0; i < cartas.length; i++) {
@@ -140,15 +118,11 @@ function todosLotesCicloCompletos() {
 }
 window.todosLotesCicloCompletos = todosLotesCicloCompletos;
 
-// Reparte automaticamente el siguiente lote del ciclo actual, sin que nadie
-// tenga que presionar ningun boton. Solo lo ejecuta el anfitrion de la
-// sala (o cualquiera si se juega sin sala), para evitar que dos jugadores
-// repartan el mismo lote dos veces.
 function repartirSiguienteLoteAutomatico() {
     var numJugadores = Object.keys(playersData).length;
     if (numJugadores === 0) return;
     var cartasPorLote = numJugadores * 2;
-    if (mazoRestante.length < cartasPorLote) return; // no alcanza el mazo, se deja como esta
+    if (mazoRestante.length < cartasPorLote) return;
 
     tandaActual++;
     var nuevasCartas = [];
@@ -157,7 +131,7 @@ function repartirSiguienteLoteAutomatico() {
         nuevasCartas.push({
             id: 'carta-' + tandaActual + '-' + k,
             numero: numero,
-            imagen: 'imagenes/Corredor_' + numero + '.png',
+            imagen: getImagenCarta(numero),
             seleccionadoPor: null,
             seleccionadoPorId: null,
             esGanadora: false,
@@ -174,13 +148,9 @@ function repartirSiguienteLoteAutomatico() {
 }
 window.repartirSiguienteLoteAutomatico = repartirSiguienteLoteAutomatico;
 
-// Revisa si el lote actual del ciclo ya fue completamente seleccionado (sin
-// cartas disponibles) y, de ser asi, reparte de inmediato el siguiente lote
-// del mismo ciclo. Se llama cada vez que alguien selecciona una carta
-// (tanto localmente como al recibir la seleccion de otro jugador por red).
 function verificarSiguienteLote() {
     if (tandaActual < 0) return;
-    if (tandaActual >= cicloTandaInicio + LOTES_POR_CICLO - 1) return; // ya se repartieron todos los lotes del ciclo
+    if (tandaActual >= cicloTandaInicio + LOTES_POR_CICLO - 1) return;
     var quedanDisponibles = false;
     for (var i = 0; i < cartas.length; i++) {
         if (cartas[i].tanda === tandaActual && !cartas[i].seleccionadoPor) {
@@ -188,7 +158,7 @@ function verificarSiguienteLote() {
             break;
         }
     }
-    if (quedanDisponibles) return; // todavia hay cartas de este lote sin escoger
+    if (quedanDisponibles) return;
     var esAnfitrion = !currentRoom || !hostId || hostId === myId;
     if (!esAnfitrion) return;
     repartirSiguienteLoteAutomatico();
@@ -210,7 +180,6 @@ function iniciarJuego() {
     var esPrimerLote = !gameStarted;
 
     if (esPrimerLote) {
-        // Partida nueva: armar y barajar el mazo completo de corredores.
         mazoRestante = [];
         for (var i = 1; i <= TOTAL_IMAGENES; i++) {
             mazoRestante.push(i);
@@ -240,19 +209,17 @@ function iniciarJuego() {
         return;
     }
 
-    // Al arrancar un ciclo nuevo (incluso si no es el primero), el estado de
-    // la ronda de puntaje (1grado/2grado) siempre debe partir limpio.
     estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
 
     tandaActual++;
-    cicloTandaInicio = tandaActual; // este lote es el primero del nuevo ciclo
+    cicloTandaInicio = tandaActual;
     var nuevasCartas = [];
     for (var k = 0; k < cartasPorLote; k++) {
         var numero = mazoRestante.shift();
         nuevasCartas.push({
             id: 'carta-' + tandaActual + '-' + k,
             numero: numero,
-            imagen: 'imagenes/Corredor_' + numero + '.png',
+            imagen: getImagenCarta(numero),
             seleccionadoPor: null,
             seleccionadoPorId: null,
             esGanadora: false,
@@ -263,10 +230,6 @@ function iniciarJuego() {
     cartas = cartas.concat(nuevasCartas);
     gameStarted = true;
 
-    // El segundo (y ultimo) lote de este ciclo se repartira automaticamente
-    // en cuanto todos terminen de escoger las cartas de este primer lote
-    // (ver verificarSiguienteLote()), sin necesidad de volver a presionar
-    // "Corredores".
     broadcastStart(cartas, tandaActual, mazoRestante, esPrimerLote, true);
     renderizarCartas();
     renderizarMisCorredores();
@@ -275,11 +238,7 @@ function iniciarJuego() {
 }
 window.iniciarJuego = iniciarJuego;
 
-// NOTA: renderizarMisCorredores() vive en ui.js (se carga despues de este
-// archivo y sobrescribe cualquier definicion aqui). Se elimino la copia
-// duplicada que existia en este archivo para evitar que quedara desactualizada.
-
-// ========== FUNCIONES PARA INTERCAMBIO ==========
+// Funciones de intercambio
 function mostrarModalSeleccion(cartasDisponibles, titulo, callback) {
     var modal = document.getElementById('intercambioModal');
     var contenido = document.getElementById('intercambioContenido');
@@ -320,12 +279,6 @@ function cerrarIntercambio() {
 }
 window.cerrarIntercambio = cerrarIntercambio;
 
-// --- CARTA 17: deja "copiar" (solo visualmente, y SOLO PARA MI) la imagen de
-// un corredor que TODAVIA no ha salido en ninguna tanda (sigue en el mazo).
-// El resto de jugadores sigue viendo esta carta como "#17" normal: no se
-// cambia carta.numero/imagen (eso es compartido), solo se guarda en
-// `copiasVisuales`, que es local. No afecta su estado real (activa,
-// ganadora, descartada), que siempre se maneja por el id real de la carta.
 function intercambiarPor17(cartaActual) {
     if (!mazoRestante || mazoRestante.length === 0) {
         alert('No quedan corredores en el mazo para copiar.');
@@ -338,7 +291,6 @@ function intercambiarPor17(cartaActual) {
         alert('No quedan corredores disponibles en el mazo para copiar.');
         return;
     }
-    // Mezclar
     var mezclados = candidatosNumeros.slice();
     for (var i = mezclados.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
@@ -347,7 +299,7 @@ function intercambiarPor17(cartaActual) {
         mezclados[j] = temp;
     }
     var seleccionables = mezclados.slice(0, Math.min(3, mezclados.length)).map(function(n) {
-        return { numero: n, imagen: 'imagenes/Corredor_' + n + '.png' };
+        return { numero: n, imagen: getImagenCarta(n) };
     });
 
     mostrarModalSeleccion(seleccionables, 'Elige un corredor para copiar (17) - solo tu lo veras asi', function(elegido) {
@@ -362,15 +314,13 @@ function intercambiarPor17(cartaActual) {
     });
 }
 
-// --- CARTA 33: deja "copiar" (solo visualmente, y SOLO PARA MI) la imagen de
-// una carta ganadora ya existente. Igual que 17: el resto sigue viendo "#33".
 function intercambiarPor33(cartaActual) {
     var vistos = {};
     var ganadoras = cartas.filter(function(c) {
         if (c.id === cartaActual.id) return false;
         if (!c.esGanadora) return false;
         if (c.numero === 17 || c.numero === 33) return false;
-        if (vistos[c.numero]) return false; // evitar ofrecer el mismo numero dos veces
+        if (vistos[c.numero]) return false;
         vistos[c.numero] = true;
         return true;
     });
@@ -414,8 +364,6 @@ function setActiveCard(cartaId) {
 
     var activeActual = playersData[myId].activeCardId;
 
-    // Si ya elegiste una carta esta ronda (sea esta misma u otra), la eleccion
-    // queda bloqueada: no se puede deshacer ni cambiar hasta la proxima ronda.
     if (activeActual) {
         if (activeActual !== cartaId) {
             alert('Ya elegiste tu corredor para usar esta ronda. No puedes cambiar de carta hasta la proxima ronda.');
@@ -423,7 +371,6 @@ function setActiveCard(cartaId) {
         return;
     }
 
-    // ========== CARTAS ESPECIALES ==========
     if (carta.numero === 17) {
         intercambiarPor17(carta);
         return;
@@ -432,13 +379,9 @@ function setActiveCard(cartaId) {
         intercambiarPor33(carta);
         return;
     }
-    // =======================================
 
-    // Comportamiento normal: activar
     playersData[myId].activeCardId = cartaId;
     broadcastSetActive(myId, cartaId);
-    // Sincronizamos el estado completo de inmediato: ayuda a que el resto de
-    // jugadores (y el leaderboard) sepan cuanto antes que ya elegiste tu carta.
     broadcastState('sync');
     renderizarMisCorredores();
     actualizarUI();
@@ -446,23 +389,6 @@ function setActiveCard(cartaId) {
 }
 window.setActiveCard = setActiveCard;
 
-// Aplica LOCALMENTE el descarte de las cartas activas de TODOS los
-// jugadores (se ejecuta al presionar "2grado"). La carta del ganador
-// (esGanadora === true) tambien se descarta y desaparece de "Mis
-// Corredores", pero conserva su estatus de ganadora y sigue visible en el
-// boton "Ganadores".
-//
-// IMPORTANTE: esta funcion NO transmite nada por red. Cada jugador la debe
-// ejecutar en su propio dispositivo (ver descartarActivas() para quien
-// presiona el boton, y el manejador de 'puntaje_global' en mqtt.js para el
-// resto). Esto es clave: el campo `misSelecciones` (y `playersData[miId
-// ].selecciones`) es un dato LOCAL de cada jugador, asi que solo dejar que
-// el mensaje de red "sync" lo actualice puede llegar tarde o perderse, y
-// entonces la carta ganadora nunca desaparece de "Mis Corredores" en la
-// pantalla del propio ganador, dejando la ronda trabada. Al ejecutar este
-// mismo calculo en cada dispositivo (usando el activeCardId ya sincronizado
-// de cada jugador) el resultado es identico en todos y no depende de que
-// un unico mensaje de red llegue bien.
 function aplicarDescarteActivas(ganadorId) {
     for (var id in playersData) {
         var data = playersData[id];
@@ -494,15 +420,9 @@ function aplicarDescarteActivas(ganadorId) {
 }
 window.aplicarDescarteActivas = aplicarDescarteActivas;
 
-// La ejecuta quien presiona "2grado": aplica el descarte en su propio
-// dispositivo y ademas avisa al resto de la sala.
 function descartarActivas(ganadorId) {
     aplicarDescarteActivas(ganadorId);
     broadcastState('sync');
-    // Reenvio redundante: la red MQTT publica sin garantia de entrega, asi que
-    // se reenvia el estado poco despues para autocorregir a jugadores que
-    // hayan perdido el primer mensaje (por ejemplo, si se reconectaron justo
-    // en ese momento).
     setTimeout(function() {
         broadcastState('sync');
     }, 700);
@@ -512,8 +432,6 @@ function descartarActivas(ganadorId) {
 }
 window.descartarActivas = descartarActivas;
 
-// Devuelve true solo si todos los jugadores que aun tienen cartas en juego
-// ya eligieron (boton "Usar") la carta que van a usar esta ronda.
 function todosEligieronCarta() {
     for (var id in playersData) {
         var data = playersData[id];
@@ -571,8 +489,6 @@ function actualizarUI() {
         actualizarBotonesGlobales();
     }
 
-    // El juego se considera terminado solo cuando nadie tiene cartas en
-    // juego Y ya no queda mazo suficiente para repartir un lote nuevo.
     var juegoTerminado = false;
     if (gameStarted) {
         var quedanCartasEnJuego = false;
@@ -646,8 +562,6 @@ function resetGlobalGame() {
     }
     broadcastReset();
     resetLocalGame();
-    // Refrescamos el mensaje "sync" retenido para que cualquiera que se una
-    // despues del reinicio reciba el estado ya reiniciado, no el anterior.
     broadcastState('sync');
 }
 window.resetGlobalGame = resetGlobalGame;
@@ -731,7 +645,8 @@ function mostrarGanadores() {
         info.style.flexDirection = 'column';
         info.style.alignItems = 'flex-start';
         var numSpan = document.createElement('span');
-        numSpan.textContent = '#' + numeroMostrado;
+        var prefijo = getPrefijoCarta(numeroMostrado);
+        numSpan.textContent = prefijo + ' - #' + numeroMostrado;
         numSpan.style.fontWeight = 'bold';
         info.appendChild(numSpan);
         var dueno = 'Desconocido';
