@@ -86,7 +86,7 @@
         <div class="modal-box zoom-box">
             <h3 id="intercambioTitulo">Selecciona una carta</h3>
             <div id="intercambioContenido" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 15px 0;"></div>
-            <button class="modal-btn btn-secondary" onclick="cerrarIntercambio()">Cancelar</button>
+            <!-- Boton Cancelar eliminado -->
         </div>
     </div>
 
@@ -118,11 +118,12 @@
                     
                     <!-- Puntaje del jugador -->
                     <div id="misPuntosDisplay" style="text-align:center; font-size:1.2rem; font-weight:bold; margin:8px 0;">Puntos: 0</div>
+                    <div id="mazoRestanteDisplay" style="text-align:center; font-size:0.9rem; color: var(--text-muted); margin: -4px 0 8px 0;">Restantes: 0</div>
                     
                     <!-- Botones globales de puntuacion (siempre visibles) -->
                     <div id="puntaje-botones" class="puntaje-botones" style="margin-top: 10px;">
-                        <button class="btn-puntaje btn-3" id="btnPuntaje3" onclick="asignarPuntoGlobal('+3')">+3</button>
-                        <button class="btn-puntaje btn-2" id="btnPuntaje2" onclick="asignarPuntoGlobal('+2')">+2</button>
+                        <button class="btn-puntaje btn-3" id="btnPuntaje3" onclick="asignarPuntoGlobal('+3')">1°</button>
+                        <button class="btn-puntaje btn-2" id="btnPuntaje2" onclick="asignarPuntoGlobal('+2')">2°</button>
                         <button class="btn-puntaje btn-menos" id="btnPuntajeMenos" onclick="asignarPuntoGlobal('-1')">-1</button>
                         <button class="btn-puntaje btn-mas" id="btnPuntajeMas" onclick="asignarPuntoGlobal('+1')">+1</button>
                     </div>

@@ -28,7 +28,7 @@ function asignarPuntoGlobal(tipo) {
 
     if (tipo === '+3') {
         if (estadoRonda.usado3) {
-            alert('+3 ya fue usado esta ronda.');
+            alert('1° ya fue usado esta ronda.');
             return;
         }
         var activeId = playersData[myId] ? playersData[myId].activeCardId : null;
@@ -68,15 +68,15 @@ function asignarPuntoGlobal(tipo) {
         saveSession();
     } else if (tipo === '+2') {
         if (!estadoRonda.usado3) {
-            alert('Debes usar +3 primero.');
+            alert('Debes usar 1° primero.');
             return;
         }
         if (estadoRonda.usado2) {
-            alert('+2 ya fue usado esta ronda.');
+            alert('2° ya fue usado esta ronda.');
             return;
         }
         if (estadoRonda.jugadorGanador === myId) {
-            alert('No puedes usar +2, ya usaste +3.');
+            alert('No puedes usar 2°, ya usaste 1°.');
             return;
         }
         puntosPorJugador[myId] += 2;

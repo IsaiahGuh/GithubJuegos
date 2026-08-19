@@ -58,8 +58,14 @@ function entrarSala() {
     cartas = [];
     misSelecciones = [];
     cartaActivaId = null;
+    tandaActual = -1;
+    cicloTandaInicio = 0;
+    mazoRestante = [];
+    copiasVisuales = {};
+    gruposExpansion31 = {};
     gameStarted = false;
     gameInitiator = null;
+    hostId = null;
     
     var session = loadSession();
     if (session && session.roomCode === sala && session.myName === nombre) {
@@ -71,6 +77,12 @@ function entrarSala() {
         puntosPorJugador = session.puntosPorJugador || {};
         estadoRonda = session.estadoRonda || { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
         cartaActivaId = session.cartaActivaId || null;
+        tandaActual = session.tandaActual !== undefined ? session.tandaActual : -1;
+        cicloTandaInicio = session.cicloTandaInicio !== undefined ? session.cicloTandaInicio : 0;
+        mazoRestante = session.mazoRestante || [];
+        copiasVisuales = session.copiasVisuales || {};
+        gruposExpansion31 = session.gruposExpansion31 || {};
+        hostId = session.hostId || null;
         if (session.playersData) {
             playersData = session.playersData;
         }

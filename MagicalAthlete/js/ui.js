@@ -1,10 +1,10 @@
-// ui.js (sin cambios)
+// ui.js
 function renderizarCartas() {
     var grid = document.getElementById('card-grid');
     grid.innerHTML = '';
     var boardContainer = document.querySelector('.board-container');
     
-    if (!cartas || cartas.length === 0) {
+    if (!cartas || cartas.length === 0 || tandaActual < 0) {
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Presiona "Corredores" para comenzar la partida</div>';
         if (boardContainer) boardContainer.style.display = 'block';
         return;
@@ -15,16 +15,15 @@ function renderizarCartas() {
     });
     
     if (disponibles.length === 0) {
-        var haySinDescartar = cartas.some(function(c) {
-            return c.tanda === tandaActual && !c.descartada;
-        });
-        if (haySinDescartar) {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas de esta tanda ya fueron seleccionadas</div>';
+        var cicloYaTerminado = (typeof cicloTerminado === 'function') && cicloTerminado();
+        if (cicloYaTerminado) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Presiona "Corredores" para repartir un nuevo lote</div>';
         } else {
-            if (tandaActual < TOTAL_TANDAS - 1) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Esperando siguiente tanda...</div>';
+            var loteCompleto = (typeof todosLotesCicloCompletos === 'function') && todosLotesCicloCompletos();
+            if (!loteCompleto) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Repartiendo el siguiente lote de corredores...</div>';
             } else {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Todas las cartas han sido seleccionadas o descartadas</div>';
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">Corredores en juego. Cuando todos usen y descarten sus 4 corredores, presiona "Corredores" para repartir un nuevo lote.</div>';
             }
         }
         if (boardContainer) boardContainer.style.display = 'block';
@@ -45,7 +44,8 @@ function renderizarCartas() {
         cardDiv.appendChild(img);
         var numberSpan = document.createElement('div');
         numberSpan.className = 'card-number';
-        numberSpan.textContent = '#' + carta.numero;
+        var prefijo = getPrefijoCarta(carta.numero);
+        numberSpan.textContent = prefijo + ' - #' + carta.numero;
         cardDiv.appendChild(numberSpan);
         var overlay = document.createElement('div');
         overlay.className = 'card-overlay';
@@ -107,25 +107,47 @@ function renderizarMisCorredores() {
     var activeId = playersData[myId] ? playersData[myId].activeCardId : null;
     for (var k = 0; k < misCartas.length; k++) {
         var carta = misCartas[k];
+        var visual = (typeof copiasVisuales !== 'undefined' && copiasVisuales[carta.id]) ? copiasVisuales[carta.id] : null;
+        var numeroMostrado = visual ? visual.numero : carta.numero;
+        var imagenMostrada = visual ? visual.imagen : carta.imagen;
         var esActiva = (activeId === carta.id);
         var esGanadora = carta.esGanadora || false;
         var wrapper = document.createElement('div');
         wrapper.className = 'my-card-wrapper' + (esActiva ? ' activa' : '') + (esGanadora ? ' ganadora' : '');
         var imgContainer = document.createElement('div');
         imgContainer.className = 'my-card-img';
-        imgContainer.addEventListener('click', function(c) {
+        imgContainer.addEventListener('click', function(c, v) {
             return function(e) {
                 e.stopPropagation();
-                abrirZoom(c, false, true);
+                if (typeof EXPANSION_31_NUMERO !== 'undefined' && c.numero === EXPANSION_31_NUMERO &&
+                    typeof gruposExpansion31 !== 'undefined' && gruposExpansion31[c.id]) {
+                    mostrarGrupoExpansion31(c.id);
+                    return;
+                }
+                var cartaParaZoom = c;
+                if (v) {
+                    cartaParaZoom = {
+                        id: c.id,
+                        numero: v.numero,
+                        imagen: v.imagen,
+                        seleccionadoPor: c.seleccionadoPor,
+                        seleccionadoPorId: c.seleccionadoPorId,
+                        esGanadora: c.esGanadora,
+                        descartada: c.descartada,
+                        tanda: c.tanda
+                    };
+                }
+                abrirZoom(cartaParaZoom, false, true);
             };
-        }(carta));
+        }(carta, visual));
         var img = document.createElement('img');
-        img.src = carta.imagen;
-        img.alt = 'Corredor ' + carta.numero;
+        img.src = imagenMostrada;
+        img.alt = 'Corredor ' + numeroMostrado;
         imgContainer.appendChild(img);
         var num = document.createElement('div');
         num.className = 'mini-number';
-        num.textContent = '#' + carta.numero;
+        var prefijo = getPrefijoCarta(numeroMostrado);
+        num.textContent = prefijo + ' - #' + numeroMostrado;
         imgContainer.appendChild(num);
         if (esGanadora) {
             var badge = document.createElement('div');
@@ -136,8 +158,19 @@ function renderizarMisCorredores() {
         wrapper.appendChild(imgContainer);
         var btnUsar = document.createElement('button');
         btnUsar.className = 'btn-sm btn-usar';
-        btnUsar.textContent = 'Usar';
-        if (carta.esGanadora || carta.descartada) {
+        var faseSeleccionCompleta = (typeof todosLotesCicloCompletos !== 'function') || todosLotesCicloCompletos();
+        if (esActiva) {
+            btnUsar.textContent = 'En uso';
+        } else if (!faseSeleccionCompleta) {
+            btnUsar.textContent = 'Espera...';
+        } else {
+            btnUsar.textContent = 'Usar';
+        }
+        if (carta.esGanadora || carta.descartada || esActiva) {
+            btnUsar.disabled = true;
+        } else if (activeId) {
+            btnUsar.disabled = true;
+        } else if (!faseSeleccionCompleta) {
             btnUsar.disabled = true;
         }
         btnUsar.addEventListener('click', function(cId) {

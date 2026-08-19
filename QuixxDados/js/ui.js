@@ -12,6 +12,7 @@ function renderBoard() {
             var num = rowConfig.numbers[n];
             var box = document.createElement('div');
             box.className = 'box';
+            box.id = rowConfig.id + '-' + n;
             box.textContent = num;
             (function(color, idx) {
                 box.addEventListener('click', function() { handleBoxClick(color, idx); });
@@ -21,6 +22,7 @@ function renderBoard() {
         
         var lockBox = document.createElement('div');
         lockBox.className = 'box lock';
+        lockBox.id = rowConfig.id + '-11';
         lockBox.textContent = 'C';
         (function(color) {
             lockBox.addEventListener('click', function() { handleBoxClick(color, 11); });
@@ -52,6 +54,7 @@ function updateVisuals() {
         }
         var rowDiv = document.querySelector('.row.' + color);
         if (!rowDiv) continue;
+        var lockOwner = getGlobalLockOwner(color);
         var boxes = rowDiv.querySelectorAll('.box');
         for (var b = 0; b < boxes.length; b++) {
             var pos = moveHistory.indexOf(color + '-' + b);
@@ -63,6 +66,10 @@ function updateVisuals() {
                     boxes[b].classList.add('last-marked');
                 }
             } else if (b <= highest) {
+                boxes[b].classList.add('disabled');
+            }
+            // El candado bloqueado por otro jugador queda cerrado solo para esa casilla.
+            if (b === 11 && pos === -1 && lockOwner && lockOwner.id !== myId) {
                 boxes[b].classList.add('disabled');
             }
         }
@@ -80,42 +87,137 @@ function updateVisuals() {
             }
         }
     }
+
+    if (gameEnded) {
+        var endedBoxes = document.querySelectorAll('.box, .penalty-box');
+        for (var e = 0; e < endedBoxes.length; e++) {
+            endedBoxes[e].classList.add('disabled');
+        }
+    }
 }
 
 // ===== ACTUALIZACION DE UI DE TURNOS (igual que Yatzy) =====
 function updateUI() {
     // Banner de turno
     var banner = document.getElementById('turnBanner');
+    banner.classList.remove('my-turn', 'can-steal', 'already-stolen');
     if (!gameStarted) {
         banner.textContent = 'Esperando inicio...';
-        banner.classList.remove('my-turn');
     } else if (turnOrder.length === 0) {
         banner.textContent = '';
-        banner.classList.remove('my-turn');
     } else {
         var currentId = turnOrder[currentTurnIndex];
         var currentName = (playersData[currentId] && playersData[currentId].name) || (currentId === myId ? myName : '??');
         if (currentId === myId) {
-            banner.textContent = 'Tu turno — marca una casilla y finaliza';
+            banner.textContent = turnLocked
+                ? 'Ya marcaste — finaliza cuando quieras'
+                : 'Tu turno — marca una casilla';
             banner.classList.add('my-turn');
+        } else if (stealWindowOpen && !hasStolenThisTurn) {
+            banner.textContent = 'Turno de: ' + currentName + ' — ¡Puedes robar!';
+            banner.classList.add('can-steal');
+        } else if (stealWindowOpen && hasStolenThisTurn) {
+            banner.textContent = 'Ya robaste. Esperando a ' + currentName + '...';
+            banner.classList.add('already-stolen');
         } else {
             banner.textContent = 'Turno de: ' + currentName;
-            banner.classList.remove('my-turn');
         }
     }
 
-    // Botón Iniciar: solo visible para anfitrion si partida no empezada
+    // Botón Iniciar: solo visible para anfitrion si partida no empezada y hay jugadores
     var startBtn = document.getElementById('startGameBtn');
     var showStart = isRoomCreator && !gameStarted && currentRoom;
     startBtn.style.display = showStart ? 'block' : 'none';
-    startBtn.disabled = !showStart;
+    startBtn.disabled = !showStart || (typeof pendingOrder !== 'undefined' && pendingOrder.length === 0);
 
     // Botón Finalizar turno: visible solo si es mi turno, ya marqué (turnLocked) y partida iniciada
     var endBtn = document.getElementById('endTurnBtn');
-    var canEnd = isMyTurn() && turnLocked && gameStarted;
+    var canEnd = isMyTurn() && turnLocked && gameStarted && !gameEnded;
     endBtn.disabled = !canEnd;
 
     // Botón Reiniciar: solo anfitrion, partida iniciada
     var resetBtn = document.getElementById('resetGameBtn');
     resetBtn.style.display = (isRoomCreator && gameStarted) ? 'block' : 'none';
+
+    if (gameEnded) {
+        startBtn.disabled = true;
+        endBtn.disabled = true;
+    }
+}
+
+// ===== ANIMACION CORTA DE "PULSO" AL CAMBIAR UN VALOR =====
+function bumpElement(el) {
+    if (!el) return;
+    el.classList.remove('bump');
+    void el.offsetWidth; // fuerza reflow para poder reiniciar la animacion
+    el.classList.add('bump');
+}
+
+// ===== AVISO GENERAL (reemplaza alert() nativo) =====
+function showNotice(text, title) {
+    document.getElementById('noticeTitle').textContent = title || 'Aviso';
+    document.getElementById('noticeText').textContent = text;
+    document.getElementById('noticeModal').style.display = 'flex';
+    sfxNotice();
+}
+function closeNotice() {
+    document.getElementById('noticeModal').style.display = 'none';
+}
+
+// ===== TOAST DE EVENTOS =====
+var toastQueue = [];
+var toastShowing = false;
+
+function showEventToast(text) {
+    toastQueue.push(text);
+    processToastQueue();
+}
+function processToastQueue() {
+    if (toastShowing || toastQueue.length === 0) return;
+    toastShowing = true;
+    var el = document.getElementById('eventToast');
+    if (!el) { toastShowing = false; return; }
+    el.textContent = toastQueue.shift();
+    el.classList.add('show');
+    clearTimeout(showEventToast._t);
+    showEventToast._t = setTimeout(function() {
+        el.classList.remove('show');
+        setTimeout(function() { toastShowing = false; processToastQueue(); }, 350);
+    }, 3500);
+}
+function broadcastEvent(text) {
+    publishRoom({ action: 'event_toast', id: myId, text: text });
+}
+
+// ===== EVENTOS DIFERIDOS (mismo patron que Yatzy con YATZY/bonos) =====
+// Algunas jugadas (bloquear un candado, la falla automatica por 2 candados, robar la
+// jugada del turno) se pueden deshacer mientras el turno sigue abierto. Para evitar
+// anunciar algo que despues se deshace, encolamos el anuncio junto con el moveId que lo
+// origino y solo lo mostramos/transmitimos cuando ese turno queda cerrado de verdad: al
+// finalizar el turno (endTurn) o al recibir el avance de turno (turn_advance), lo que
+// tambien cubre a quien robo, ya que la ventana de robo se cierra en ese mismo momento
+// para todos — y es el jugador en turno el unico que puede finalizarlo.
+var pendingEvents = []; // [{ moveId, text }]
+
+function queueEvent(moveId, text) {
+    pendingEvents.push({ moveId: moveId, text: text });
+}
+
+// Quita del pendiente cualquier evento asociado a un moveId que se acaba de deshacer.
+function dequeueEventsForMove(moveId) {
+    pendingEvents = pendingEvents.filter(function(e) { return e.moveId !== moveId; });
+}
+
+function flushPendingEvents() {
+    if (pendingEvents.length === 0) return;
+    var events = pendingEvents;
+    pendingEvents = [];
+    events.forEach(function(e) {
+        showEventToast(e.text);
+        broadcastEvent(e.text);
+    });
+}
+
+function clearPendingEvents() {
+    pendingEvents = [];
 }

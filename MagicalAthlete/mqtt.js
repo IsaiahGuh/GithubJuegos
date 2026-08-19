@@ -9,6 +9,60 @@ var claimResolved = false;
 var pendingClaim = null;
 var gameStarted = false;
 var gameInitiator = null;
+var hostId = null; // id del jugador anfitrion de la sala (unico que puede reiniciar)
+var hostClaimTimer = null;
+var hostHeartbeatInterval = null;
+
+// Fusiona el arreglo de cartas recibido por red con el que tenemos localmente,
+// en vez de reemplazarlo por completo. Esto evita que un mensaje "sync" que
+// llegue tarde o desordenado (la red MQTT no garantiza orden) "resucite" una
+// carta que ya sabiamos que estaba descartada. Los campos criticos
+// (descartada, esGanadora) son monotonos: una vez true, se quedan en true
+// sin importar lo que diga el mensaje entrante.
+function mergeCartas(incomingCartas) {
+    if (!incomingCartas || !incomingCartas.length) return;
+    var localById = {};
+    for (var i = 0; i < cartas.length; i++) {
+        localById[cartas[i].id] = cartas[i];
+    }
+    var merged = [];
+    for (var j = 0; j < incomingCartas.length; j++) {
+        var inc = incomingCartas[j];
+        var loc = localById[inc.id];
+        if (!loc) {
+            merged.push(inc);
+            continue;
+        }
+        merged.push({
+            id: inc.id,
+            numero: inc.numero,
+            imagen: inc.imagen,
+            tanda: inc.tanda !== undefined ? inc.tanda : loc.tanda,
+            descartada: !!(loc.descartada || inc.descartada),
+            esGanadora: !!(loc.esGanadora || inc.esGanadora),
+            seleccionadoPor: loc.seleccionadoPor || inc.seleccionadoPor || null,
+            seleccionadoPorId: loc.seleccionadoPorId || inc.seleccionadoPorId || null
+        });
+    }
+    cartas = merged;
+}
+window.mergeCartas = mergeCartas;
+
+// Si el activeCardId que llega por red apunta a una carta que en nuestro
+// estado actual ya esta descartada (o que no existe), lo ignoramos. Esto
+// evita que un jugador que se reconecta con datos atrasados (por ejemplo,
+// porque cerro la pagina antes de enterarse de que su carta fue descartada)
+// "resucite" esa carta como si siguiera activa en la ronda.
+function activeCardIdSaneado(id) {
+    if (!id) return null;
+    for (var i = 0; i < cartas.length; i++) {
+        if (cartas[i].id === id) {
+            return cartas[i].descartada ? null : id;
+        }
+    }
+    return id; // si no la conocemos aun (p.ej. cartas todavia no ha llegado), la dejamos pasar
+}
+window.activeCardIdSaneado = activeCardIdSaneado;
 
 function connectToRoom(code, isReconnect) {
     if (isReconnect === undefined) isReconnect = false;
@@ -20,12 +74,25 @@ function connectToRoom(code, isReconnect) {
         cartas = [];
         misSelecciones = [];
         cartaActivaId = null;
-        tandaActual = 0;
-        avanzando = false;
+        tandaActual = -1;
+        cicloTandaInicio = 0;
+        mazoRestante = [];
+        copiasVisuales = {};
+        gruposExpansion31 = {};
         gameStarted = false;
         gameInitiator = null;
+        hostId = null;
     }
-    
+
+    if (hostClaimTimer) {
+        clearTimeout(hostClaimTimer);
+        hostClaimTimer = null;
+    }
+    if (hostHeartbeatInterval) {
+        clearInterval(hostHeartbeatInterval);
+        hostHeartbeatInterval = null;
+    }
+
     showLoading(isReconnect ? 'Reconectando a la sala...' : 'Conectando con la sala...');
     claimResolved = isReconnect;
     pendingClaim = null;
@@ -54,11 +121,36 @@ function connectToRoom(code, isReconnect) {
         
         joinSuccess(code);
         broadcastState('join');
-        
-        if (!isReconnect) {
-            broadcastRequestState();
+
+        // Siempre pedimos el estado actual a los demas: esto es clave para que
+        // alguien que se desconecto (celular apagado, salio de la pagina, etc.)
+        // reciba el estado real y actualizado al reconectar, en vez de quedarse
+        // con su copia local desactualizada.
+        broadcastRequestState();
+
+        // Determinar anfitrion: si nadie responde con un hostId conocido en un
+        // par de segundos, este jugador se autoproclama anfitrion.
+        if (!hostId) {
+            hostClaimTimer = setTimeout(function() {
+                if (!hostId) {
+                    hostId = myId;
+                    broadcastHostClaim();
+                    actualizarUI();
+                    saveSession();
+                }
+            }, 1800);
         }
-        
+
+        // El anfitrion reenvia el estado completo cada cierto tiempo para
+        // autocorregir a cualquier cliente que haya perdido mensajes por la
+        // red (MQTT publica sin garantia de entrega).
+        if (hostHeartbeatInterval) clearInterval(hostHeartbeatInterval);
+        hostHeartbeatInterval = setInterval(function() {
+            if (hostId === myId && currentRoom) {
+                broadcastState('sync');
+            }
+        }, 15000);
+
         saveSession();
     });
 
@@ -126,18 +218,54 @@ function connectToRoom(code, isReconnect) {
                 return;
             }
 
+            if (data.action === 'host_claim') {
+                // Si no tenemos anfitrion, o el que llega tiene id "menor"
+                // (para resolver empates si dos se autoproclaman a la vez),
+                // adoptamos ese id como anfitrion.
+                if (!hostId || data.id < hostId) {
+                    hostId = data.id;
+                    if (hostClaimTimer) {
+                        clearTimeout(hostClaimTimer);
+                        hostClaimTimer = null;
+                    }
+                    actualizarUI();
+                    saveSession();
+                }
+                return;
+            }
+
+            if (data.hostId && (!hostId || data.hostId < hostId)) {
+                hostId = data.hostId;
+                if (hostClaimTimer) {
+                    clearTimeout(hostClaimTimer);
+                    hostClaimTimer = null;
+                }
+            }
+
             if (data.action === 'start') {
                 gameStarted = true;
                 gameInitiator = data.id;
                 cartas = data.cartas || [];
                 tandaActual = data.tandaActual !== undefined ? data.tandaActual : 0;
-                if (data.id !== myId) {
+                mazoRestante = data.mazoRestante || [];
+                if (data.nuevoCiclo) {
+                    // Este lote es el primero de un ciclo nuevo (los dos
+                    // lotes que se reparten automaticamente por cada
+                    // "Corredores").
+                    cicloTandaInicio = tandaActual;
+                }
+                if (data.id !== myId && data.esPrimerLote) {
+                    // Solo reiniciamos nuestro estado local si es el PRIMER
+                    // lote de una partida nueva; si es un lote adicional
+                    // (continuacion de la misma partida), conservamos
+                    // nuestros puntos y demas datos actuales.
                     misSelecciones = [];
                     puntosPorJugador = {};
-                    estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
                     cartaActivaId = null;
-                    avanzando = false;
+                    copiasVisuales = {};
+                    gruposExpansion31 = {};
                 }
+                estadoRonda = { usado3: false, usado2: false, ganadorCartaId: null, jugadorGanador: null };
                 for (var pid in playersData) {
                     if (!puntosPorJugador[pid]) {
                         puntosPorJugador[pid] = 0;
@@ -150,17 +278,6 @@ function connectToRoom(code, isReconnect) {
                 renderizarMisCorredores();
                 actualizarUI();
                 saveSession();
-            }
-
-            if (data.action === 'next_tanda') {
-                if (data.tandaActual > tandaActual) {
-                    tandaActual = data.tandaActual;
-                    renderizarCartas();
-                    renderizarMisCorredores();
-                    actualizarUI();
-                    saveSession();
-                }
-                return;
             }
 
             if (data.action === 'puntaje_global') {
@@ -197,6 +314,15 @@ function connectToRoom(code, isReconnect) {
                         }
                     }
                     if (tipo === '+2') {
+                        // Cada jugador aplica el descarte en su propio
+                        // dispositivo (en vez de esperar a que le llegue el
+                        // "sync" de quien presiono el boton). Esto es lo que
+                        // hace que la carta ganadora SI desaparezca de "Mis
+                        // Corredores" en la pantalla del ganador, y que su
+                        // activeCardId quede libre para la siguiente ronda.
+                        if (typeof window.aplicarDescarteActivas === 'function') {
+                            window.aplicarDescarteActivas(estadoRonda.jugadorGanador);
+                        }
                         setTimeout(function() {
                             reiniciarRonda();
                         }, 500);
@@ -253,9 +379,8 @@ function connectToRoom(code, isReconnect) {
                 renderLeaderboard();
                 actualizarUI();
                 saveSession();
-
-                if (jugadorId !== myId) {
-                    verificarYAvanzarTanda();
+                if (typeof window.verificarSiguienteLote === 'function') {
+                    window.verificarSiguienteLote();
                 }
             }
 
@@ -268,11 +393,17 @@ function connectToRoom(code, isReconnect) {
 
             if (data.action === 'sync') {
                 if (data.cartas) {
-                    cartas = data.cartas;
+                    mergeCartas(data.cartas);
                     renderizarCartas();
                 }
                 if (data.tandaActual !== undefined) {
                     tandaActual = data.tandaActual;
+                }
+                if (data.cicloTandaInicio !== undefined) {
+                    cicloTandaInicio = data.cicloTandaInicio;
+                }
+                if (data.mazoRestante !== undefined) {
+                    mazoRestante = data.mazoRestante;
                 }
                 if (data.gameStarted !== undefined) {
                     gameStarted = data.gameStarted;
@@ -289,7 +420,10 @@ function connectToRoom(code, isReconnect) {
                             playersData[pid].name = data.playersData[pid].name;
                             playersData[pid].selecciones = data.playersData[pid].selecciones || [];
                             playersData[pid].cartasGanadoras = data.playersData[pid].cartasGanadoras || [];
-                            playersData[pid].activeCardId = data.playersData[pid].activeCardId || null;
+                            // --- FIX: Solo actualizar si el mensaje incluye activeCardId ---
+                            if (data.playersData[pid].activeCardId !== undefined) {
+                                playersData[pid].activeCardId = activeCardIdSaneado(data.playersData[pid].activeCardId);
+                            }
                         }
                     }
                 }
@@ -317,13 +451,17 @@ function connectToRoom(code, isReconnect) {
                         name: data.name,
                         selecciones: data.selecciones || [],
                         cartasGanadoras: data.cartasGanadoras || [],
-                        activeCardId: data.activeCardId || null
+                        activeCardId: data.activeCardId !== undefined ? activeCardIdSaneado(data.activeCardId) : null
                     };
                 } else {
                     playersData[data.id].name = data.name;
                     playersData[data.id].selecciones = data.selecciones || [];
                     playersData[data.id].cartasGanadoras = data.cartasGanadoras || [];
-                    playersData[data.id].activeCardId = data.activeCardId || null;
+                    // Solo actualizar si el mensaje incluye activeCardId
+                    if (data.activeCardId !== undefined) {
+                        playersData[data.id].activeCardId = activeCardIdSaneado(data.activeCardId);
+                    }
+                    // Si no viene, conservamos el valor que ya tenía
                 }
                 renderLeaderboard();
 
@@ -361,13 +499,25 @@ function broadcastState(action) {
             selecciones: misSelecciones || [],
             cartas: cartas || [],
             tandaActual: tandaActual,
+            cicloTandaInicio: cicloTandaInicio,
+            mazoRestante: mazoRestante || [],
             gameStarted: gameStarted,
             gameInitiator: gameInitiator || null,
             playersData: playersData,
             puntosPorJugador: puntosPorJugador,
-            estadoRonda: estadoRonda
+            estadoRonda: estadoRonda,
+            hostId: hostId || null
         });
-        mqttClient.publish(topic, payload);
+        var opts = { qos: 1 };
+        // Los mensajes "sync" se retienen en el broker: asi, cualquier
+        // jugador que se conecte o reconecte (celular apagado, se salio de
+        // la pagina, etc.) recibe el ultimo estado conocido INMEDIATAMENTE
+        // al suscribirse, sin depender de que otro cliente le responda a
+        // tiempo con el estado.
+        if (action === 'sync') {
+            opts.retain = true;
+        }
+        mqttClient.publish(topic, payload, opts);
     }
 }
 
@@ -378,11 +528,22 @@ function broadcastRequestState() {
             action: 'request_state',
             id: myId
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
-function broadcastStart(cartasArray, tanda) {
+function broadcastHostClaim() {
+    if (mqttClient && currentRoom) {
+        var topic = 'magical_athlete/room/' + currentRoom;
+        var payload = JSON.stringify({
+            action: 'host_claim',
+            id: myId
+        });
+        mqttClient.publish(topic, payload, { qos: 1 });
+    }
+}
+
+function broadcastStart(cartasArray, tanda, mazo, esPrimerLote, nuevoCiclo) {
     if (mqttClient && currentRoom) {
         var topic = 'magical_athlete/room/' + currentRoom;
         var payload = JSON.stringify({
@@ -391,15 +552,21 @@ function broadcastStart(cartasArray, tanda) {
             name: myName,
             cartas: cartasArray,
             tandaActual: tanda !== undefined ? tanda : 0,
+            cicloTandaInicio: cicloTandaInicio,
+            mazoRestante: mazo || [],
+            esPrimerLote: !!esPrimerLote,
+            nuevoCiclo: !!nuevoCiclo,
             gameStarted: true,
             playersData: playersData,
             puntosPorJugador: puntosPorJugador,
-            estadoRonda: estadoRonda
+            estadoRonda: estadoRonda,
+            hostId: hostId || null
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1, retain: true });
         gameStarted = true;
         gameInitiator = myId;
         tandaActual = tanda !== undefined ? tanda : 0;
+        mazoRestante = mazo || [];
     }
 }
 
@@ -414,19 +581,7 @@ function broadcastSelect(cartaId) {
             selecciones: misSelecciones || [],
             tandaActual: tandaActual
         });
-        mqttClient.publish(topic, payload);
-    }
-}
-
-function broadcastNextTanda(nuevaTanda) {
-    if (mqttClient && currentRoom) {
-        var topic = 'magical_athlete/room/' + currentRoom;
-        var payload = JSON.stringify({
-            action: 'next_tanda',
-            id: myId,
-            tandaActual: nuevaTanda
-        });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -441,7 +596,7 @@ function broadcastPuntajeGlobal(tipo) {
             puntos: puntosPorJugador[myId],
             cartaId: estadoRonda.ganadorCartaId || null
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -453,7 +608,7 @@ function broadcastEstadoRonda() {
             id: myId,
             estado: estadoRonda
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -464,7 +619,7 @@ function broadcastRemove(idToRemove) {
             action: 'remove',
             id: idToRemove
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -476,7 +631,7 @@ function broadcastReset() {
             id: myId,
             name: myName
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -493,7 +648,7 @@ function broadcastClaimOffer(targetId, offeredId) {
             selecciones: cached.selecciones || [],
             cartasGanadoras: cached.cartasGanadoras || []
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 
@@ -505,7 +660,7 @@ function broadcastSetActive(playerId, activeCardId) {
             id: playerId,
             activeCardId: activeCardId
         });
-        mqttClient.publish(topic, payload);
+        mqttClient.publish(topic, payload, { qos: 1 });
     }
 }
 window.broadcastSetActive = broadcastSetActive;

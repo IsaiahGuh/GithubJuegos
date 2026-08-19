@@ -48,6 +48,7 @@ function saveSession() {
             turnOrder: turnOrder,
             currentTurnIndex: currentTurnIndex,
             hostId: hostId,
+            color: playerColors[myId] || null,
             updatedAt: Date.now()
         }));
     } catch (e) { 
@@ -101,7 +102,7 @@ function getRegistryEntry(room, name) {
 function reconnectToSession() {
     var session = loadSession();
     if (!session) {
-        alert('No hay sesion guardada para reconectar.');
+        showNotice('No hay sesion guardada para reconectar.', 'Sin sesion');
         return;
     }
 
@@ -114,7 +115,17 @@ function reconnectToSession() {
     turnOrder = session.turnOrder || [];
     currentTurnIndex = session.currentTurnIndex || 0;
     hostId = session.hostId || null;
+    // Antes esto se forzaba siempre a "false", por lo que un anfitrion que se reconectaba
+    // perdia sus botones de Iniciar/Reiniciar aunque siguiera siendo el anfitrion real.
+    // Lo derivamos del hostId guardado; si en la sala ya asumio otro anfitrion mientras
+    // estabamos fuera, lo corregimos en cuanto llegue un game_state_sync/order_update.
+    refreshHostStatus();
+    pendingOrder = [];
+    playerColors = {};
+    if (session.color) playerColors[myId] = session.color;
     turnLocked = false;
+    clearPendingEvents();
+    startRoundSnapshot();
     
     updateVisuals();
     calculateScores();

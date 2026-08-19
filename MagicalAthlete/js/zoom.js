@@ -1,3 +1,4 @@
+// zoom.js
 var cartaEnZoom = null;
 
 function abrirZoom(carta, mostrarBoton, soloVisualizacion) {
@@ -19,7 +20,8 @@ function abrirZoom(carta, mostrarBoton, soloVisualizacion) {
     content.appendChild(img);
     var info = document.createElement('div');
     info.className = 'zoom-info';
-    info.innerHTML = 'Corredor <span>#' + carta.numero + '</span>';
+    var prefijo = getPrefijoCarta(carta.numero);
+    info.innerHTML = 'Corredor <span>' + prefijo + ' - #' + carta.numero + '</span>';
     content.appendChild(info);
 
     if (mostrarBoton && !carta.seleccionadoPor) {
@@ -53,4 +55,14 @@ document.addEventListener('DOMContentLoaded', function() {
             cerrarZoom();
         }
     });
+
+    // Cerrar modal de intercambio al hacer clic fuera
+    var intercambioModal = document.getElementById('intercambioModal');
+    if (intercambioModal) {
+        intercambioModal.addEventListener('click', function(e) {
+            if (e.target === intercambioModal) {
+                cerrarIntercambio();
+            }
+        });
+    }
 });
